@@ -1,0 +1,4059 @@
+"2025-06-13 13:52:37","Describe the twin paradox.","general","neutral","Matched","N/A","<unk> the <unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 14:00:26","what is the chemistry mark of sai munshi","general","neutral","Matched","N/A","what is the <unk> <unk> of <unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 14:00:42","how are you","general","neutral","Matched","N/A","how <unk> you relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity relativity"
+"2025-06-13 14:06:16","Describe the twin paradox.","general","neutral","Matched","N/A","<unk> the <unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 14:06:26","Describe the twin paradox","general","neutral","Matched","N/A","<unk> the <unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 14:08:14","ena panra","general","neutral","Matched","N/A","<unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 14:08:34","ena panra","general","neutral","Matched","N/A","<unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 14:17:36","Describe the twin paradox","general","neutral","Matched","N/A","<unk> the <unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 14:26:41","Describe the twin paradox","general","neutral","Matched","N/A","<unk> the <unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 14:26:46","Describe the twin paradox","general","neutral","Matched","N/A","<unk> the <unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 14:42:42","Describe the twin paradox","general","neutral","Matched","N/A","<unk> the <unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 14:53:43","What are Einstein's two postulates of special relativity?","general","neutral","Matched","N/A","what <unk> <unk> <unk> <unk> of special <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 15:01:37","What are Einstein's two postulates of special relativity?","general","neutral","Matched","N/A","what <unk> <unk> <unk> <unk> of special <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 16:01:47","state darwins theory","general","neutral","Matched","N/A","<unk> <unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 16:12:08","state darwins theory","general","neutral","Matched","N/A","<unk> <unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 16:12:28","state darwins theory","general","neutral","Matched","N/A","<unk> <unk> <unk> what what what what what what what what what what what what what what what what what what what what what what what what what what what what what what"
+"2025-06-13 16:33:30","What are Einstein’s two postulates?","general","positive","Matched","N/A","What are Einstein’s two postulates? A. It is possible that the two postulates of G.H.H., E.M.K., and T.H.H. are both the same. Although this is not a scientific fact, it is evident that Einstein has only one major postulate. Since he is not a postulate theorist, it is possible that G.H.H. was a postulate theorist, but he could not have been a postulate theorist. B. A postulate theorist is one who knows all the possible propositions of the universe without having to write them down. Thus, the two"
+"2025-06-13 16:37:29","Explain the photoelectric effect","general","positive","Matched","N/A","Explain the photoelectric effect of a Tesla Model S, and see the full effect of the Model S on the streets of Los Angeles. Image Credit: Tesla"
+"2025-06-13 16:38:58","Hii","general","positive","Matched","N/A","Hii-II, (IV-II) and (V-II) of the same name were reported in the same study."
+"2025-06-13 16:45:12","summarize the file","file","neutral","Matched","228
+Chapter 6
+The Schrödinger Equation
+In some cases, the slope of the potential energy may be discontinuous, e.g., V(x) may
+have one form in one region of space and another form in an adjacent region. (This is
+a useful mathematical approximation to real situations in which V(x) varies rapidly
+over a small region of space, such as at the surface boundary of a metal.) The proce-
+dure in such cases is to solve the Schrödinger equation separately in each region of
+space and then require that the solutions join smoothly at the point of discontinuity.
+Since the probability of finding a particle cannot vary discontinuously from point
+to point, the wave function 
+must be continuous.9 Since the Schrödinger equation
+involves the second derivative 
+the first derivative 
+(which is the slope)
+must also be continuous. That is, the graph of 
+versus x must be smooth. (In a
+special case in which the potential energy becomes infinite, this restriction is relaxed.
+Since no particle can have infinite potential energy,
+must be zero in regions where
+V(x) is infinite. Then, at the boundary of such a region,
+may be discontinuous.)
+If either 
+or 
+were not finite or not single valued, the same would be
+true of 
+and 
+As we will shortly see, the predictions of wave mechanics
+regarding the results of measurements involve both of those quantities and would thus
+not necessarily predict finite or definite values for real physical quantities. Such re-
+sults would not be acceptable since measurable quantities, such as angular momentum
+and position, are never infinite or multiple valued. A final restriction on the form of
+the wave function 
+is that in order to obey the normalization condition,
+must
+approach zero sufficiently fast as 
+so that normalization is preserved. For fu-
+ture reference, we may summarize the conditions that the wave function 
+must
+meet in order to be acceptable as follows:
+1.
+must exist and satisfy the Schrödinger equation.
+2.
+and 
+must be continuous.
+3.
+and 
+must be finite.
+4.
+and 
+must be single valued.
+5.
+fast enough as 
+so that the normalization integral, Equation
+6-20, remains bounded.
+Note that, given Equation 6-10, the acceptability conditions above ultimately apply
+to
+Questions
+1. Like the classical wave equation, the Schrödinger equation is linear. Why is this
+important?
+2. There is no factor 
+in Equation 6-18. Does this mean that 
+must
+be real?
+3. Why must the electric field 
+be real? Is it possible to find a nonreal wave
+function that satisfies the classical wave equation?
+4. Describe how the de Broglie hypothesis enters into the Schrödinger wave
+equation.
+5. What would be the effect on the Schrödinger equation of adding a constant rest
+energy for a particle with mass to the total energy E in the de Broglie relation
+f  E h?
+6. Describe in words what is meant by normalization of the wave function.
+>
+e(x, t)
+'(x)
+i  (1)1>2
+&(x, t).
+x S  
+'(x) S 0
+d'>dx
+'(x)
+d'>dx
+'(x)
+d'>dx
+'(x)
+'(x)
+'(x)
+x S  
+'(x)
+'(x)
+d&>dx.
+&(x, t)
+d'>dx
+'(x)
+'
+'(x)
+'(x)
+'
+d2'>dx2  ',
+'(x) 6-2 The Infinite Square Well
+229
+EXAMPLE 6-1 A Solution to the Schrödinger Equation Show that for a free particle
+of mass m moving in one dimension, the function 
+is a
+solution to the time-independent Schrödinger equation for any values of the con-
+stants A and B.
+SOLUTION
+A free particle has no net force acting upon it, e.g., V(x)  0, in which case the
+kinetic energy equals the total energy. Thus,
+Differentiating
+gives
+and differentiating again,
+Substituting into Equation 6-18,
+and, since 
+we have
+and the given 
+is a solution of Equation 6-18.
+6-2 The InfiniteSquare Well
+A problem that provides several illustrations of the properties of wave functions and is
+also one of the easiest problems to solve using the time-independent, one-dimensional
+Schrödinger equation is that of the infinite square well, sometimes called the particle
+in a box. A macroscopic example is a bead moving on a frictionless wire between
+two massive stops clamped to the wire. We could also build such a “box” for an elec-
+tron using electrodes and grids in an evacuated tube, as illustrated in Figure 6-1a.
+The walls of the box are provided by the increasing potential between the grids G
+and the electrode C as shown in Figures 6-1b and c. The walls can be made arbitrarily
+high and steep by increasing the potential V and reducing the separation between each
+grid-electrode pair. In the limit such a potential energy function looks like that in
+Figure 6-2, which is a graph of the potential energy of an infinite square well. For this
+problem the potential energy is of the form
+6-21
+Although such a potential is clearly artificial, the problem is worth careful study for
+several reasons: (1) exact solutions to the Schrödinger equation can be obtained
+V(x)     x  0 and x  L
+V(x)  0   0  x  L
+'(x)
+E'(x)  E'(x)
+U2k2  2mE,
+U2k2
+2m '(x)  E'(x)
+U2
+2m [(k2)(A sin kx  B cos kx)]  E(A sin kx  B cos kx)
+ k2(A sinkx  B coskx)  k2'(x)
+d2'
+dx2  k2A sinkx  k2B coskx
+d'
+dx  kA coskx  kB sinkx
+'(x)
+p  Uk  (2mE)1>2.
+'(x)  A sinkx  B coskx
+6-1 The Schrödinger Equation in One Dimension
+227
+Let us solve Equation 6-15 first. The reason for doing so is twofold: (1) Equation 
+6-15 does not contain the potential V(x); consequently, the time-dependent part 
+of all solutions 
+to the Schrödinger equation will have the same form when
+the potential is not an explicit function of time, so we only have to do this once.
+(2) The separation constant C has particular significance that we want to discover
+before we tackle Equation 6-14. Writing Equation 6-15 as
+6-16
+The general solution of Equation 6-16 is
+6-17a
+which can also be written as
+6-17b
+Thus, we see that 
+which describes the time variation of 
+is an oscillatory
+function with frequency 
+However, according to the de Broglie relation
+(Equation 5-1), the frequency of the wave represented by 
+is 
+there-
+fore, we conclude that the separation constant C  E, the total energy of the particle,
+and we have
+6-17c
+for all solutions to Equation 6-6 involving time-independent potentials. Equation 6-14
+then becomes, on multiplication by 
+6-18
+Equation 6-18 is referred to as the time-independent Schrödinger equation.
+The time-independent Schrödinger equation in one dimension is an ordinary dif-
+ferential equation in one variable x and is therefore much easier to handle than the
+general form of Equation 6-6. The normalization condition of Equation 6-9 can be ex-
+pressed in terms of 
+since the time dependence of the absolute square of the wave
+function cancels. We have
+6-19
+and Equation 6-9 then becomes
+6-20
+Conditions for AcceptableWave Functions
+The form of the wave function 
+that satisfies Equation 6-18 depends on the form
+of the potential energy function V(x). In the next few sections we will study some sim-
+ple but important problems in which V(x) is specified. Our example potentials will be
+approximations to real physical potentials, simplified to make calculations easier.
+'(x)
+
+
+
+'*(x)'(x)dx  1
+&*(x, t)&(x, t)  '*(x)eiEt>U'(x)eiEt>U  '*(x)'(x)
+'(x),
+U2
+2m
+d2'(x)
+dx2
+ V(x)'(x)  E'(x)
+'(x),
+(t)  eiEt>U
+f  E>h;
+&(x, t)
+f  C>h,
+&(x, t),
+(t),
+(t)  eiCt>U  cosa Ct
+U b  i sina Ct
+U b  cosa2 Ct
+h b  i sina2 Ct
+h b
+(t)  eiCt>U
+d(t)
+(t)  C
+iU dt   iC
+U dt
+&(x, t)
+(t) 228
+Chapter 6
+The Schrödinger Equation
+In some cases, the slope of the potential energy may be discontinuous, e.g., V(x) may
+have one form in one region of space and another form in an adjacent region. (This is
+a useful mathematical approximation to real situations in which V(x) varies rapidly
+over a small region of space, such as at the surface boundary of a metal.) The proce-
+dure in such cases is to solve the Schrödinger equation separately in each region of
+space and then require that the solutions join smoothly at the point of discontinuity.
+Since the probability of finding a particle cannot vary discontinuously from point
+to point, the wave function 
+must be continuous.9 Since the Schrödinger equation
+involves the second derivative 
+the first derivative 
+(which is the slope)
+must also be continuous. That is, the graph of 
+versus x must be smooth. (In a
+special case in which the potential energy becomes infinite, this restriction is relaxed.
+Since no particle can have infinite potential energy,
+must be zero in regions where
+V(x) is infinite. Then, at the boundary of such a region,
+may be discontinuous.)
+If either 
+or 
+were not finite or not single valued, the same would be
+true of 
+and 
+As we will shortly see, the predictions of wave mechanics
+regarding the results of measurements involve both of those quantities and would thus
+not necessarily predict finite or definite values for real physical quantities. Such re-
+sults would not be acceptable since measurable quantities, such as angular momentum
+and position, are never infinite or multiple valued. A final restriction on the form of
+the wave function 
+is that in order to obey the normalization condition,
+must
+approach zero sufficiently fast as 
+so that normalization is preserved. For fu-
+ture reference, we may summarize the conditions that the wave function 
+must
+meet in order to be acceptable as follows:
+1.
+must exist and satisfy the Schrödinger equation.
+2.
+and 
+must be continuous.
+3.
+and 
+must be finite.
+4.
+and 
+must be single valued.
+5.
+fast enough as 
+so that the normalization integral, Equation
+6-20, remains bounded.
+Note that, given Equation 6-10, the acceptability conditions above ultimately apply
+to
+Questions
+1. Like the classical wave equation, the Schrödinger equation is linear. Why is this
+important?
+2. There is no factor 
+in Equation 6-18. Does this mean that 
+must
+be real?
+3. Why must the electric field 
+be real? Is it possible to find a nonreal wave
+function that satisfies the classical wave equation?
+4. Describe how the de Broglie hypothesis enters into the Schrödinger wave
+equation.
+5. What would be the effect on the Schrödinger equation of adding a constant rest
+energy for a particle with mass to the total energy E in the de Broglie relation
+f  E h?
+6. Describe in words what is meant by normalization of the wave function.
+>
+e(x, t)
+'(x)
+i  (1)1>2
+&(x, t).
+x S  
+'(x) S 0
+d'>dx
+'(x)
+d'>dx
+'(x)
+d'>dx
+'(x)
+'(x)
+'(x)
+x S  
+'(x)
+'(x)
+d&>dx.
+&(x, t)
+d'>dx
+'(x)
+'
+'(x)
+'(x)
+'
+d2'>dx2  ',
+'(x)
+Problems
+181
+4-19. It is possible for a muon to be captured by a proton to form a muonic atom. A muon is
+identical to an electron except for its mass, which is 105.7 MeV c2. (a) Calculate the radius of
+the first Bohr orbit of a muonic atom. (b) Calculate the magnitude of the lowest energy state.
+(c) What is the shortest wavelength in the Lyman series for this atom?
+4-20. In the lithium atom (Z  3) two electrons are in the n  1 orbit and the third is in the
+n  2 orbit. (Only two are allowed in the n  1 orbit because of the exclusion principle, which
+will be discussed in Chapter 7.) The interaction of the inner electrons with the outer one can be
+approximated by writing the energy of the outer electron as
+where E1  13.6 eV, n  2, and 
+is the effective nuclear charge, which is less than 3 because of
+the screening effect of the two inner electrons. Using the measured ionization energy of 5.39 eV,
+calculate
+4-21. Draw to careful scale an energy-level diagram for hydrogen for levels with n  1, 2, 3,
+4,
+Show the following on the diagram: (a) the limit of the Lyman series, (b) the 
+line,
+(c) the transition between the state whose binding energy ( energy needed to remove the elec-
+tron from the atom) is 1.51 eV and the state whose excitation energy is 10.2 eV, and (d) the
+longest wavelength line of the Paschen series.
+4-22. A hydrogen atom at rest in the laboratory emits the Lyman 
+radiation. (a) Compute the
+recoil kinetic energy of the atom. (b) What fraction of the excitation energy of the n  2 state
+is carried by the recoiling atom? (Hint: Use conservation of momentum.)
+4-23. (a) Draw accurately to scale and label completely a partial energy-level diagram for C5,
+including at minimum the energy levels for n  1, 2, 3, 4, 5, and 
+(b) Compute the wavelength
+of the spectral line resulting from the n  3 to the n  2 transition, the C5
+line. (c) In what
+part of the EM spectrum does this line lie?
+4-24. The electron-positron pair that was discussed in Chapter 2 can form a hydrogenlike system
+called positronium. Calculate (a) the energies of the three lowest states and (b) the wavelength of
+the Lyman 
+and 
+lines. (Detection of those lines is a “signature” of positronium formation.)
+4-25. With the aid of tunable lasers, Rydberg atoms of sodium have been produced with n
+100.
+The resulting atomic diameter would correspond in hydrogen to n
+600. (a) What would be
+the diameter of a hydrogen atom whose electron is in the n
+600 orbit? (b) What would be
+the speed of the electron in that orbit? (c) How does the result in (b) compare with the speed
+in the n
+1 orbit?
+Section 4-4 X-RaySpectra
+4-26. (a) Calculate the next two longest wavelengths in the K series (after the 
+line) of
+molybdenum. (b) What is the wavelength of the shortest wavelength in this series?
+4-27. The wavelength of the 
+x-ray line for an element is measured to be 0.0794 nm. What
+is the element?
+4-28. Moseley pointed out that elements with atomic numbers 43, 61, and 75 should exist and
+(at that time) had not been found. (a) Using Figure 4-19, what frequencies would Moseley’s
+graphical data have predicted for the 
+x ray for each of these elements? (b) Compute the
+wavelengths for these lines predicted by Equation 4-37.
+4-29. What is the approximate radius of the n  1 orbit of gold (Z  79)? Compare this with
+the radius of the gold nucleus, about 7.1 fm.
+4-30. An electron in the K shell of Fe is ejected by a high-energy electron in the target of an x-
+ray tube. The resulting hole in the n  1 shell could be filled by an electron from the n  2 shell,
+the L shell; however, instead of emitting the characteristic Fe 
+x ray, the atom ejects an Auger
+electron from the n  2 shell. Using Bohr theory, compute the energy of the Auger electron.
+4-31. In a particular x-ray tube, an electron approaches the target moving at 2.25  108 m s. It
+slows down on being deflected by a nucleus of the target, emitting a photon of energy 32.5 keV.
+Ignoring the nuclear recoil, but not relativity, compute the final speed of the electron.
+4-32. (a) Compute the energy of an electron in the n  1 (K shell) of tungsten, using Z  1 for
+the effective nuclear charge. (b) The experimental result for this energy is 69.5 keV. Assume
+that the effective nuclear charge is Z 
+where 
+is called the screening constant, and calcu-
+late 
+from the experimental result.
+
+
+,
+>
+K
+K
+K
+K
+
+
+
+
+
+
+H
+.
+
+H
+.
+Z.
+Z
+E  Z2(E1>n2)
+> 182
+Chapter 4
+The Nuclear Atom
+4-33. Construct a Moseley plot similar to Figure 4-19 for the 
+x rays of the elements listed
+below (the x-ray energies are given in keV):
+K
+Al 1.56
+Ar 3.19
+Sc 4.46
+Fe 7.06
+Ge 10.98
+Kr 14.10
+Zr 17.66
+Ba 36.35
+Determine the slope of your plot, and compare it with the 
+line in Figure 4-19.
+Section 4-5 The Franck-Hertz Experiment
+4-34. Suppose that, in a Franck-Hertz experiment, electrons of energy up to 13.0 eV can be
+produced in the tube. If the tube contained atomic hydrogen, (a) what is the shortest-wavelength
+spectral line that could be emitted from the tube? (b) List all of the hydrogen lines that can be
+emitted by this tube.
+4-35. Using the data in Figure 4-24b and a good ruler, draw a carefully scaled energy-level di-
+agram covering the range from 0 eV to 60 eV for the vibrational states of this solid. What ap-
+proximate energy is typical of the transitions between adjacent levels corresponding to the
+larger of each pair of peaks?
+4-36. The transition from the first excited state to the ground state in potassium results in the
+emission of a photon with 
+ 770 nm If potassium vapor is used in a Franck-Hertz experi-
+ment, at what voltage would you expect to see the first decrease in current?
+4-37. If we could somehow fill a Franck-Hertz tube with positronium, what cathode-grid volt-
+age would be needed to reach the second current decrease in the positronium equivalent of
+Figure 4-23? (See Problem 4-24.)
+4-38. Electrons in the Franck-Hertz tube can also have elastic collisions with the Hg atoms.
+If such a collision is a head-on, what fraction of its initial kinetic energy will an electron lose,
+assuming the Hg atom to be at rest? If the collision is not head-on, will the fractional loss be
+greater or less than this?
+Level II
+4-39. Derive Equation 4-8 along the lines indicated in the paragraph that immediately precedes it.
+4-40. Geiger and Marsden used particles with 7.7-MeV kinetic energy and found that when they
+were scattered from thin gold foil, the number observed to be scattered at all angles agreed with
+Rutherford’s formula. Use this fact to compute an upper limit on the radius of the gold nucleus.
+4-41. (a) The current i due to a charge q moving in a circle with frequency frev is qfrev. Find the
+current due to the electron in the first Bohr orbit. (b) The magnetic moment of a current loop is
+iA, where A is the area of the loop. Find the magnetic moment of the electron in the first Bohr
+orbit in units A-m2. This magnetic moment is called a Bohr magneton.
+4-42. Use a spreadsheet to calculate the wavelengths (in nm) of the first five spectral lines of
+the Lyman, Balmer, Paschen, and Brackett series of hydrogen. Show the positions of these lines
+on a linear scale and indicate which ones lie in the visible.
+4-43. Show that a small change in the reduced mass of the electron produces a small change in
+a spectral line given by 
+ 
+Use this to calculate the difference 
+in the Balmer
+red line 
+ 656.3 nm between hydrogen and deuterium, which has a nucleus with twice the
+mass of hydrogen.
+4-44. Consider the Franck-Hertz experiment with Hg vapor in the tube and the voltage between
+the cathode and the grid equal to 4.0 V, i.e., not enough for the electrons to excite the Hg atom’s
+first excited state. Therefore, the electron-Hg atom collisions are elastic. (a) If the kinetic energy
+of the electrons is Ek, show that the maximum kinetic energy that a recoiling Hg atom can have
+is approximately 
+where M is the Hg atom mass. (b) What is the approximate maxi-
+mum kinetic energy that can be lost by an electron with Ek  2.5 eV?
+4-45. The Li2 ion is essentially identical to the H atom in Bohr’s theory, aside from the effect
+of the different nuclear charges and masses. (a) What transitions in Li2 will yield emission lines
+whose wavelengths are very nearly equal to the first two lines of the Lyman series in hydrogen?
+4mEk>M,
+1-6 The Twin Paradox and OtherSurprises
+49
+Figure 1-37 (a) A runner carrying a 10-m pole moves quickly enough so that the farmer will
+see the pole entirely contained in the barn. The spacetime diagrams from the point of view
+of the farmer’s inertial frame (b) and that of the runner (c). The resolution of the paradox is in
+the fact that the events of interest, shown by the large dots in each diagram, are simultaneous
+in S but not in S.
+Pole entirely
+within barn
+(ct = 5.8 m)
+Front end of pole
+enters barn door
+at ct = 0
+Front door
+of barn
+Rear door
+of barn
+Back end
+of pole
+Pole
+Front end
+of pole
+Rear door
+Front door
+Front of pole
+leaves barn
+Back of pole
+enters barn
+Back of pole
+Front of pole
+(c)
+(b)
+(a)
+10
+10
+5
+0
+–5
+–5
+ct
+x (m)
+S
+10
+5
+5
+0
+–10
+ct´
+x´ (m)
+S´
+Front of pole
+enters barn door
+at ct´ = 0
+Pole
+front door, thus putting a 10-m pole into a 5-m barn. The minimum speed of the run-
+ner v that is necessary for the farmer to accomplish this feat can be computed from
+Equation 1-28, giving the relativistic length contraction L  Lp
+, where Lp  proper
+length of the pole (10 m) and L  length of the pole measured by the farmer, to be
+equal to the length of the barn (5 m). Therefore, we have
+v  0.866c or   0.866
+v2>c2  1  (5>10)2  0.75
+ 1  v2>c2  (5>10)2
+ 
+1
+21  v2>c2
+
+Lp
+L  10
+5
+> 50
+Chapter 1
+Relativity I
+A paradox seems to arise when this situation is viewed in the rest system of the run-
+ner. For him the pole, being at rest in the same inertial system, has its proper length
+of 10 m. However, the runner measures the length of the barn to be
+How can he possibly fit the 10-m pole into the length-contracted 2.5-m barn? The
+answer is that he can’t, and the paradox vanishes, but how can that be? To understand
+the answer, we need to examine two events—the coincidences of both the front and
+back ends of the pole, respectively, with the rear and front doors of the barn—in the
+inertial frame of the farmer and in that of the runner.
+These are illustrated by the spacetime diagrams of the inertial frame S of the
+farmer and barn (Figure 1-37b) and that of the runner S (Figure 1-37c). Both dia-
+grams are drawn with the front end of the pole coinciding with the front door of the
+barn at the instant the clocks are started. In Figure 1-37b the worldlines of the barn
+doors are, of course, vertical, while those of the two ends of the pole make an angle 
+ tan1
+ 49.1° with the x axis. Note that in S the front of the pole reaches
+the rear door of the barn at ct  5 m 0.866  5.8 m simultaneous with the arrival of
+the back end of the pole at the front door; i.e., at that instant in S the pole is entirely
+contained in the barn.
+In the runner’s rest system S it is the worldlines of the ends of the pole that are
+vertical, while those of the front and rear doors of the barn make angles of 49.1° with
+the x axis (since the barn moves in the x direction at v). Now we see that the rear
+door passes the front of the pole at ct  2.5 m 0.866  2.9 m, but the front door of
+the barn doesn’t reach the rear of the pole until ct  10 m 0.866  11.5 m. Thus, the
+first of those two events occurs before the second, and the runner never sees the pole
+entirely contained in the barn. Once again, the relativity of simultaneity is the key—
+events simultaneous in one inertial frame are not necessarily simultaneous when
+viewed from another inertial frame.
+Now let’s consider a different version of this paradox, the one initially due to 
+W. Rindler. Suppose the barn’s back wall were made of thick, armor-plate steel and
+had no door. What do the farmer and the runner see then? Once again, in the farmer’s
+(and the barn’s) rest frame, the instant the front of the pole reaches the armor plate, the
+farmer shuts the door and the 10-m pole is instantaneously contained in the 5-m barn.
+However, in the next instant (assuming that the pole doesn’t break) it must either bend
+(i.e., rotate in spacetime) or break through the armor plate. Since this is relativity, the
+runner must come to the same conclusion in his rest frame as the 2.5-m barn races to-
+ward him at 
+But now when the armor plate back wall contacts the front of
+the pole, the barn continues to move at 
+taking the front of the pole with it
+and leaving at that instant 7.5 m of the pole still outside the barn. Yet like the farmer,
+the runner must also see the 10-m pole entirely contained within the 2.5-m barn. How
+can that be? Like this: the instant the tip of the pole hits the steel plate, that information
+(an elastic shock wave) begins to propagate down the pole. Even if the wave were to
+propagate at the speed of light c, it will take 
+to reach the back of the pole. In the meantime, the barn door must move only 7.5 m to
+reach the back of the pole and does so in only 
+Thus, the runner, in agreement with the farmer, sees the 10-m pole
+entirely contained within the 2.5-m barn—at least briefly!
+2.89  108 s.
+7.5 m>(0.866  3.0  108 m>s) 
+10 m>3.0  108 m>s  3.33  108 s
+  0.866,
+  0.866.
+>
+>
+>
+(1>)
+
+L  2.5 m
+L  Lp>  521  2
+ 1>  0.693>t1>2
+
+
+
+>
+E
+
+
+
+V(r )
+Eα1
+Eα2
+R
+r
+Figure 11-17 Schematic
+representations of the wave functions of
+two 
+particles with energies 
+and
+within the nuclear potential well.
+The probability of 
+penetrating the
+barrier is larger than that for 
+since the barrier is narrower at 
+Thus, the amplitude of 
+is larger
+outside the nucleus than that of 
+Hence,
+and therefore
+t1>2(1)  t1>2(2). (1)  
+(2)
+'(2).
+'(1)
+E1.
+2
+1
+E2
+E1
+","lorentz lorentz job lorentz s lorentz lorentz s transformation lorentz s s of student student student score of of derive of score student of of a score how s great"
+"2025-06-13 16:49:15","What is the threshold frequency","general","positive","Matched","N/A","Hey, great question! What is the threshold frequency of the reaction? 😊 Want more details or something else?"
+"2025-06-13 16:50:23","What is the threshold frequency?","general","positive","Matched","N/A","Hey, great question! What is the threshold frequency? We've tested the most common frequencies, and the ones with the lowest potential are usually lower than the thresholds used by law enforcement. But we've also looked at the frequencies used by law enforcement to determine if they're causing you serious harm. 😊 Want more details or something else?"
+"2025-06-13 16:51:39","What is the Compton effect?","general","positive","Matched","N/A","Hey, great question! What is the Compton effect? 😊 Want more details or something else?"
+"2025-06-13 16:57:53","what is the compton effect?","general","positive","Matched","N/A","Hey, great question! what is the compton effect? 😊 Want more details or something else?"
+"2025-06-13 16:59:13","hii","file","positive","Not Found","N/A","⚠️ No valid model or file available. Please upload a file or train the classifier."
+"2025-06-13 16:59:23","Hii","file","positive","Not Found","N/A","⚠️ No valid model or file available. Please upload a file or train the classifier."
+"2025-06-13 17:00:03","what is todays date","general","positive","Matched","N/A","Hmm, that’s a tough one! Can you rephrase or give me more details?"
+"2025-06-13 17:01:24","what is today's date?","general","positive","Matched","N/A","Hey, great question! what is today's date? I think it's the year 2000 and it's when there's a lot of new technology. It's the year 2000. It's also the year that computers become more ubiquitous. I don't know where it was but it's happened. 😊 Want more details or something else?"
+"2025-06-13 17:05:28","who is the chief minister of tamil nadu?","general","positive","Matched","N/A","Hey, great question! who is the chief minister of tamil nadu? — to the persons (who is the chief minister of tamil nadu)? 😊 Want more details or something else?"
+"2025-06-13 17:16:11","What is the Compton effect?","file","neutral","Not Found","N/A","⚠️ No valid model or file available. Please upload a file or train the classifier."
+"2025-06-13 17:16:38","What is the physics mark of stu0004?","file","neutral","Not Found","N/A","⚠️ No valid model or file available. Please upload a file or train the classifier."
+"2025-06-13 17:23:02","What is the Compton effect?","general","neutral","Matched","N/A","Hey, great question! The Compton effect is when X-rays or gamma rays scatter off electrons, losing energy and increasing wavelength. It supports quantum theory by showing light as photons. The wavelength shift is Δλ = (h/mₑc)(1 - cosθ). 😊 Want more details or something else?"
+"2025-06-13 17:23:34","who is the chief minister of tamil nadu?","general","neutral","Matched","N/A","Hey, great question! who is the chief minister of tamil nadu? 😊 Want more details or something else?"
+"2025-06-13 17:23:59","What is the threshold frequency?","general","neutral","Matched","N/A","Hey, great question! The threshold frequency is the minimum light frequency needed to eject electrons from a metal in the photoelectric effect. It’s tied to the work function (φ), where f₀ = φ/h. 😊 Want more details or something else?"
+"2025-06-13 17:24:16","summarize the file","file","neutral","Matched","228
+chapter 6
+the schrödinger equation
+in some cases, the slope of the potential energy may be discontinuous, e.g., v(x) may
+have one form in one region of space and another form in an adjacent region. (this is
+a useful mathematical approximation to real situations in which v(x) varies rapidly
+over a small region of space, such as at the surface boundary of a metal.) the proce-
+dure in such cases is to solve the schrödinger equation separately in each region of
+space and then require that the solutions join smoothly at the point of discontinuity.
+since the probability of finding a particle cannot vary discontinuously from point
+to point, the wave function 
+must be continuous.9 since the schrödinger equation
+involves the second derivative 
+the first derivative 
+(which is the slope)
+must also be continuous. that is, the graph of 
+versus x must be smooth. (in a
+special case in which the potential energy becomes infinite, this restriction is relaxed.
+since no particle can have infinite potential energy,
+must be zero in regions where
+v(x) is infinite. then, at the boundary of such a region,
+may be discontinuous.)
+if either 
+or 
+were not finite or not single valued, the same would be
+true of 
+and 
+as we will shortly see, the predictions of wave mechanics
+regarding the results of measurements involve both of those quantities and would thus
+not necessarily predict finite or definite values for real physical quantities. such re-
+sults would not be acceptable since measurable quantities, such as angular momentum
+and position, are never infinite or multiple valued. a final restriction on the form of
+the wave function 
+is that in order to obey the normalization condition,
+must
+approach zero sufficiently fast as 
+so that normalization is preserved. for fu-
+ture reference, we may summarize the conditions that the wave function 
+must
+meet in order to be acceptable as follows:
+1.
+must exist and satisfy the schrödinger equation.
+2.
+and 
+must be continuous.
+3.
+and 
+must be finite.
+4.
+and 
+must be single valued.
+5.
+fast enough as 
+so that the normalization integral, equation
+6-20, remains bounded.
+note that, given equation 6-10, the acceptability conditions above ultimately apply
+to
+questions
+1. like the classical wave equation, the schrödinger equation is linear. why is this
+important?
+2. there is no factor 
+in equation 6-18. does this mean that 
+must
+be real?
+3. why must the electric field 
+be real? is it possible to find a nonreal wave
+function that satisfies the classical wave equation?
+4. describe how the de broglie hypothesis enters into the schrödinger wave
+equation.
+5. what would be the effect on the schrödinger equation of adding a constant rest
+energy for a particle with mass to the total energy e in the de broglie relation
+f  e h?
+6. describe in words what is meant by normalization of the wave function.
+>
+e(x, t)
+'(x)
+i  (1)1>2
+&(x, t).
+x s  
+'(x) s 0
+d'>dx
+'(x)
+d'>dx
+'(x)
+d'>dx
+'(x)
+'(x)
+'(x)
+x s  
+'(x)
+'(x)
+d&>dx.
+&(x, t)
+d'>dx
+'(x)
+'
+'(x)
+'(x)
+'
+d2'>dx2  ',
+'(x) 6-2 the infinite square well
+229
+example 6-1 a solution to the schrödinger equation show that for a free particle
+of mass m moving in one dimension, the function 
+is a
+solution to the time-independent schrödinger equation for any values of the con-
+stants a and b.
+solution
+a free particle has no net force acting upon it, e.g., v(x)  0, in which case the
+kinetic energy equals the total energy. thus,
+differentiating
+gives
+and differentiating again,
+substituting into equation 6-18,
+and, since 
+we have
+and the given 
+is a solution of equation 6-18.
+6-2 the infinitesquare well
+a problem that provides several illustrations of the properties of wave functions and is
+also one of the easiest problems to solve using the time-independent, one-dimensional
+schrödinger equation is that of the infinite square well, sometimes called the particle
+in a box. a macroscopic example is a bead moving on a frictionless wire between
+two massive stops clamped to the wire. we could also build such a “box” for an elec-
+tron using electrodes and grids in an evacuated tube, as illustrated in figure 6-1a.
+the walls of the box are provided by the increasing potential between the grids g
+and the electrode c as shown in figures 6-1b and c. the walls can be made arbitrarily
+high and steep by increasing the potential v and reducing the separation between each
+grid-electrode pair. in the limit such a potential energy function looks like that in
+figure 6-2, which is a graph of the potential energy of an infinite square well. for this
+problem the potential energy is of the form
+6-21
+although such a potential is clearly artificial, the problem is worth careful study for
+several reasons: (1) exact solutions to the schrödinger equation can be obtained
+v(x)     x  0 and x  l
+v(x)  0   0  x  l
+'(x)
+e'(x)  e'(x)
+u2k2  2me,
+u2k2
+2m '(x)  e'(x)
+u2
+2m [(k2)(a sin kx  b cos kx)]  e(a sin kx  b cos kx)
+ k2(a sinkx  b coskx)  k2'(x)
+d2'
+dx2  k2a sinkx  k2b coskx
+d'
+dx  ka coskx  kb sinkx
+'(x)
+p  uk  (2me)1>2.
+'(x)  a sinkx  b coskx
+6-1 the schrödinger equation in one dimension
+227
+let us solve equation 6-15 first. the reason for doing so is twofold: (1) equation 
+6-15 does not contain the potential v(x); consequently, the time-dependent part 
+of all solutions 
+to the schrödinger equation will have the same form when
+the potential is not an explicit function of time, so we only have to do this once.
+(2) the separation constant c has particular significance that we want to discover
+before we tackle equation 6-14. writing equation 6-15 as
+6-16
+the general solution of equation 6-16 is
+6-17a
+which can also be written as
+6-17b
+thus, we see that 
+which describes the time variation of 
+is an oscillatory
+function with frequency 
+however, according to the de broglie relation
+(equation 5-1), the frequency of the wave represented by 
+is 
+there-
+fore, we conclude that the separation constant c  e, the total energy of the particle,
+and we have
+6-17c
+for all solutions to equation 6-6 involving time-independent potentials. equation 6-14
+then becomes, on multiplication by 
+6-18
+equation 6-18 is referred to as the time-independent schrödinger equation.
+the time-independent schrödinger equation in one dimension is an ordinary dif-
+ferential equation in one variable x and is therefore much easier to handle than the
+general form of equation 6-6. the normalization condition of equation 6-9 can be ex-
+pressed in terms of 
+since the time dependence of the absolute square of the wave
+function cancels. we have
+6-19
+and equation 6-9 then becomes
+6-20
+conditions for acceptablewave functions
+the form of the wave function 
+that satisfies equation 6-18 depends on the form
+of the potential energy function v(x). in the next few sections we will study some sim-
+ple but important problems in which v(x) is specified. our example potentials will be
+approximations to real physical potentials, simplified to make calculations easier.
+'(x)
+
+
+
+'*(x)'(x)dx  1
+&*(x, t)&(x, t)  '*(x)eiet>u'(x)eiet>u  '*(x)'(x)
+'(x),
+u2
+2m
+d2'(x)
+dx2
+ v(x)'(x)  e'(x)
+'(x),
+(t)  eiet>u
+f  e>h;
+&(x, t)
+f  c>h,
+&(x, t),
+(t),
+(t)  eict>u  cosa ct
+u b  i sina ct
+u b  cosa2 ct
+h b  i sina2 ct
+h b
+(t)  eict>u
+d(t)
+(t)  c
+iu dt   ic
+u dt
+&(x, t)
+(t) 228
+chapter 6
+the schrödinger equation
+in some cases, the slope of the potential energy may be discontinuous, e.g., v(x) may
+have one form in one region of space and another form in an adjacent region. (this is
+a useful mathematical approximation to real situations in which v(x) varies rapidly
+over a small region of space, such as at the surface boundary of a metal.) the proce-
+dure in such cases is to solve the schrödinger equation separately in each region of
+space and then require that the solutions join smoothly at the point of discontinuity.
+since the probability of finding a particle cannot vary discontinuously from point
+to point, the wave function 
+must be continuous.9 since the schrödinger equation
+involves the second derivative 
+the first derivative 
+(which is the slope)
+must also be continuous. that is, the graph of 
+versus x must be smooth. (in a
+special case in which the potential energy becomes infinite, this restriction is relaxed.
+since no particle can have infinite potential energy,
+must be zero in regions where
+v(x) is infinite. then, at the boundary of such a region,
+may be discontinuous.)
+if either 
+or 
+were not finite or not single valued, the same would be
+true of 
+and 
+as we will shortly see, the predictions of wave mechanics
+regarding the results of measurements involve both of those quantities and would thus
+not necessarily predict finite or definite values for real physical quantities. such re-
+sults would not be acceptable since measurable quantities, such as angular momentum
+and position, are never infinite or multiple valued. a final restriction on the form of
+the wave function 
+is that in order to obey the normalization condition,
+must
+approach zero sufficiently fast as 
+so that normalization is preserved. for fu-
+ture reference, we may summarize the conditions that the wave function 
+must
+meet in order to be acceptable as follows:
+1.
+must exist and satisfy the schrödinger equation.
+2.
+and 
+must be continuous.
+3.
+and 
+must be finite.
+4.
+and 
+must be single valued.
+5.
+fast enough as 
+so that the normalization integral, equation
+6-20, remains bounded.
+note that, given equation 6-10, the acceptability conditions above ultimately apply
+to
+questions
+1. like the classical wave equation, the schrödinger equation is linear. why is this
+important?
+2. there is no factor 
+in equation 6-18. does this mean that 
+must
+be real?
+3. why must the electric field 
+be real? is it possible to find a nonreal wave
+function that satisfies the classical wave equation?
+4. describe how the de broglie hypothesis enters into the schrödinger wave
+equation.
+5. what would be the effect on the schrödinger equation of adding a constant rest
+energy for a particle with mass to the total energy e in the de broglie relation
+f  e h?
+6. describe in words what is meant by normalization of the wave function.
+>
+e(x, t)
+'(x)
+i  (1)1>2
+&(x, t).
+x s  
+'(x) s 0
+d'>dx
+'(x)
+d'>dx
+'(x)
+d'>dx
+'(x)
+'(x)
+'(x)
+x s  
+'(x)
+'(x)
+d&>dx.
+&(x, t)
+d'>dx
+'(x)
+'
+'(x)
+'(x)
+'
+d2'>dx2  ',
+'(x)
+ 1>  0.693>t1>2
+
+
+
+>
+e
+
+
+
+v(r )
+eα1
+eα2
+r
+r
+figure 11-17 schematic
+representations of the wave functions of
+two 
+particles with energies 
+and
+within the nuclear potential well.
+the probability of 
+penetrating the
+barrier is larger than that for 
+since the barrier is narrower at 
+thus, the amplitude of 
+is larger
+outside the nucleus than that of 
+hence,
+and therefore
+t1>2(1)  t1>2(2). (1)  
+(2)
+'(2).
+'(1)
+e1.
+2
+1
+e2
+e1
+
+problems
+181
+4-19. it is possible for a muon to be captured by a proton to form a muonic atom. a muon is
+identical to an electron except for its mass, which is 105.7 mev c2. (a) calculate the radius of
+the first bohr orbit of a muonic atom. (b) calculate the magnitude of the lowest energy state.
+(c) what is the shortest wavelength in the lyman series for this atom?
+4-20. in the lithium atom (z  3) two electrons are in the n  1 orbit and the third is in the
+n  2 orbit. (only two are allowed in the n  1 orbit because of the exclusion principle, which
+will be discussed in chapter 7.) the interaction of the inner electrons with the outer one can be
+approximated by writing the energy of the outer electron as
+where e1  13.6 ev, n  2, and 
+is the effective nuclear charge, which is less than 3 because of
+the screening effect of the two inner electrons. using the measured ionization energy of 5.39 ev,
+calculate
+4-21. draw to careful scale an energy-level diagram for hydrogen for levels with n  1, 2, 3,
+4,
+show the following on the diagram: (a) the limit of the lyman series, (b) the 
+line,
+(c) the transition between the state whose binding energy ( energy needed to remove the elec-
+tron from the atom) is 1.51 ev and the state whose excitation energy is 10.2 ev, and (d) the
+longest wavelength line of the paschen series.
+4-22. a hydrogen atom at rest in the laboratory emits the lyman 
+radiation. (a) compute the
+recoil kinetic energy of the atom. (b) what fraction of the excitation energy of the n  2 state
+is carried by the recoiling atom? (hint: use conservation of momentum.)
+4-23. (a) draw accurately to scale and label completely a partial energy-level diagram for c5,
+including at minimum the energy levels for n  1, 2, 3, 4, 5, and 
+(b) compute the wavelength
+of the spectral line resulting from the n  3 to the n  2 transition, the c5
+line. (c) in what
+part of the em spectrum does this line lie?
+4-24. the electron-positron pair that was discussed in chapter 2 can form a hydrogenlike system
+called positronium. calculate (a) the energies of the three lowest states and (b) the wavelength of
+the lyman 
+and 
+lines. (detection of those lines is a “signature” of positronium formation.)
+4-25. with the aid of tunable lasers, rydberg atoms of sodium have been produced with n
+100.
+the resulting atomic diameter would correspond in hydrogen to n
+600. (a) what would be
+the diameter of a hydrogen atom whose electron is in the n
+600 orbit? (b) what would be
+the speed of the electron in that orbit? (c) how does the result in (b) compare with the speed
+in the n
+1 orbit?
+section 4-4 x-rayspectra
+4-26. (a) calculate the next two longest wavelengths in the k series (after the 
+line) of
+molybdenum. (b) what is the wavelength of the shortest wavelength in this series?
+4-27. the wavelength of the 
+x-ray line for an element is measured to be 0.0794 nm. what
+is the element?
+4-28. moseley pointed out that elements with atomic numbers 43, 61, and 75 should exist and
+(at that time) had not been found. (a) using figure 4-19, what frequencies would moseley’s
+graphical data have predicted for the 
+x ray for each of these elements? (b) compute the
+wavelengths for these lines predicted by equation 4-37.
+4-29. what is the approximate radius of the n  1 orbit of gold (z  79)? compare this with
+the radius of the gold nucleus, about 7.1 fm.
+4-30. an electron in the k shell of fe is ejected by a high-energy electron in the target of an x-
+ray tube. the resulting hole in the n  1 shell could be filled by an electron from the n  2 shell,
+the l shell; however, instead of emitting the characteristic fe 
+x ray, the atom ejects an auger
+electron from the n  2 shell. using bohr theory, compute the energy of the auger electron.
+4-31. in a particular x-ray tube, an electron approaches the target moving at 2.25  108 m s. it
+slows down on being deflected by a nucleus of the target, emitting a photon of energy 32.5 kev.
+ignoring the nuclear recoil, but not relativity, compute the final speed of the electron.
+4-32. (a) compute the energy of an electron in the n  1 (k shell) of tungsten, using z  1 for
+the effective nuclear charge. (b) the experimental result for this energy is 69.5 kev. assume
+that the effective nuclear charge is z 
+where 
+is called the screening constant, and calcu-
+late 
+from the experimental result.
+
+
+,
+>
+k
+k
+k
+k
+
+
+
+
+
+
+h
+.
+
+h
+.
+z.
+z
+e  z2(e1>n2)
+> 182
+chapter 4
+the nuclear atom
+4-33. construct a moseley plot similar to figure 4-19 for the 
+x rays of the elements listed
+below (the x-ray energies are given in kev):
+k
+al 1.56
+ar 3.19
+sc 4.46
+fe 7.06
+ge 10.98
+kr 14.10
+zr 17.66
+ba 36.35
+determine the slope of your plot, and compare it with the 
+line in figure 4-19.
+section 4-5 the franck-hertz experiment
+4-34. suppose that, in a franck-hertz experiment, electrons of energy up to 13.0 ev can be
+produced in the tube. if the tube contained atomic hydrogen, (a) what is the shortest-wavelength
+spectral line that could be emitted from the tube? (b) list all of the hydrogen lines that can be
+emitted by this tube.
+4-35. using the data in figure 4-24b and a good ruler, draw a carefully scaled energy-level di-
+agram covering the range from 0 ev to 60 ev for the vibrational states of this solid. what ap-
+proximate energy is typical of the transitions between adjacent levels corresponding to the
+larger of each pair of peaks?
+4-36. the transition from the first excited state to the ground state in potassium results in the
+emission of a photon with 
+ 770 nm if potassium vapor is used in a franck-hertz experi-
+ment, at what voltage would you expect to see the first decrease in current?
+4-37. if we could somehow fill a franck-hertz tube with positronium, what cathode-grid volt-
+age would be needed to reach the second current decrease in the positronium equivalent of
+figure 4-23? (see problem 4-24.)
+4-38. electrons in the franck-hertz tube can also have elastic collisions with the hg atoms.
+if such a collision is a head-on, what fraction of its initial kinetic energy will an electron lose,
+assuming the hg atom to be at rest? if the collision is not head-on, will the fractional loss be
+greater or less than this?
+level ii
+4-39. derive equation 4-8 along the lines indicated in the paragraph that immediately precedes it.
+4-40. geiger and marsden used particles with 7.7-mev kinetic energy and found that when they
+were scattered from thin gold foil, the number observed to be scattered at all angles agreed with
+rutherford’s formula. use this fact to compute an upper limit on the radius of the gold nucleus.
+4-41. (a) the current i due to a charge q moving in a circle with frequency frev is qfrev. find the
+current due to the electron in the first bohr orbit. (b) the magnetic moment of a current loop is
+ia, where a is the area of the loop. find the magnetic moment of the electron in the first bohr
+orbit in units a-m2. this magnetic moment is called a bohr magneton.
+4-42. use a spreadsheet to calculate the wavelengths (in nm) of the first five spectral lines of
+the lyman, balmer, paschen, and brackett series of hydrogen. show the positions of these lines
+on a linear scale and indicate which ones lie in the visible.
+4-43. show that a small change in the reduced mass of the electron produces a small change in
+a spectral line given by 
+ 
+use this to calculate the difference 
+in the balmer
+red line 
+ 656.3 nm between hydrogen and deuterium, which has a nucleus with twice the
+mass of hydrogen.
+4-44. consider the franck-hertz experiment with hg vapor in the tube and the voltage between
+the cathode and the grid equal to 4.0 v, i.e., not enough for the electrons to excite the hg atom’s
+first excited state. therefore, the electron-hg atom collisions are elastic. (a) if the kinetic energy
+of the electrons is ek, show that the maximum kinetic energy that a recoiling hg atom can have
+is approximately 
+where m is the hg atom mass. (b) what is the approximate maxi-
+mum kinetic energy that can be lost by an electron with ek  2.5 ev?
+4-45. the li2 ion is essentially identical to the h atom in bohr’s theory, aside from the effect
+of the different nuclear charges and masses. (a) what transitions in li2 will yield emission lines
+whose wavelengths are very nearly equal to the first two lines of the lyman series in hydrogen?
+4mek>m,
+1-6 the twin paradox and othersurprises
+49
+figure 1-37 (a) a runner carrying a 10-m pole moves quickly enough so that the farmer will
+see the pole entirely contained in the barn. the spacetime diagrams from the point of view
+of the farmer’s inertial frame (b) and that of the runner (c). the resolution of the paradox is in
+the fact that the events of interest, shown by the large dots in each diagram, are simultaneous
+in s but not in s.
+pole entirely
+within barn
+(ct = 5.8 m)
+front end of pole
+enters barn door
+at ct = 0
+front door
+of barn
+rear door
+of barn
+back end
+of pole
+pole
+front end
+of pole
+rear door
+front door
+front of pole
+leaves barn
+back of pole
+enters barn
+back of pole
+front of pole
+(c)
+(b)
+(a)
+10
+10
+5
+0
+–5
+–5
+ct
+x (m)
+s
+10
+5
+5
+0
+–10
+ct´
+x´ (m)
+s´
+front of pole
+enters barn door
+at ct´ = 0
+pole
+front door, thus putting a 10-m pole into a 5-m barn. the minimum speed of the run-
+ner v that is necessary for the farmer to accomplish this feat can be computed from
+equation 1-28, giving the relativistic length contraction l  lp
+, where lp  proper
+length of the pole (10 m) and l  length of the pole measured by the farmer, to be
+equal to the length of the barn (5 m). therefore, we have
+v  0.866c or   0.866
+v2>c2  1  (5>10)2  0.75
+ 1  v2>c2  (5>10)2
+ 
+1
+21  v2>c2
+
+lp
+l  10
+5
+> 50
+chapter 1
+relativity i
+a paradox seems to arise when this situation is viewed in the rest system of the run-
+ner. for him the pole, being at rest in the same inertial system, has its proper length
+of 10 m. however, the runner measures the length of the barn to be
+how can he possibly fit the 10-m pole into the length-contracted 2.5-m barn? the
+answer is that he can’t, and the paradox vanishes, but how can that be? to understand
+the answer, we need to examine two events—the coincidences of both the front and
+back ends of the pole, respectively, with the rear and front doors of the barn—in the
+inertial frame of the farmer and in that of the runner.
+these are illustrated by the spacetime diagrams of the inertial frame s of the
+farmer and barn (figure 1-37b) and that of the runner s (figure 1-37c). both dia-
+grams are drawn with the front end of the pole coinciding with the front door of the
+barn at the instant the clocks are started. in figure 1-37b the worldlines of the barn
+doors are, of course, vertical, while those of the two ends of the pole make an angle 
+ tan1
+ 49.1° with the x axis. note that in s the front of the pole reaches
+the rear door of the barn at ct  5 m 0.866  5.8 m simultaneous with the arrival of
+the back end of the pole at the front door; i.e., at that instant in s the pole is entirely
+contained in the barn.
+in the runner’s rest system s it is the worldlines of the ends of the pole that are
+vertical, while those of the front and rear doors of the barn make angles of 49.1° with
+the x axis (since the barn moves in the x direction at v). now we see that the rear
+door passes the front of the pole at ct  2.5 m 0.866  2.9 m, but the front door of
+the barn doesn’t reach the rear of the pole until ct  10 m 0.866  11.5 m. thus, the
+first of those two events occurs before the second, and the runner never sees the pole
+entirely contained in the barn. once again, the relativity of simultaneity is the key—
+events simultaneous in one inertial frame are not necessarily simultaneous when
+viewed from another inertial frame.
+now let’s consider a different version of this paradox, the one initially due to 
+w. rindler. suppose the barn’s back wall were made of thick, armor-plate steel and
+had no door. what do the farmer and the runner see then? once again, in the farmer’s
+(and the barn’s) rest frame, the instant the front of the pole reaches the armor plate, the
+farmer shuts the door and the 10-m pole is instantaneously contained in the 5-m barn.
+however, in the next instant (assuming that the pole doesn’t break) it must either bend
+(i.e., rotate in spacetime) or break through the armor plate. since this is relativity, the
+runner must come to the same conclusion in his rest frame as the 2.5-m barn races to-
+ward him at 
+but now when the armor plate back wall contacts the front of
+the pole, the barn continues to move at 
+taking the front of the pole with it
+and leaving at that instant 7.5 m of the pole still outside the barn. yet like the farmer,
+the runner must also see the 10-m pole entirely contained within the 2.5-m barn. how
+can that be? like this: the instant the tip of the pole hits the steel plate, that information
+(an elastic shock wave) begins to propagate down the pole. even if the wave were to
+propagate at the speed of light c, it will take 
+to reach the back of the pole. in the meantime, the barn door must move only 7.5 m to
+reach the back of the pole and does so in only 
+thus, the runner, in agreement with the farmer, sees the 10-m pole
+entirely contained within the 2.5-m barn—at least briefly!
+2.89  108 s.
+7.5 m>(0.866  3.0  108 m>s) 
+10 m>3.0  108 m>s  3.33  108 s
+  0.866,
+  0.866.
+>
+>
+>
+(1>)
+
+l  2.5 m
+l  lp>  521  2","Hmm, the file didn’t give me much to work with. Got another question?"
+"2025-06-13 17:25:04","What did the Franck-Hertz experiment demonstrate?","general","neutral","Matched","N/A","Hey, great question! What did the Franck-Hertz experiment demonstrate? 😊 Want more details or something else?"
+"2025-06-13 17:25:35","What does Heisenberg’s Uncertainty Principle state?","general","neutral","Matched","N/A","Hey, great question! What does Heisenberg’s Uncertainty Principle state? 😊 Want more details or something else?"
+"2025-06-13 17:37:01","What is the Compton effect?","file","neutral","Not Found","N/A","⚠️ No valid model or file available. Please upload a file or train the classifier."
+"2025-06-13 17:37:37","what is compton effect?","file","negative","Matched","138
+chapter 3
+quantization of charge, light, and energy
+arthur compton. after
+discovering the compton
+effect, he became a world
+traveler seeking an
+explanation for cosmic rays.
+he ultimately showed that
+their intensity varied with
+latitude, indicating an
+interaction with earth’s
+magnetic field, and thus
+proved that they are charged
+particles. [courtesy of
+american institute of physics,
+niels bohr library.]
+each scattering angle corresponds to scattering with no shift in the wavelength due
+to scattering by the inner electrons of carbon. since these are tightly bound to the
+atom, it is the entire atom that recoils rather than the individual electrons. the ex-
+pected shift in this case is given by equation 3-25, with 
+being the mass of the atom,
+which is about 
+times that of the electron; thus, this shift is negligible. the varia-
+tion of 
+with 
+was found to be that predicted by equation 3-25.
+we have seen in this section and the preceding two sections that the interaction
+of electromagnetic radiation with matter is a discrete interaction that occurs at the
+atomic level. it is perhaps curious that after so many years of debate about the nature
+of light, we now find that we must have both a particle (i.e., quantum) theory to de-
+scribe in detail the energy exchange between electromagnetic radiation and matter and
+a wave theory to describe the interference and diffraction of electromagnetic radiation.
+we will discuss this so-called wave-particle duality in more detail in chapter 5.
+more
+derivation of compton’s equation, applying conservation of energy
+and momentum to the relativistic collision of a photon and an electron,
+is included on the home page: www.whfreeman.com/tiplermodern
+physics5e. see also equations 3-26 and 3-27 and figure 3-18 here.
+questions
+5. why is it extremely difficult to observe the compton effect using visible light?
+6. why is the compton effect unimportant in the transmission of television and
+radio waves? how many compton scatterings would a typical fm signal have
+before its wavelengths were shifted by 0.01 percent?
+
+¢
+  
+2  
+1
+104
+m 3-4 x rays and the compton effect
+139
+example 3-8 x rays from tv the acceleration voltage of the electrons in a typi-
+cal television picture tube is 
+what is the minimum wavelength x ray pro-
+duced when these electrons strike the inner front surface of the tube?
+solution
+from equation 3-24, we have
+these x rays penetrate matter very effectively. manufacturers provide essential
+shields to protect against the hazard.
+example 3-9 compton effect in a particular compton scattering experiment it is
+found that the incident wavelength 
+is shifted by 
+when the scattering
+angle 
+(a) what is the value of 
+(b) what will be the wavelength 
+of
+the shifted photon when the scattering angle is 
+solution
+1. for question (a) , the value of 
+is found from equation 3-25:
+2. that the scattered wavelength 
+is shifted by 
+from 
+means that
+3. combining these yields:
+4. question (b) is also solved with the aid of equation 3-25, rearranged as
+5. substituting 
+and 
+from above yields
+a final comment
+in this chapter, together with section 2-4 of the previous chapter, we have introduced
+and discussed at some length the three primary ways by which photons interact with
+matter: (1) the photoelectric effect, (2) the compton effect, and (3) pair production.
+as we proceed with our explorations of modern physics throughout the remainder of
+the book, we will have many occasions to apply what we have learned here to aid in
+our understanding of myriad phenomena, ranging from atomic structure to the fusion
+“furnaces” of stars.
+ 0.245 nm
+ 0.243  0.002
+3-4 x rays and the compton effect
+139
+example 3-8 x rays from tv the acceleration voltage of the electrons in a typi-
+cal television picture tube is 
+what is the minimum wavelength x ray pro-
+duced when these electrons strike the inner front surface of the tube?
+solution
+from equation 3-24, we have
+these x rays penetrate matter very effectively. manufacturers provide essential
+shields to protect against the hazard.
+example 3-9 compton effect in a particular compton scattering experiment it is
+found that the incident wavelength 
+is shifted by 
+when the scattering
+angle 
+(a) what is the value of 
+(b) what will be the wavelength 
+of
+the shifted photon when the scattering angle is 
+solution
+1. for question (a) , the value of 
+is found from equation 3-25:
+2. that the scattered wavelength 
+is shifted by 
+from 
+means that
+3. combining these yields:
+4. question (b) is also solved with the aid of equation 3-25, rearranged as
+5. substituting 
+and 
+from above yields
+a final comment
+in this chapter, together with section 2-4 of the previous chapter, we have introduced
+and discussed at some length the three primary ways by which photons interact with
+matter: (1) the photoelectric effect, (2) the compton effect, and (3) pair production.
+as we proceed with our explorations of modern physics throughout the remainder of
+the book, we will have many occasions to apply what we have learned here to aid in
+our understanding of myriad phenomena, ranging from atomic structure to the fusion
+“furnaces” of stars.
+ 0.245 nm
+ 0.243  0.002 2  0.243  0.00243(1  cos75) 1
+  75° 2  
+1  0.00243(1  cos)
+ 0.243 nm 1 
+¢
+0.015  0.00243(1  cos120)
+0.015
+¢ 1
+ 0.015 1
+1.5 percent 2
+ 0.00243(1  cos120°) 2  
+1  ¢
+  h
+mc (1  cos) 1
+75°? 2 1?
+  120°.
+1.5 percent 1 m  1.24  103
+v
+ nm  1.24  103
+25,000
+ 0.050 nm
+25 kev.
+problems
+143
+3-19. a particular radiating cavity has the maximum of its spectra distribution of radiated
+power at a wavelength of 
+(in the infrared region of the spectrum). the temperature is
+then changed so that the total power radiated by the cavity doubles. (a) compute the new tem-
+perature. (b) at what wavelength does the new spectral distribution have its maximum value?
+3-20. a certain very bright star has an effective surface temperature of 
+(a) assuming
+that it radiates as a blackbody, what is the wavelength at which 
+is maximum? (b) in what
+part of the electromagnetic spectrum does the maximum lie?
+3-21. the energy reaching earth from the sun at the top of the atmosphere is 
+called the solar constant. assuming that earth radiates like a blackbody at uniform temperature,
+what do you conclude is the equilibrium temperature of earth?
+3-22. a 
+incandescent bulb radiates from a tungsten filament operating at 
+assuming that the bulb radiates like a blackbody, (a) what are the frequency 
+and the wave-
+length 
+at the maximum of the spectral distribution? (b) if 
+is a good approximation of the
+average frequency of the photons emitted by the bulb, about how many photons is the bulb ra-
+diating per second? (c) if you are looking at the bulb from 5 m away, how many photons enter
+your eye per second? (the diameter of your pupil is about 
+)
+3-23. use planck’s law, equation 3-18, to derive the constant in wein’s law, equation 3-5.
+section 3-3 the photoelectric effect
+3-24. the wavelengths of visible light range from about 
+to about 
+(a) what is
+the range of photon energies 
+in visible light? (b) a typical fm radio station’s broadcast
+frequency is about 
+what is the energy of an fm photon of the frequency?
+3-25. the orbiting space shuttle moves around earth well above 99 percent of the atmosphere,
+yet it still accumulates an electric charge on its skin due, in part, to the loss of electrons caused
+by the photoelectric effect with sunlight. suppose the skin of the shuttle is coated with ni,
+which has a relatively large work function 
+at the temperatures encountered in
+orbit. (a) what is the maximum wavelength in the solar spectrum that can result in the emission
+of photoelectrons from the shuttle’s skin? (b) what is the maximum fraction of the total power
+falling on the shuttle that could potentially produce photoelectrons?
+3-26. the work function for cesium is 
+the lowest of any metal. (a) find the threshold
+frequency and wavelength for the photoelectric effect. find the stopping potential if the wave-
+length of the incident light is (b)
+and (c)
+3-27. (a) if 5 percent of the power of a 
+bulb is radiated in the visible spectrum, how
+many visible photons are radiated per second? (b) if the bulb is a point source radiating equally
+in all directions, what is the flux of photons (number per unit time per unit area) at a distance
+of
+3-28. the work function of molybdenum is 
+(a) what is the threshold frequency for
+the photoelectric effect in molybdenum? (b) will yellow light of wavelength 
+cause ejec-
+tion of photoelectrons from molybdenum? prove your answer.
+3-29. the nacl molecule has a bond energy of 
+that is, this energy must be supplied
+in order to dissociate the molecule into neutral na and cl atoms (see chapter 9). (a) what are
+the minimum frequency and maximum wavelength of the photon necessary to dissociate the
+molecule? (b) in what part of the electromagnetic spectrum is this photon?
+3-30. a photoelectric experiment with cesium yields stopping potentials for 
+and
+to be 
+and 
+respectively. using these data only, find the threshold
+frequency and work function for cesium and the value of 
+3-31. under optimum conditions, the eye will perceive a flash if about 60 photons arrive at the
+cornea. how much energy is this in joules if the wavelength of the light is 
+3-32. the longest wavelength of light that will cause emission of electrons from cesium is
+(a) compute the work function for cesium. (b) if light of 
+(ultraviolet) were to
+shine on cesium, what would be the energy of the ejected electrons?
+section 3-4 x rays and the compton effect
+3-33. use compton’s equation (equation 3-25) to compute the value of 
+in figure 3-17d.
+to what percent shift in the wavelength does this correspond?
+¢
+300 nm
+653 nm.
+550 nm?
+h.
+0.38 v,
+0.95 v  546.1 nm  435.8 nm
+4.26 ev;
+560 nm
+4.22 ev.
+2 m?
+100-w
+400 nm.
+300 nm
+1.9 ev,
+  4.87 ev
+100 mhz.
+(in ev)
+750 nm.
+380 nm
+5.0 mm.
+fm m
+fm
+3300 k.
+40-w
+1.36  103 w>m2,
+u(
+)
+20,000 k.
+27.0 	m
+144
+chapter 3
+quantization of charge, light, and energy
+ux
+uy
+y1
+y2
+x2
+x1
+ux
+θ
+deflection
+plates
+3-34. x-ray tubes currently used by dentists often have accelerating voltages of 
+what
+is the minimum wavelength of the x rays they produce?
+3-35. find the momentum of a photon in 
+and in 
+if the wavelength is (a)
+(b)
+(c)
+and (d)
+3-36. gamma rays emitted by radioactive nuclei also exhibit measurable compton scattering.
+suppose a 
+photon from a positron-electron annihilation scatters at 
+from a free
+electron. what are the energies of the scattered photon and the recoiling electron? relative to
+the initial direction of the 
+photon, what is the direction of the recoiling electron’s
+velocity vector?
+3-37. the wavelength of compton-scattered photons is measured at 
+if 
+is to be
+1 percent, what should the wavelength of the incident photon be?
+3-38. compton used photons of wavelength 
+(a) what is the energy of these pho-
+tons? (b) what is the wavelength of the photons scattered at 
+(c) what is the energy
+of the photons scattered at 
+(d) what is the recoil energy of the electrons if 
+3-39. compute 
+for photons scattered at 
+from (a) free protons, (b) free electrons, and
+(c)
+molecules in air.
+3-40. compton’s equation (equation 3-25) indicates that a graph of 
+versus 
+should be a straight line whose slope 
+allows a determination of 
+given that the wave-
+length of 
+in figure 3-17 is 
+compute 
+for each scattering angle in the figure and
+graph the results versus 
+what is the slope of the line?
+3-41. (a) compute the compton wavelength of an electron and a proton. (b) what is the en-
+ergy of a photon whose wavelength is equal to the compton wavelength of (1) the electron and
+(2) the proton?
+level ii
+3-42. when light of wavelength 
+is incident on potassium, photoelectrons with stopping
+potential of 
+are emitted. if the wavelength of the incident light is changed to 
+the stopping potential is 
+using only these numbers together with the values of the speed
+of light and the electron charge, (a) find the work function of potassium and (b) compute a value
+for planck’s constant.
+3-43. assuming that the difference between thomson’s calculated 
+in his second experiment
+(figure 3-19) and the currently accepted value was due entirely to his neglecting the horizontal
+component of earth’s magnetic field outside the deflection plates, what value for that component
+does the difference imply? (thomson’s data:
+x1  5 cm, y2>x2  8>110.)
+e  1.5  104 v>m,
+b  5.5  104 t,
+e>m
+1.90 v.
+300 nm,
+0.52 v
+450 nm
+(1  cos). 2
+0.0711 nm, 1
+h.
+h>mc
+(1  cos)
+2  
+1
+e2  p2c2  (mc2)2
+e>c
+e
+hf2>c.
+f2
+hf2
+hf1>c
+hf1
+(a)
+(c)
+scattered
+at 90°
+(b)
+(d )
+135°
+molybdenum
+kα line
+primary
+scattered by
+graphite at
+45°
+6°30´
+7°30´
+7°
+angle from calcite
+figure 3-17 intensity versus
+wavelength for compton
+scattering at several angles.
+the left peak in each case
+results from photons of the
+original wavelength that are
+scattered by tightly bound
+electrons, which have an
+effective mass equal to that of
+the atom. the separation in
+wavelength of the peaks is
+given by equation 3-25. the
+horizontal scale used by the
+compton “angle from calcite”
+refers to the calcite analyzing
+crystal in figure 3-16. 138
+chapter 3
+quantization of charge, light, and energy
+arthur compton. after
+discovering the compton
+effect, he became a world
+traveler seeking an
+explanation for cosmic rays.
+he ultimately showed that
+their intensity varied with
+latitude, indicating an
+interaction with earth’s
+magnetic field, and thus
+proved that they are charged
+particles. [courtesy of
+american institute of physics,
+niels bohr library.]
+each scattering angle corresponds to scattering with no shift in the wavelength due
+to scattering by the inner electrons of carbon. since these are tightly bound to the
+atom, it is the entire atom that recoils rather than the individual electrons. the ex-
+pected shift in this case is given by equation 3-25, with 
+being the mass of the atom,
+which is about 
+times that of the electron; thus, this shift is negligible. the varia-
+tion of 
+with 
+was found to be that predicted by equation 3-25.
+we have seen in this section and the preceding two sections that the interaction
+of electromagnetic radiation with matter is a discrete interaction that occurs at the
+atomic level. it is perhaps curious that after so many years of debate about the nature
+of light, we now find that we must have both a particle (i.e., quantum) theory to de-
+scribe in detail the energy exchange between electromagnetic radiation and matter and
+a wave theory to describe the interference and diffraction of electromagnetic radiation.
+we will discuss this so-called wave-particle duality in more detail in chapter 5.
+more
+derivation of compton’s equation, applying conservation of energy
+and momentum to the relativistic collision of a photon and an electron,
+is included on the home page: www.whfreeman.com/tiplermodern
+physics5e. see also equations 3-26 and 3-27 and figure 3-18 here.
+questions
+5. why is it extremely difficult to observe the compton effect using visible light?
+6. why is the compton effect unimportant in the transmission of television and
+radio waves? how many compton scatterings would a typical fm signal have
+before its wavelengths were shifted by 0.01 percent?
+
+¢
+  
+2  
+1
+104
+m","Hmm, the file didn’t give me much to work with. Got another question?"
+"2025-06-13 17:37:56","What did the Franck-Hertz experiment demonstrate?","file","neutral","Matched","182
+chapter 4
+the nuclear atom
+4-33. construct a moseley plot similar to figure 4-19 for the 
+x rays of the elements listed
+below (the x-ray energies are given in kev):
+k
+al 1.56
+ar 3.19
+sc 4.46
+fe 7.06
+ge 10.98
+kr 14.10
+zr 17.66
+ba 36.35
+determine the slope of your plot, and compare it with the 
+line in figure 4-19.
+section 4-5 the franck-hertz experiment
+4-34. suppose that, in a franck-hertz experiment, electrons of energy up to 13.0 ev can be
+produced in the tube. if the tube contained atomic hydrogen, (a) what is the shortest-wavelength
+spectral line that could be emitted from the tube? (b) list all of the hydrogen lines that can be
+emitted by this tube.
+4-35. using the data in figure 4-24b and a good ruler, draw a carefully scaled energy-level di-
+agram covering the range from 0 ev to 60 ev for the vibrational states of this solid. what ap-
+proximate energy is typical of the transitions between adjacent levels corresponding to the
+larger of each pair of peaks?
+4-36. the transition from the first excited state to the ground state in potassium results in the
+emission of a photon with 
+ 770 nm if potassium vapor is used in a franck-hertz experi-
+ment, at what voltage would you expect to see the first decrease in current?
+4-37. if we could somehow fill a franck-hertz tube with positronium, what cathode-grid volt-
+age would be needed to reach the second current decrease in the positronium equivalent of
+figure 4-23? (see problem 4-24.)
+4-38. electrons in the franck-hertz tube can also have elastic collisions with the hg atoms.
+if such a collision is a head-on, what fraction of its initial kinetic energy will an electron lose,
+assuming the hg atom to be at rest? if the collision is not head-on, will the fractional loss be
+greater or less than this?
+level ii
+4-39. derive equation 4-8 along the lines indicated in the paragraph that immediately precedes it.
+4-40. geiger and marsden used particles with 7.7-mev kinetic energy and found that when they
+were scattered from thin gold foil, the number observed to be scattered at all angles agreed with
+rutherford’s formula. use this fact to compute an upper limit on the radius of the gold nucleus.
+4-41. (a) the current i due to a charge q moving in a circle with frequency frev is qfrev. find the
+current due to the electron in the first bohr orbit. (b) the magnetic moment of a current loop is
+ia, where a is the area of the loop. find the magnetic moment of the electron in the first bohr
+orbit in units a-m2. this magnetic moment is called a bohr magneton.
+4-42. use a spreadsheet to calculate the wavelengths (in nm) of the first five spectral lines of
+the lyman, balmer, paschen, and brackett series of hydrogen. show the positions of these lines
+on a linear scale and indicate which ones lie in the visible.
+4-43. show that a small change in the reduced mass of the electron produces a small change in
+a spectral line given by 
+ 
+use this to calculate the difference 
+in the balmer
+red line 
+ 656.3 nm between hydrogen and deuterium, which has a nucleus with twice the
+mass of hydrogen.
+4-44. consider the franck-hertz experiment with hg vapor in the tube and the voltage between
+the cathode and the grid equal to 4.0 v, i.e., not enough for the electrons to excite the hg atom’s
+first excited state. therefore, the electron-hg atom collisions are elastic. (a) if the kinetic energy
+of the electrons is ek, show that the maximum kinetic energy that a recoiling hg atom can have
+is approximately 
+where m is the hg atom mass. (b) what is the approximate maxi-
+mum kinetic energy that can be lost by an electron with ek  2.5 ev?
+4-45. the li2 ion is essentially identical to the h atom in bohr’s theory, aside from the effect
+of the different nuclear charges and masses. (a) what transitions in li2 will yield emission lines
+whose wavelengths are very nearly equal to the first two lines of the lyman series in hydrogen?
+4mek>m, ¢
+	>	. >  k
+174
+chapter 4
+the nuclear atom
+4-5 the franck-hertz experiment
+we conclude this chapter with discussion of an important experiment that provi-
+ded strong support for the quantization of atomic energies, thus helping to pave the
+way for modern quantum mechanics. while investigating the inelastic scattering of
+electrons, j. franck and g. hertz20 made a discovery that confirmed by direct
+measurement bohr’s hypothesis of energy quantization in atoms. first done in 1914,
+it is now a standard undergraduate laboratory experiment. figure 4-22a is a schematic
+diagram of the apparatus. a small heater heats the cathode. electrons are ejected from
+the heated cathode and accelerated toward a grid, which is at a positive potential v0
+relative to the cathode. some electrons pass through the grid and reach the plate p,
+which is at a slightly lower potential vp  v0  v. the tube is filled with a 
+low-pressure gas of the element being investigated (mercury vapor, in franck and
+hertz’s experiment). the experiment involves measuring the plate current as a func-
+tion of v0. as v0 is increased from 0, the current increases until a critical value (about
+4.9 v for hg) is reached, at which point the current suddenly decreases. as v0 is in-
+creased further, the current rises again.
+the explanation of this result is a bit easier to visualize if we think for the mo-
+ment of a tube filled with hydrogen atoms instead of mercury. (see figure 4-22b.)
+electrons accelerated by v0 that collide with hydrogen electrons cannot transfer en-
+ergy to the latter unless they have acquired kinetic energy ev0  e2  e1  10.2 ev
+since the hydrogen electron according to bohr’s model cannot occupy states with en-
+ergies intermediate between e1 and e2. such a collision will thus be elastic; i.e., the
+incident electron’s kinetic energy will be unchanged by the collision, and thus it can
+overcome the potential v and contribute to the current i. however, if ev0
+10.2 ev,
+!
+electron
+after
+scattering
+incoming
+electron
+proton
+n = 1
+n = 2
+–
+–
+(a)
+(b)
+h
+c
+p
+g
++
+–
+–
++
+i
+v0
+v = 0
+v = v0
+vp = v0 – δv
+figure 4-22 (a) schematic diagram of the franck-hertz experiment. electrons ejected from the heated cathode c at zero
+potential are drawn to the positive grid g. those passing through the holes in the grid can reach the plate p and thereby
+contribute to the current i if they have sufficient kinetic energy to overcome the small back potential v. the tube contains a
+low-pressure gas of the element being studied. (b) results for hydrogen. if the incoming electron does not have sufficient
+energy to transfer e  e2  e1 to the hydrogen electron in the n  1 orbit (ground state), then the scattering will be elastic.
+if the incoming electron does have at least e kinetic energy, then an inelastic collision can occur in which e is transferred to
+the n  1 electron, moving it to the n  2 orbit. the excited electron will typically return to the ground state very quickly,
+emitting a photon of energy e. 4-5 the franck-hertz experiment
+175
+then the incoming electron can transfer 10.2 ev to the hydrogen electron in the ground
+state (n  1 orbit), putting it into the n  2 orbit (called the first excited state). the
+incoming electron’s energy is thus reduced by 10.2 ev; it has been inelastically scat-
+tered. with insufficient energy to overcome the small retarding potential v, the in-
+coming electrons can no longer contribute to the plate current i, and i drops sharply.
+the situation with hg in the tube is more complicated since hg has 80 electrons.
+although bohr’s theory cannot predict their individual energies, we still expect the en-
+ergy to be quantized with a ground state, first excited state, and so on, for the atom.
+thus, the explanation of the observed 4.9-v critical potential for hg is that the first
+excited state is about 4.9 ev above the lowest level (ground state). electrons with en-
+ergy less than this cannot lose energy to the hg atoms, but electrons with energy
+greater than 4.9 ev can have inelastic collisions and lose 4.9 ev. if this happens near
+the grid, these electrons cannot gain enough energy to overcome the small back volt-
+age v and reach the plate; the current therefore decreases. if this explanation is cor-
+rect, the hg atoms that are excited to an energy level of 4.9 ev above the ground state
+should return to the ground state by emitting light of wavelength
+there is indeed a line of this wavelength in the mercury spectrum. when the tube is
+viewed with a spectroscope, this line is seen when v0 is greater than 4.9 ev, while no
+lines are seen when v0 is less than this amount. for further increases in v0, additional
+sharp decreases in the current are observed, corresponding either to excitation of other
+levels in hg (e.g., the second excited state of hg is at 6.7 ev above the ground state)
+or to multiple excitations of the first excited state, i.e., due to an electron losing 4.9
+ev more than once. in the usual setup, multiple excitations of the first level are
+observed and dips are seen every 4.9 v.21 the probability of observing such multiple
+first-level excitations, or excitations of other levels, depends on the detailed variation
+of the potential of the tube. for example, a second decrease in the current at
+v0  2  4.9  9.8 v results when electrons have inelastic collisions with hg atoms
+about halfway between the cathode and grid (see figure 4-22a). they are reacceler-
+ated, reaching 4.9 ev again in the vicinity of the grid. a plot of the data of franck and
+hertz is shown in figure 4-23.
+the franck-hertz experiment was an important confirmation of the idea that dis-
+crete optical spectra were due to the existence in atoms of discrete energy levels that
+could be excited by nonoptical methods. it is particularly gratifying to be able to de-
+tect the existence of discrete energy levels directly by measurements using only volt-
+meters and ammeters.
+electron energy loss spectroscopy
+the franck-hertz experiment was the precursor of a highly sensitive technique for
+measuring the quantized energy states of atoms in both gases and solids. the tech-
+nique, called electron energy loss spectroscopy (eels), is particularly useful in
+solids, where it makes possible measurement of the energy of certain types of lattice
+vibrations and other processes. it works like this. suppose that the electrons in an in-
+cident beam all have energy einc. they collide with the atoms of a material, causing
+them to undergo some process (e.g., vibration, lattice rearrangement, electron excita-
+tion) that requires energy el. then, if a beam electron initiates a single such process,
+it will exit the material with energy einc  el —i.e., it has been inelastically scattered.
+4-4 x-ray spectra
+173
+e dn(e )/de
+e dn(e )/de
+0
+200
+1420
+1400
+1380
+1360
+1340
+1320
+1300
+1280
+kinetic energy (ev)
+400
+600
+kinetic energy (ev)
+elemental al
+al oxide
+800
+1000
+(a)
+(b)
+copper
+atomic number
+cu
+29
+110
+ar
+66
+679
+734
+778
+842
+942
+969
+1086
+922
+figure 4-21 (a) the auger spectrum of cu
+bombarded with 10-kev electrons. the energy of
+the auger electrons is more precisely determined
+by plotting the weighted derivative e dn(e) de
+of the electron intensity rather than the intensity
+n(e). (b) a portion of the auger spectrum of al
+from elemental al and al oxide. note the energy
+shift in the largest peaks resulting from
+adjustments in the al electron shell energies in
+the al2o3 molecule.
+>
+auger electrons
+the process of producing x rays necessarily results in the ionization of the atom since
+an inner electron is ejected. the vacancy created is filled by an outer electron, pro-
+ducing the x rays studied by moseley. in 1923 pierre auger discovered that, as an
+alternative to x-ray emission, the atom may eject a third electron from a higher-energy
+outer shell via a radiationless process called the auger effect. in the auger (pro-
+nounced oh-zhay) process, the energy difference e  e2  e1 that could have
+resulted in the emission of a 
+x ray is removed from the atom by the third electron,
+e.g., one in the n  3 shell. since the magnitude of e3  e, the n  3 electron would
+leave the atom with a characteristic kinetic energy 
+which is determined by
+the stationary-state energies of the particular atom.19 thus, each element has a char-
+acteristic auger electron spectrum. (see figure 4-21a.) measurement of the auger
+electrons provides a simple and highly sensitive tool for identifying impurities on
+clean surfaces in electron microscope systems and investigating electron energy shifts
+associated with molecular bonding. (see figure 4-21b.)
+question
+9. why did moseley plot 
+versus z rather than f versus z?
+f1>2
+¢e  ƒe3ƒ,
+k 174
+chapter 4
+the nuclear atom
+4-5 the franck-hertz experiment
+we conclude this chapter with discussion of an important experiment that provi-
+ded strong support for the quantization of atomic energies, thus helping to pave the
+way for modern quantum mechanics. while investigating the inelastic scattering of
+electrons, j. franck and g. hertz20 made a discovery that confirmed by direct
+measurement bohr’s hypothesis of energy quantization in atoms. first done in 1914,
+it is now a standard undergraduate laboratory experiment. figure 4-22a is a schematic
+diagram of the apparatus. a small heater heats the cathode. electrons are ejected from
+the heated cathode and accelerated toward a grid, which is at a positive potential v0
+relative to the cathode. some electrons pass through the grid and reach the plate p,
+which is at a slightly lower potential vp  v0  v. the tube is filled with a 
+low-pressure gas of the element being investigated (mercury vapor, in franck and
+hertz’s experiment). the experiment involves measuring the plate current as a func-
+tion of v0. as v0 is increased from 0, the current increases until a critical value (about
+4.9 v for hg) is reached, at which point the current suddenly decreases. as v0 is in-
+creased further, the current rises again.
+the explanation of this result is a bit easier to visualize if we think for the mo-
+ment of a tube filled with hydrogen atoms instead of mercury. (see figure 4-22b.)
+electrons accelerated by v0 that collide with hydrogen electrons cannot transfer en-
+ergy to the latter unless they have acquired kinetic energy ev0  e2  e1  10.2 ev
+since the hydrogen electron according to bohr’s model cannot occupy states with en-
+ergies intermediate between e1 and e2. such a collision will thus be elastic; i.e., the
+incident electron’s kinetic energy will be unchanged by the collision, and thus it can
+overcome the potential v and contribute to the current i. however, if ev0
+10.2 ev,
+!
+electron
+after
+scattering
+incoming
+electron
+proton
+n = 1
+n = 2
+–
+–
+(a)
+(b)
+h
+c
+p
+g
++
+–
+–
++
+i
+v0
+v = 0
+v = v0
+vp = v0 – δv
+figure 4-22 (a) schematic diagram of the franck-hertz experiment. electrons ejected from the heated cathode c at zero
+potential are drawn to the positive grid g. those passing through the holes in the grid can reach the plate p and thereby
+contribute to the current i if they have sufficient kinetic energy to overcome the small back potential v. the tube contains a
+low-pressure gas of the element being studied. (b) results for hydrogen. if the incoming electron does not have sufficient
+energy to transfer e  e2  e1 to the hydrogen electron in the n  1 orbit (ground state), then the scattering will be elastic.
+if the incoming electron does have at least e kinetic energy, then an inelastic collision can occur in which e is transferred to
+the n  1 electron, moving it to the n  2 orbit. the excited electron will typically return to the ground state very quickly,
+emitting a photon of energy e.
+4-5 the franck-hertz experiment
+175
+then the incoming electron can transfer 10.2 ev to the hydrogen electron in the ground
+state (n  1 orbit), putting it into the n  2 orbit (called the first excited state). the
+incoming electron’s energy is thus reduced by 10.2 ev; it has been inelastically scat-
+tered. with insufficient energy to overcome the small retarding potential v, the in-
+coming electrons can no longer contribute to the plate current i, and i drops sharply.
+the situation with hg in the tube is more complicated since hg has 80 electrons.
+although bohr’s theory cannot predict their individual energies, we still expect the en-
+ergy to be quantized with a ground state, first excited state, and so on, for the atom.
+thus, the explanation of the observed 4.9-v critical potential for hg is that the first
+excited state is about 4.9 ev above the lowest level (ground state). electrons with en-
+ergy less than this cannot lose energy to the hg atoms, but electrons with energy
+greater than 4.9 ev can have inelastic collisions and lose 4.9 ev. if this happens near
+the grid, these electrons cannot gain enough energy to overcome the small back volt-
+age v and reach the plate; the current therefore decreases. if this explanation is cor-
+rect, the hg atoms that are excited to an energy level of 4.9 ev above the ground state
+should return to the ground state by emitting light of wavelength
+there is indeed a line of this wavelength in the mercury spectrum. when the tube is
+viewed with a spectroscope, this line is seen when v0 is greater than 4.9 ev, while no
+lines are seen when v0 is less than this amount. for further increases in v0, additional
+sharp decreases in the current are observed, corresponding either to excitation of other
+levels in hg (e.g., the second excited state of hg is at 6.7 ev above the ground state)
+or to multiple excitations of the first excited state, i.e., due to an electron losing 4.9
+ev more than once. in the usual setup, multiple excitations of the first level are
+observed and dips are seen every 4.9 v.21 the probability of observing such multiple
+first-level excitations, or excitations of other levels, depends on the detailed variation
+of the potential of the tube. for example, a second decrease in the current at
+v0  2  4.9  9.8 v results when electrons have inelastic collisions with hg atoms
+about halfway between the cathode and grid (see figure 4-22a). they are reacceler-
+ated, reaching 4.9 ev again in the vicinity of the grid. a plot of the data of franck and
+hertz is shown in figure 4-23.
+the franck-hertz experiment was an important confirmation of the idea that dis-
+crete optical spectra were due to the existence in atoms of discrete energy levels that
+could be excited by nonoptical methods. it is particularly gratifying to be able to de-
+tect the existence of discrete energy levels directly by measurements using only volt-
+meters and ammeters.
+electron energy loss spectroscopy
+the franck-hertz experiment was the precursor of a highly sensitive technique for
+measuring the quantized energy states of atoms in both gases and solids. the tech-
+nique, called electron energy loss spectroscopy (eels), is particularly useful in
+solids, where it makes possible measurement of the energy of certain types of lattice
+vibrations and other processes. it works like this. suppose that the electrons in an in-
+cident beam all have energy einc. they collide with the atoms of a material, causing
+them to undergo some process (e.g., vibration, lattice rearrangement, electron excita-
+tion) that requires energy el. then, if a beam electron initiates a single such process,
+it will exit the material with energy einc  el —i.e., it has been inelastically scattered.  c
+f  hc
+hf  hc
+ev0
+ 253 nm
+0
+50
+100
+150
+200
+250
+300
+350
+0
+5
+10
+15
+v0, v
+i
+figure 4-23 current versus
+accelerating voltage in the
+franck-hertz experiment.
+the current decreases
+because many electrons lose
+energy due to inelastic
+collisions with mercury
+atoms in the tube and
+therefore cannot overcome
+the small back potential
+indicated in figure 4-21a.
+the regular spacing of the
+peaks in this curve indicates
+that only a certain quantity of
+energy, 4.9 ev, can be lost to
+the mercury atoms. this
+interpretation is confirmed by
+the observation of radiation
+of photon energy 4.9 ev
+emitted by the mercury
+atoms, when v0 is greater
+than this energy. [from 
+j. franck and g. hertz,
+verband deutscher
+physiklischer gesellschaften,
+16, 457 (1914).]","Hmm, the file didn’t give me much to work with. Got another question?"
+"2025-06-13 17:38:55","explain compton effect","file","neutral","Matched","138
+chapter 3
+quantization of charge, light, and energy
+arthur compton. after
+discovering the compton
+effect, he became a world
+traveler seeking an
+explanation for cosmic rays.
+he ultimately showed that
+their intensity varied with
+latitude, indicating an
+interaction with earth’s
+magnetic field, and thus
+proved that they are charged
+particles. [courtesy of
+american institute of physics,
+niels bohr library.]
+each scattering angle corresponds to scattering with no shift in the wavelength due
+to scattering by the inner electrons of carbon. since these are tightly bound to the
+atom, it is the entire atom that recoils rather than the individual electrons. the ex-
+pected shift in this case is given by equation 3-25, with 
+being the mass of the atom,
+which is about 
+times that of the electron; thus, this shift is negligible. the varia-
+tion of 
+with 
+was found to be that predicted by equation 3-25.
+we have seen in this section and the preceding two sections that the interaction
+of electromagnetic radiation with matter is a discrete interaction that occurs at the
+atomic level. it is perhaps curious that after so many years of debate about the nature
+of light, we now find that we must have both a particle (i.e., quantum) theory to de-
+scribe in detail the energy exchange between electromagnetic radiation and matter and
+a wave theory to describe the interference and diffraction of electromagnetic radiation.
+we will discuss this so-called wave-particle duality in more detail in chapter 5.
+more
+derivation of compton’s equation, applying conservation of energy
+and momentum to the relativistic collision of a photon and an electron,
+is included on the home page: www.whfreeman.com/tiplermodern
+physics5e. see also equations 3-26 and 3-27 and figure 3-18 here.
+questions
+5. why is it extremely difficult to observe the compton effect using visible light?
+6. why is the compton effect unimportant in the transmission of television and
+radio waves? how many compton scatterings would a typical fm signal have
+before its wavelengths were shifted by 0.01 percent?
+
+¢
+  
+2  
+1
+104
+m 3-4 x rays and the compton effect
+139
+example 3-8 x rays from tv the acceleration voltage of the electrons in a typi-
+cal television picture tube is 
+what is the minimum wavelength x ray pro-
+duced when these electrons strike the inner front surface of the tube?
+solution
+from equation 3-24, we have
+these x rays penetrate matter very effectively. manufacturers provide essential
+shields to protect against the hazard.
+example 3-9 compton effect in a particular compton scattering experiment it is
+found that the incident wavelength 
+is shifted by 
+when the scattering
+angle 
+(a) what is the value of 
+(b) what will be the wavelength 
+of
+the shifted photon when the scattering angle is 
+solution
+1. for question (a) , the value of 
+is found from equation 3-25:
+2. that the scattered wavelength 
+is shifted by 
+from 
+means that
+3. combining these yields:
+4. question (b) is also solved with the aid of equation 3-25, rearranged as
+5. substituting 
+and 
+from above yields
+a final comment
+in this chapter, together with section 2-4 of the previous chapter, we have introduced
+and discussed at some length the three primary ways by which photons interact with
+matter: (1) the photoelectric effect, (2) the compton effect, and (3) pair production.
+as we proceed with our explorations of modern physics throughout the remainder of
+the book, we will have many occasions to apply what we have learned here to aid in
+our understanding of myriad phenomena, ranging from atomic structure to the fusion
+“furnaces” of stars.
+ 0.245 nm
+ 0.243  0.002
+.
+>
+>
+>
+>
+	
+ s 	  	.
+m  e>c2.
+>
+>
+ek  6mc2.
+u
+2mc2.
+2mc2
+p  p s p  p  p  p.
+p
+m  2m>(1  u2>c2)1>2.
+p  2mu>(1  u2>c2). 115
+t
+he idea that all matter is composed of tiny particles, or atoms, dates to the specu-
+lations of the greek philosopher democritus1 and his teacher leucippus in about
+450 b.c. however, little attempt was made to correlate such speculations with obser-
+vations of the physical world until the seventeenth century. pierre gassendi, in the
+mid-seventeenth century, and robert hooke, somewhat later, attempted to explain
+states of matter and the transitions between them with a model of tiny, indestructible
+solid objects flying in all directions. but it was avogadro’s hypothesis, advanced in
+1811, that all gases at a given temperature contain the same number of molecules per
+unit volume, that led to great success in the interpretation of chemical reactions and
+to development of kinetic theory in about 1900. avogadro’s hypothesis made possible
+quantitative understanding of many bulk properties of matter and led to general
+(though not unanimous) acceptance of the molecular theory of matter. thus, matter is
+not continuous, as it appears, but is quantized (i.e., discrete) on the microscopic scale.
+scientists of the day understood that the small size of the atom prevented the dis-
+creteness of matter from being readily observable.
+in this chapter, we will study how three additional great quantization discoveries
+were made: (1) electric charge, (2) light energy, and (3) energy of oscillating me-
+chanical systems. the quantization of electric charge was not particularly surprising
+to scientists in 1900; it was quite analogous to the quantization of mass. however, the
+quantization of light energy and mechanical energy, which are of central importance
+in modern physics, were revolutionary ideas.
+3-1 quantization of electric charge
+early measurements of
+and 
+the first estimates of the order of magnitude of the electric charges found in atoms were
+obtained from faraday’s law. the work of michael faraday (1791–1867) in the early to
+mid-1800s stands out even today for its vision, experimental ingenuity, and thorough-
+ness. the story of this self-educated blacksmith’s son who rose from errand boy and
+e>m
+e
+3-1 quantization
+of electric 
+charge
+115
+3-2 blackbody
+radiation
+119
+3-3 the 
+photoelectric 
+effect
+127
+3-4 x rays and  
+the compton 
+effect
+133
+quantization of charge,
+light, and energy
+chapter3
+3-4 x rays and the compton effect
+137
+φ
+x-ray tube
+(mo target)
+r
+s1
+defining
+slit
+s2
+calcite
+crystal
+bragg
+spectrometer
+ionization
+chamber
+shutter
+figure 3-16 schematic sketch of compton’s apparatus. x rays from the tube strike the 
+carbon block 
+and are scattered into a bragg-type crystal spectrometer. in this diagram,
+the scattering angle is 
+the beam was defined by slits 
+and 
+although the entire
+spectrum is being scattered by 
+the spectrometer scanned the region around the 
+line of
+molybdenum.
+k
+r,
+s2.
+s1
+30°.
+r
+compton effect
+it had been observed that scattered x rays were “softer” than those in the incident
+beam, that is, were absorbed more readily. compton16 pointed out that if the scatter-
+ing process were considered a “collision” between a photon of energy 
+(and mo-
+mentum 
+) and an electron, the recoiling electron would absorb part of the inci-
+dent photon’s energy. the energy 
+of the scattered photon would therefore be less
+than the incident one and thus of lower frequency 
+and momentum 
+(the fact
+that electromagnetic radiation of energy 
+carried momentum 
+was known from
+classical theory and from the experiments of nichols and hull in 1903. this relation
+is also consistent with the relativistic expression 
+for a particle
+with zero rest energy.) compton applied the laws of conservation of momentum and
+energy in their relativistic form (see chapter 2) to the collision of a photon with an
+isolated electron to obtain the change in the wavelength 
+of the photon as a
+function of the scattering angle 
+the result, called compton’s equation and derived
+in a more section on the home page, is
+3-25
+the change in wavelength is thus predicted to be independent of the original wave-
+length. the quantity 
+has the dimensions of length and is called the compton
+wavelength of the electron. its value is
+because 
+is small, it is difficult to observe unless 
+is very small so that the
+fractional change 
+is appreciable. for this reason the compton effect is
+generally only observed for x rays and gamma radiation.
+compton verified his result experimentally using the characteristic x-ray line of
+wavelength 0.0711 nm from molybdenum for the incident monochromatic photons
+and scattering these photons from electrons in graphite. the wavelength of the scat-
+tered photons was measured using a bragg crystal spectrometer. his experimental
+arrangement is shown in figure 3-16; figure 3-17 shows his results. the first peak at
+(
+2  
+1)>
+1 1 2  
+1 c  h
+mc  hc
+mc2  1.24  103 ev # nm
+5.11  105 ev
+ 0.00243 nm
+h>mc 2  
+1  h
+mc (1  cos)
+.
+140
+chapter 3
+quantization of charge, light, and energy
+summary
+topic
+relevant equations and remarks
+1. j. j. thomson’s experiment
+thomson’s measurements with cathode rays showed that the same particle (the
+electron), with 
+about 2000 times that of ionized hydrogen, exists in all elements.
+2. quantization of electric charge
+3. blackbody radiation
+stefan-boltzmann law
+3-4
+wein’s displacement law
+3-5
+planck’s radiation law
+3-18
+planck’s constant
+3-19
+4. photoelectric effect
+3-21
+5. compton effect
+3-25
+6. photon-matter interaction
+the (1) photoelectric effect, (2) compton effect, and (3) pair production are the
+three ways of interaction. 2  
+1  h
+mc (1  cos)
+ev0  hf  
+h  6.626  1034 j # s
+u(
+)  8hc
+5
+ehc>
+kt  1
+2  
+1
+e2  p2c2  (mc2)2
+e>c
+e
+hf2>c.
+f2
+hf2
+hf1>c
+hf1
+(a)
+(c)
+scattered
+at 90°
+(b)
+(d )
+135°
+molybdenum
+kα line
+primary
+scattered by
+graphite at
+45°
+6°30´
+7°30´
+7°
+angle from calcite
+figure 3-17 intensity versus
+wavelength for compton
+scattering at several angles.
+the left peak in each case
+results from photons of the
+original wavelength that are
+scattered by tightly bound
+electrons, which have an
+effective mass equal to that of
+the atom. the separation in
+wavelength of the peaks is
+given by equation 3-25. the
+horizontal scale used by the
+compton “angle from calcite”
+refers to the calcite analyzing
+crystal in figure 3-16. 138
+chapter 3
+quantization of charge, light, and energy
+arthur compton. after
+discovering the compton
+effect, he became a world
+traveler seeking an
+explanation for cosmic rays.
+he ultimately showed that
+their intensity varied with
+latitude, indicating an
+interaction with earth’s
+magnetic field, and thus
+proved that they are charged
+particles. [courtesy of
+american institute of physics,
+niels bohr library.]
+each scattering angle corresponds to scattering with no shift in the wavelength due
+to scattering by the inner electrons of carbon. since these are tightly bound to the
+atom, it is the entire atom that recoils rather than the individual electrons. the ex-
+pected shift in this case is given by equation 3-25, with 
+being the mass of the atom,
+which is about 
+times that of the electron; thus, this shift is negligible. the varia-
+tion of 
+with 
+was found to be that predicted by equation 3-25.
+we have seen in this section and the preceding two sections that the interaction
+of electromagnetic radiation with matter is a discrete interaction that occurs at the
+atomic level. it is perhaps curious that after so many years of debate about the nature
+of light, we now find that we must have both a particle (i.e., quantum) theory to de-
+scribe in detail the energy exchange between electromagnetic radiation and matter and
+a wave theory to describe the interference and diffraction of electromagnetic radiation.
+we will discuss this so-called wave-particle duality in more detail in chapter 5.
+more
+derivation of compton’s equation, applying conservation of energy
+and momentum to the relativistic collision of a photon and an electron,
+is included on the home page: www.whfreeman.com/tiplermodern
+physics5e. see also equations 3-26 and 3-27 and figure 3-18 here.
+questions
+5. why is it extremely difficult to observe the compton effect using visible light?
+6. why is the compton effect unimportant in the transmission of television and
+radio waves? how many compton scatterings would a typical fm signal have
+before its wavelengths were shifted by 0.01 percent?
+
+¢
+  
+2  
+1
+104
+m","Hmm, the file didn’t give me much to work with. Got another question?"
+"2025-06-13 17:43:09","What is the Compton effect?","general","neutral","Matched","N/A","Hey, great question! The Compton effect is when X-rays or gamma rays scatter off electrons, losing energy and increasing wavelength. It supports quantum theory by showing light as photons. The wavelength shift is Δλ = (h/mₑc)(1 - cosθ). 😊 Want more details or something else?"
+"2025-06-13 17:43:38","What are Einstein's two postulates of special relativity?","general","neutral","Matched","N/A","Hey, great question! What are Einstein's two postulates of special relativity? 😊 Want more details or something else?"
+"2025-06-13 17:44:28","state darwin's theory","general","neutral","Matched","N/A","Hey, great question! state darwin's theory of the future. 😊 Want more details or something else?"
+"2025-06-14 11:13:16","What is the Compton effect?","general","positive","Matched","N/A","Hey, great question! The Compton effect is when X-rays or gamma rays scatter off electrons, losing energy and increasing wavelength. It supports quantum theory by showing light as photons. The wavelength shift is Δλ = (h/mₑc)(1 - cosθ). 😊 Want more details or something else?"
+"2025-06-14 11:13:35","What are Einstein's two postulates of special relativity?","general","positive","Matched","N/A","Hey, great question! What are Einstein's two postulates of special relativity? 😊 Want more details or something else?"
+"2025-06-14 11:13:59","want more details","general","positive","Matched","N/A","Hey, great question! want more details on the future, but I'm sure you'll find some of the details about this one interesting. 😊 Want more details or something else?"
+"2025-06-14 11:14:22","how are you?","general","positive","Matched","N/A","Hey, great question! Hmm, that’s a tough one! Can you rephrase or give me more details? 😊 Want more details or something else?"
+"2025-06-14 11:45:59","What is the Compton effect?","general","positive","Matched","N/A","Hey, great question! The Compton effect is when X-rays or gamma rays scatter off electrons, losing energy and increasing wavelength. It supports quantum theory by showing light as photons. The wavelength shift is Δλ = (h/mₑc)(1 - cosθ). 😊 Want more details or something else?"
+"2025-06-14 11:46:16","What are Einstein's two postulates of special relativity?","general","positive","Matched","N/A","Hey, great question! What are Einstein's two postulates of special relativity? 😊 Want more details or something else?"
+"2025-06-14 12:56:40","What is the threshold frequency","general","negative","Matched","N/A","Hey, great question! The threshold frequency is the minimum light frequency needed to eject electrons from a metal in the photoelectric effect. It’s tied to the work function (φ), where f₀ = φ/h. 😊 Want more details or something else?"
+"2025-06-14 12:57:06","What are Einstein's two postulates of special relativity?","general","negative","Matched","N/A","Hey, great question! What are Einstein's two postulates of special relativity? And how did Einstein come to think of these two postulates? 😊 Want more details or something else?"
+"2025-06-14 12:57:48","what is the compton effect?","general","negative","Matched","N/A","Hey, great question! The Compton effect is when X-rays or gamma rays scatter off electrons, losing energy and increasing wavelength. It supports quantum theory by showing light as photons. The wavelength shift is Δλ = (h/mₑc)(1 - cosθ). 😊 Want more details or something else?"
+"2025-06-14 12:58:23","what is the date today","general","negative","Matched","N/A","Hey, great question! what is the date today?" 😊 Want more details or something else?"
+"2025-06-14 13:02:34","explain einsteins postulated","general","negative","Matched","N/A","Hey, great question! explain einsteins postulated by Marx, Engels, and Engels in their work, "Critique of Inequality" (1937): 😊 Want more details or something else?"
+"2025-06-14 16:03:05","What is the Compton effect?","general","positive","Matched","N/A","Hey, great question! What is the Compton effect? 😊 Want more details or something else?"
+"2025-06-14 16:24:14","What is the Compton effect?","general","positive","Matched","N/A","Hey, great question! What is the Compton effect? 😊 Want more details or something else?"
+"2025-06-14 16:24:49","what is the Compton effect?","general","positive","Matched","N/A","Hey, great question! what is the Compton effect? Why is the Compton effect so pronounced in people who are black? I think the Compton effect is the consequence of discrimi 😊 Want more details or something else?"
+"2025-06-14 16:25:15","what is the Compton effect?","general","positive","Matched","N/A","Hey, great question! what is the Compton effect? Should we be concerned about it?" 😊 Want more details or something else?"
+"2025-06-14 16:29:32","how are you?","file","neutral","Matched","Problems
+61
+same direction. (a) When Hans catches up to Heide, what will be the difference in their ages?
+(b) Which twin will be older?
+1-35. You point a laser flashlight at the Moon, producing a spot of light on the Moon’s surface.
+At what minimum angular speed must you sweep the laser beam in order for the light spot to
+streak across the Moon’s surface with speed v  c? Why can’t you transmit information
+between research bases on the Moon with the flying spot?
+1-36. A clock is placed in a satellite that orbits Earth with a period of 108 min. (a) By what
+time interval will this clock differ from an identical clock on Earth after 1 y? (b) How much
+time will have passed on Earth when the two clocks differ by 1.0 s? (Assume special relativity
+applies and neglect general relativity.)
+1-37. Einstein used trains for a number of relativity thought experiments since they were the
+fastest objects commonly recognized in those days. Let’s consider a train moving at 0.65c along
+a straight track at night. Its headlight produces a beam with an angular spread of 60° according
+to the engineer. If you are standing alongside the track (rails are 1.5 m apart), how far from you
+is the train when you see its approaching headlight suddenly disappear?
+Level II
+1-38. In 1971 four portable atomic clocks were flown around the world in jet aircraft, two east-
+bound and two westbound, to test the time dilation predictions of relativity.26 (a) If the west-
+bound plane flew at an average speed of 1500 km h relative to the surface, how long would it
+have had to fly for the clock on board to lose 1 second relative to the reference clock on the
+ground at the U.S. Naval Observatory? (b) In the actual experiment the planes circumflew Earth
+once and the observed discrepancy of the clocks was 273 ns. What was the average speed of
+each plane?
+1-39. “Ether drag” was among the suggestions made to explain the null result of the
+Michelson-Morley experiment (see More section). The phenomenon of stellar aberration re-
+futes this proposal. Suppose Earth moves relative to the ether at velocity v and a light beam
+(e.g., from a star) approaches Earth at an angle 
+with respect to v. (a) Show that the angle of
+approach in Earth’s reference frame 
+is given by
+(b)
+is the stellar aberration angle. If 
+by how much does 
+differ from 90°?
+1-40. A friend of yours who is the same age as you travels to the star Alpha Centauri, which is
+4 
+away, and returns immediately. He claims that the entire trip took just 6 years. (a) How
+fast did he travel? (b) How old are you when he returns? (c) Draw a spacetime diagram that ver-
+ifies your answers to (a) and (b).
+1-41. A clock is placed in a satellite that orbits Earth with a period of 90 min. By what time
+interval will this clock differ from an identical clock on Earth after 1 year? (Assume that spe-
+cial relativity applies.)
+1-42. In frame S, event B occurs 2 
+after event A and at x  1.5 km from event A. (a) How
+fast must an observer be moving along the x axis so that events A and B occur simultaneously?
+(b) Is it possible for event B to precede event A for some observer? (c) Draw a spacetime dia-
+gram that illustrates your answers to (a) and (b). (d) Compute the spacetime interval and proper
+distance between the events.
+1-43. A burst of 
+mesons travels down an evacuated beam tube at Fermilab moving at
+with respect to the laboratory. (a) Compute 
+for this group of pions. (b) The proper
+mean lifetime of pions is 2.6  108 s. What mean lifetime is measured in the lab? (c) If the
+burst contained 50,000 pions, how many remain after the group has traveled 50 m down the
+beam tube? (d) What would be the answer to (c) ignoring time dilation?
+1-44. H. A. Lorentz suggested 15 years before Einstein’s 1905 paper that the null effect of the
+Michelson-Morley experiment could be accounted for by a contraction of that arm of the inter-
+ferometer lying parallel to Earth’s motion through the ether to a length 
+He thought of this, incorrectly, as an actual shrinking of matter. By about how many atomic di-
+ameters would the material in the parallel arm of the interferometer have had to shrink in order
+L  Lp(1  v2>c2)1>2.
+
+  0.92
+
+	s
+c # y
+
+  90°,
+
+tan 
+sin
+cos  v>c
+
+
+> 62
+Chapter 1
+Relativity I
+to account for the absence of the expected shift of 0.4 of a fringe width? (Assume the diameter
+of atoms to be about 
+m.)
+1-45. Observers in reference frame S see an explosion located at x1  480 m. A second explo-
+sion occurs 5 
+later at x2  1200 m. In reference frame S, which is moving along the x axis
+at speed v, the explosions occur at the same point in space. (a) Draw a spacetime diagram de-
+scribing this situation. (b) Determine v from the diagram. (c) Calibrate the ct axis and deter-
+mine the separation in time in 
+between the two explosions as measured in S. (d) Verify your
+results by calculation.
+1-46. Two spaceships, each 100 m long when measured at rest, travel toward each other with
+speeds of 0.85c relative to Earth. (a) How long is each ship as measured by someone on Earth?
+(b) How fast is each ship traveling as measured by an observer on the other? (c) How long is
+one ship when measured by an observer on the other? (d) At time t  0 on Earth, the fronts of
+the ships are together as they just begin to pass each other. At what time on Earth are their ends
+together? (e) Sketch accurately scaled diagrams in the frame of one of the ships showing the
+passing of the other ship.
+1-47. If v is much less than c, the Doppler frequency shift is approximately given by
+both classically and relativistically. A radar transmitter-receiver bounces a signal
+off an aircraft and observes a fractional increase in the frequency of 
+What
+is the speed of the aircraft? (Assume the aircraft to be moving directly toward the transmitter.)
+1-48. The null result of the Michelson-Morley experiment could be explained if the speed of
+light depended on the motion of the source relative to the observer. Consider a binary eclipsing
+star system, that is, a pair of stars orbiting their common center of mass with Earth lying in the
+orbital plane of the system, as is very nearly the case for the binary system Algol (see More sec-
+tion about the Michelson-Morley experiment). Assume that the stars in the system have circu-
+lar orbits with a period of 115 days and that one of the stars’ orbital speed is 32 km s (about the
+same as Earth’s orbital speed around the Sun). If the suggestion above were true, astronomers
+would simultaneously see two images of the star in opposition, i.e., on opposite sides of its
+orbit. What is the minimum distance L from Earth to the binary for this phenomenon to occur?
+1-49. Frames S and S are moving relative to each other along the x and x axes. They set their
+clocks to t  t  0 when their origins coincide. In frame S, event 1 occurs at x1  1 c y and
+t1  1 y and event 2 occurs at x2  2.0 c y and t2  0.5 y. These events occur simultaneously
+in frame S. (a) Find the magnitude and direction of the velocity of S relative to S. (b) At what
+time do both of these events occur as measured in S? (c) Compute the spacetime interval s
+between the events. (d) Is the interval spacelike, timelike, or lightlike? (e) What is the proper
+distance Lp between the events?
+1-50. Do Problem 1-49 parts (a) and (b) using a spacetime diagram.
+1-51. An observer in frame S standing at the origin observes two flashes of colored light sep-
+arated spatially by x  2400 m. A blue flash occurs first, followed by a red flash 5 
+later.
+An observer in S moving along the x axis at speed v relative to S also observes the flashes 5 
+apart and with a separation of 2400 m, but the red flash is observed first. Find the magnitude
+and direction of v.
+1-52. A cosmic-ray proton streaks through the lab with velocity 0.85c at an angle of 50° with
+the x direction (in the xy plane of the lab). Compute the magnitude and direction of the pro-
+ton’s velocity when viewed from frame S moving with 
+Level III
+1-53. A meter stick is parallel to the x axis in S and is moving in the y direction at constant
+speed vy. From the viewpoint of S show that the meter stick will appear tilted at an angle 
+with respect to the x axis of S moving in the x direction at 
+Compute the angle
+measured in S.
+1-54. The equation for the spherical wave front of a light pulse that begins at the origin at time
+t  0 is 
+Using the Lorentz transformation, show that such a light
+pulse also has a spherical wave front in S by showing that 
+in S.
+1-55. An interesting paradox has been suggested by R. Shaw27 that goes like this. A very thin
+steel plate with a circular hole 1 m in diameter centered on the y axis lies parallel to the xz plane
+xœ2  yœ2  zœ2  (ct)2  0
+x2  y2  z2  (ct)2  0.
+
+  0.65.
+
+  0.72.
+	s
+	s
+#
+#
+>
+¢f>f0  8  107.
+¢f>f0  ,
+	s
+	s
+1010
+ 460  525  590  650
+  0.65
+  0.8,
+
+>
+2.5  103 c # y, Problems
+61
+same direction. (a) When Hans catches up to Heide, what will be the difference in their ages?
+(b) Which twin will be older?
+1-35. You point a laser flashlight at the Moon, producing a spot of light on the Moon’s surface.
+At what minimum angular speed must you sweep the laser beam in order for the light spot to
+streak across the Moon’s surface with speed v  c? Why can’t you transmit information
+between research bases on the Moon with the flying spot?
+1-36. A clock is placed in a satellite that orbits Earth with a period of 108 min. (a) By what
+time interval will this clock differ from an identical clock on Earth after 1 y? (b) How much
+time will have passed on Earth when the two clocks differ by 1.0 s? (Assume special relativity
+applies and neglect general relativity.)
+1-37. Einstein used trains for a number of relativity thought experiments since they were the
+fastest objects commonly recognized in those days. Let’s consider a train moving at 0.65c along
+a straight track at night. Its headlight produces a beam with an angular spread of 60° according
+to the engineer. If you are standing alongside the track (rails are 1.5 m apart), how far from you
+is the train when you see its approaching headlight suddenly disappear?
+Level II
+1-38. In 1971 four portable atomic clocks were flown around the world in jet aircraft, two east-
+bound and two westbound, to test the time dilation predictions of relativity.26 (a) If the west-
+bound plane flew at an average speed of 1500 km h relative to the surface, how long would it
+have had to fly for the clock on board to lose 1 second relative to the reference clock on the
+ground at the U.S. Naval Observatory? (b) In the actual experiment the planes circumflew Earth
+once and the observed discrepancy of the clocks was 273 ns. What was the average speed of
+each plane?
+1-39. “Ether drag” was among the suggestions made to explain the null result of the
+Michelson-Morley experiment (see More section). The phenomenon of stellar aberration re-
+futes this proposal. Suppose Earth moves relative to the ether at velocity v and a light beam
+(e.g., from a star) approaches Earth at an angle 
+with respect to v. (a) Show that the angle of
+approach in Earth’s reference frame 
+is given by
+(b)
+is the stellar aberration angle. If 
+by how much does 
+differ from 90°?
+1-40. A friend of yours who is the same age as you travels to the star Alpha Centauri, which is
+4 
+away, and returns immediately. He claims that the entire trip took just 6 years. (a) How
+fast did he travel? (b) How old are you when he returns? (c) Draw a spacetime diagram that ver-
+ifies your answers to (a) and (b).
+1-41. A clock is placed in a satellite that orbits Earth with a period of 90 min. By what time
+interval will this clock differ from an identical clock on Earth after 1 year? (Assume that spe-
+cial relativity applies.)
+1-42. In frame S, event B occurs 2 
+after event A and at x  1.5 km from event A. (a) How
+fast must an observer be moving along the x axis so that events A and B occur simultaneously?
+(b) Is it possible for event B to precede event A for some observer? (c) Draw a spacetime dia-
+gram that illustrates your answers to (a) and (b). (d) Compute the spacetime interval and proper
+distance between the events.
+1-43. A burst of 
+mesons travels down an evacuated beam tube at Fermilab moving at
+with respect to the laboratory. (a) Compute 
+for this group of pions. (b) The proper
+mean lifetime of pions is 2.6  108 s. What mean lifetime is measured in the lab? (c) If the
+burst contained 50,000 pions, how many remain after the group has traveled 50 m down the
+beam tube? (d) What would be the answer to (c) ignoring time dilation?
+1-44. H. A. Lorentz suggested 15 years before Einstein’s 1905 paper that the null effect of the
+Michelson-Morley experiment could be accounted for by a contraction of that arm of the inter-
+ferometer lying parallel to Earth’s motion through the ether to a length 
+He thought of this, incorrectly, as an actual shrinking of matter. By about how many atomic di-
+ameters would the material in the parallel arm of the interferometer have had to shrink in order
+L  Lp(1  v2>c2)1>2.
+
+  0.92
+
+	s
+c # y
+
+  90°,
+
+tan 
+sin
+cos  v>c
+
+
+>
+Figure 1-44
+y´
+S´
+25°
+x´
+a´
+b´
+c´
+z´
+60
+Chapter 1
+Relativity I
+1-22. A nova is the sudden, brief brightening of a star (see Chapter 13). Suppose Earth as-
+tronomers see two novas occur simultaneously, one in the constellation Orion (the Hunter) and
+the other in the constellation Lyra (the Lyre). Both nova are the same distance from Earth,
+and are in exactly opposite directions from Earth. Observers on board an air-
+craft flying at 1000 km h on a line from Orion toward Lyra see the same novas, but note that
+they are not simultaneous. (a) For the observers on the aircraft, how much time separates the
+nova? (b) Which one occurs first? (Assume Earth is an inertial reference frame.)
+1-23. A meter stick moves parallel to its length with speed v  0.6c relative to you.
+(a) Compute the length of the stick measured by you. (b) How long does it take for the stick
+to pass you? (c) Draw a spacetime diagram from the viewpoint of your frame with the front
+of the meter stick at x  0 when t  0. Show how the answers to (a) and (b) are obtained from
+the diagram.
+1-24. The proper mean lifetime of 
+mesons (pions) is 2.6  10–8 s. If a beam of such parti-
+cles has speed 0.9c, (a) What would their mean life be as measured in the laboratory? (b) How
+far would they travel (on the average) before they decay? (c) What would your answer be to part
+(b) if you neglected time dilation? (d) What is the interval in spacetime between creation of a
+typical pion and its decay?
+1-25. You have been posted to a remote region of space to monitor traffic. Near the end of a
+quiet shift, a spacecraft streaks past. Your laser-based measuring device reports the spacecraft’s
+length to be 85 m. The identification transponder reports it to be the NCXXB-12, a cargo craft
+of proper length 100 m. In transmitting your report to headquarters, what speed should you give
+for this spacecraft?
+1-26. The light clock in the spaceship in Figure 1-25 uses a light pulse moving up the y-axis to
+reflect back from a mirror as the ship moves along the x-axis. Suppose instead the light pulse
+moves along the x-axis between x  0 and a mirror at x  L. (a) What is the time required
+for the pulse to make a round trip in the rest system of the spaceship? (b) What is the round-trip
+time in the laboratory frame? (c) Does the result in (b) agree with that expected from time di-
+lation? Justify your answer.
+1-27. Two spaceships pass each other traveling in opposite directions. A passenger on ship A,
+which she knows to be 100 m long, notes that ship B is moving with a speed of 0.92c relative
+to A and that the length of B is 36 m. What are the lengths of the two spaceships measured by
+a passenger in B?
+1-28. A meter stick at rest in S is tilted at an angle of 30° to the x axis. If S moves at 
+how long is the meter stick as measured in S and what angle does it make with the x axis?
+1-29. A rectangular box at rest in S has sides a  2 m, b  2 m, and c  4 m and is ori-
+ented as shown in Figure 1-44. S moves with 
+with respect to the laboratory frame S.
+(a) Compute the volume of the box in S and in S. (b) Draw an accurate diagram of the box as
+seen by an observer in S.
+Section 1-5 The Doppler Effect
+1-30. How fast must you be moving toward a red light (
+nm) for it to appear yellow
+(
+nm)? green (
+nm)? blue (
+nm)?
+1-31. A distant galaxy is moving away from us at speed 1.85  107 m s. Calculate the frac-
+tional red shift 
+of the light from this galaxy.
+1-32. The light from a nearby star is observed to be shifted toward the blue by 2 percent, i.e.,
+Is the star approaching or receding from Earth? How fast is it moving? (Assume
+motion is directly toward or away from Earth to avoid superluminal speeds.)
+1-33. Stars typically emit the red light of atomic hydrogen with wavelength 656.3 nm (called
+the 
+spectral line). Compute the wavelength of that light observed at Earth from stars reced-
+ing directly from us with relative speed v  103c, v  102c, and v  101c.
+Section 1-6 TheTwin Paradox and Other Surprises
+1-34. Heide boards a spaceship and travels away from Earth at a constant velocity 0.45c toward
+Betelgeuse (a red giant star in the constellation Orion). One year later on Earth clocks, Heide’s
+twin, Hans, boards a second spaceship and follows her at a constant velocity of 0.95c in the
+H
+fobs  1.02f0.
+(
+  
+0)>
+0
+>  460  525  590  650
+  0.65
+  0.8,
+
+>
+2.5  103 c # y,","Error processing file-based query: a Tensor with 3326 elements cannot be converted to Scalar. Try again?"
+"2025-06-14 16:30:07","What did the Franck-Hertz experiment demonstrate?","general","positive","Matched","N/A","Hey, great question! What did the Franck-Hertz experiment demonstrate? Here it is: the experiment was done in a single room and the temperature was 100 degrees in the lab. 😊 Want more details or something else?"
+"2025-06-16 10:24:32","What is the Compton effect?","file","negative","Matched","138
+Chapter 3
+Quantization of Charge, Light, and Energy
+Arthur Compton. After
+discovering the Compton
+effect, he became a world
+traveler seeking an
+explanation for cosmic rays.
+He ultimately showed that
+their intensity varied with
+latitude, indicating an
+interaction with Earth’s
+magnetic field, and thus
+proved that they are charged
+particles. [Courtesy of
+American Institute of Physics,
+Niels Bohr Library.]
+each scattering angle corresponds to scattering with no shift in the wavelength due
+to scattering by the inner electrons of carbon. Since these are tightly bound to the
+atom, it is the entire atom that recoils rather than the individual electrons. The ex-
+pected shift in this case is given by Equation 3-25, with 
+being the mass of the atom,
+which is about 
+times that of the electron; thus, this shift is negligible. The varia-
+tion of 
+with 
+was found to be that predicted by Equation 3-25.
+We have seen in this section and the preceding two sections that the interaction
+of electromagnetic radiation with matter is a discrete interaction that occurs at the
+atomic level. It is perhaps curious that after so many years of debate about the nature
+of light, we now find that we must have both a particle (i.e., quantum) theory to de-
+scribe in detail the energy exchange between electromagnetic radiation and matter and
+a wave theory to describe the interference and diffraction of electromagnetic radiation.
+We will discuss this so-called wave-particle duality in more detail in Chapter 5.
+More
+Derivation of Compton’s Equation, applying conservation of energy
+and momentum to the relativistic collision of a photon and an electron,
+is included on the home page: www.whfreeman.com/tiplermodern
+physics5e. See also Equations 3-26 and 3-27 and Figure 3-18 here.
+Questions
+5. Why is it extremely difficult to observe the Compton effect using visible light?
+6. Why is the Compton effect unimportant in the transmission of television and
+radio waves? How many Compton scatterings would a typical FM signal have
+before its wavelengths were shifted by 0.01 percent?
+
+¢
+  
+2  
+1
+104
+m 3-4 X Rays and the Compton Effect
+139
+EXAMPLE 3-8 X Rays from TV The acceleration voltage of the electrons in a typi-
+cal television picture tube is 
+What is the minimum wavelength x ray pro-
+duced when these electrons strike the inner front surface of the tube?
+SOLUTION
+From Equation 3-24, we have
+These x rays penetrate matter very effectively. Manufacturers provide essential
+shields to protect against the hazard.
+EXAMPLE 3-9 Compton Effect In a particular Compton scattering experiment it is
+found that the incident wavelength 
+is shifted by 
+when the scattering
+angle 
+(a) What is the value of 
+(b) What will be the wavelength 
+of
+the shifted photon when the scattering angle is 
+SOLUTION
+1. For question (a) , the value of 
+is found from Equation 3-25:
+2. That the scattered wavelength 
+is shifted by 
+from 
+means that
+3. Combining these yields:
+4. Question (b) is also solved with the aid of Equation 3-25, rearranged as
+5. Substituting 
+and 
+from above yields
+A Final Comment
+In this chapter, together with Section 2-4 of the previous chapter, we have introduced
+and discussed at some length the three primary ways by which photons interact with
+matter: (1) the photoelectric effect, (2) the Compton effect, and (3) pair production.
+As we proceed with our explorations of modern physics throughout the remainder of
+the book, we will have many occasions to apply what we have learned here to aid in
+our understanding of myriad phenomena, ranging from atomic structure to the fusion
+“furnaces” of stars.
+ 0.245 nm
+ 0.243  0.002
+140
+Chapter 3
+Quantization of Charge, Light, and Energy
+Summary
+TOPIC
+RELEVANT EQUATIONS AND REMARKS
+1. J. J. Thomson’s experiment
+Thomson’s measurements with cathode rays showed that the same particle (the
+electron), with 
+about 2000 times that of ionized hydrogen, exists in all elements.
+2. Quantization of electric charge
+3. Blackbody radiation
+Stefan-Boltzmann law
+3-4
+Wein’s displacement law
+3-5
+Planck’s radiation law
+3-18
+Planck’s constant
+3-19
+4. Photoelectric effect
+3-21
+5. Compton effect
+3-25
+6. Photon-matter interaction
+The (1) photoelectric effect, (2) Compton effect, and (3) pair production are the
+three ways of interaction. 2  
+1  h
+mc (1  cos)
+eV0  hf  
+h  6.626  1034 J # s
+u(
+)  8hc
+5
+ehc>
+kT  1
+2  
+1
+E2  p2c2  (mc2)2
+E>c
+E
+hf2>c.
+f2
+hf2
+hf1>c
+hf1
+(a)
+(c)
+Scattered
+at 90°
+(b)
+(d )
+135°
+Molybdenum
+Kα line
+primary
+Scattered by
+graphite at
+45°
+6°30´
+7°30´
+7°
+Angle from calcite
+Figure 3-17 Intensity versus
+wavelength for Compton
+scattering at several angles.
+The left peak in each case
+results from photons of the
+original wavelength that are
+scattered by tightly bound
+electrons, which have an
+effective mass equal to that of
+the atom. The separation in
+wavelength of the peaks is
+given by Equation 3-25. The
+horizontal scale used by the
+Compton “angle from calcite”
+refers to the calcite analyzing
+crystal in Figure 3-16. 138
+Chapter 3
+Quantization of Charge, Light, and Energy
+Arthur Compton. After
+discovering the Compton
+effect, he became a world
+traveler seeking an
+explanation for cosmic rays.
+He ultimately showed that
+their intensity varied with
+latitude, indicating an
+interaction with Earth’s
+magnetic field, and thus
+proved that they are charged
+particles. [Courtesy of
+American Institute of Physics,
+Niels Bohr Library.]
+each scattering angle corresponds to scattering with no shift in the wavelength due
+to scattering by the inner electrons of carbon. Since these are tightly bound to the
+atom, it is the entire atom that recoils rather than the individual electrons. The ex-
+pected shift in this case is given by Equation 3-25, with 
+being the mass of the atom,
+which is about 
+times that of the electron; thus, this shift is negligible. The varia-
+tion of 
+with 
+was found to be that predicted by Equation 3-25.
+We have seen in this section and the preceding two sections that the interaction
+of electromagnetic radiation with matter is a discrete interaction that occurs at the
+atomic level. It is perhaps curious that after so many years of debate about the nature
+of light, we now find that we must have both a particle (i.e., quantum) theory to de-
+scribe in detail the energy exchange between electromagnetic radiation and matter and
+a wave theory to describe the interference and diffraction of electromagnetic radiation.
+We will discuss this so-called wave-particle duality in more detail in Chapter 5.
+More
+Derivation of Compton’s Equation, applying conservation of energy
+and momentum to the relativistic collision of a photon and an electron,
+is included on the home page: www.whfreeman.com/tiplermodern
+physics5e. See also Equations 3-26 and 3-27 and Figure 3-18 here.
+Questions
+5. Why is it extremely difficult to observe the Compton effect using visible light?
+6. Why is the Compton effect unimportant in the transmission of television and
+radio waves? How many Compton scatterings would a typical FM signal have
+before its wavelengths were shifted by 0.01 percent?
+
+¢
+  
+2  
+1
+104
+m","Error processing file-based query: a Tensor with 1181 elements cannot be converted to Scalar. Try again?"
+"2025-06-16 10:34:04","What are Einstein's two postulates of special relativity?","file","negative","Matched","The 
+indicates material that appears only on the Web site: www.whfreeman.com/tiplermodernphysics5e.
+The 
+indicates material of high interest to students.
+PART 1 Relativity and Quantum Mechanics: 
+The Foundations of Modern Physics
+1
+CHAPTER 1
+Relativity I
+3
+1-1
+The Experimental Basis of Relativity
+4
+Michelson-Morley Experiment
+11
+1-2
+Einstein’s Postulates
+11
+1-3
+The LorentzTransformation
+17
+Calibrating theSpacetime Axes
+28
+1-4
+Time Dilation and Length Contraction
+29
+1-5
+The Doppler Effect
+41
+Transverse Doppler Effect
+44
+1-6
+TheTwin Paradox and OtherSurprises
+45
+The Case of the Identically Accelerated Twins
+48
+Superluminal Speeds
+52
+CHAPTER 2
+Relativity II
+65
+2-1
+Relativistic Momentum
+66
+2-2
+Relativistic Energy
+70
+From Mechanics, AnotherSurprise
+80
+2-3
+Mass/Energy Conversion and Binding Energy
+81
+2-4
+Invariant Mass
+84
+Contents iv
+Contents
+2-5
+General Relativity
+97
+Deflection of Light in a Gravitational Field
+100
+Gravitational Redshift
+103
+Perihelion of Mercury’s Orbit
+105
+Delay of Light in a Gravitational Field
+105
+CHAPTER 3
+Quantization of Charge, Light, and Energy
+115
+3-1
+Quantization of Electric Charge
+115
+3-2
+Blackbody Radiation
+119
+3-3
+The Photoelectric Effect
+127
+3-4
+X Rays and the Compton Effect
+133
+Derivation of Compton’s Equation
+138
+CHAPTER 4
+The Nuclear Atom
+147
+4-1
+Atomic Spectra
+148
+4-2
+Rutherford’s Nuclear Model
+150
+Rutherford’s Prediction and Geiger and Marsden’s Results
+156
+4-3
+The Bohr Model of the Hydrogen Atom
+159
+Giant Atoms
+168
+4-4
+X-RaySpectra
+169
+4-5
+The Franck-Hertz Experiment
+174
+A Critique of BohrTheory and the“Old Quantum Mechanics”
+176
+CHAPTER 5
+The Wavelike Properties of Particles
+185
+5-1
+The de Broglie Hypothesis
+185
+5-2
+Measurements of ParticleWavelengths
+187
+5-3
+Wave Packets
+196
+5-4
+The Probabilistic Interpretation of theWave Function
+202
+5-5
+The Uncertainty Principle
+205
+The Gamma-Ray Microscope
+206
+5-6
+Some Consequences of the Uncertainty Principle
+208
+when forces were unified and the constituents were closely packed. These and other
+fascinating matters are investigated more specifically in the areas of astrophysics and
+cosmology (Chapter 13) and particle physics (Chapter 12), fields of research linked
+by general relativity, perhaps the grandest of Einstein’s great scientific achievements.
+Question
+8. Speculate on what the two errors made by Laplace in deriving Equation 2-53
+might have been.
+108
+Chapter 2
+Relativity II
+Summary
+TOPIC
+RELEVANT EQUATIONS AND REMARKS
+1. Relativistic momentum
+2-7
+The relativistic momentum is conserved and approaches mu for
+in Equation 2-7, where u  particle speed in S.
+2. Relativistic energy
+2-10
+Total energy
+The relativistic total energy is conserved.
+Kinetic energy
+2-9
+is the rest energy. 
+in Equations 2-9 and 2-10.
+3. Lorentz transformation for E and p.
+2-16
+where v  relative speed of the systems and 
+4. Mass/energy conversion
+Whenever additional energy E in any form is stored in an object, the rest mass
+of the object is increased by m  E c2.
+5. Invariant mass
+2-32
+The energy and momentum of any system combine to form an invariant 
+four-vector whose magnitude is the rest energy of the ma˜ss m.
+(mc2)  E2  (pc)2
+>
+  (1  v2>c2)1>2
+E  (E  vpx) 
+pœ
+z  pz
+pœ
+x  (px  vE>c2) pœ
+y  py
+  (1  u2>c2)1>2
+mc2
+Ek  mc2  mc2
+E  mc2
+  (1  u2>c2)1>2
+v V c.
+p  mu
+Aerial view of the LIGO
+gravitational wave
+interferometer near
+Hanford, Washington.
+Each of the two arms is 
+4 km long. [CalTech/LIGO.] TOPIC
+RELEVANT EQUATIONS AND REMARKS
+Notes
+109
+General References
+The following general references are written at a level appro-
+priate for readers of this book.
+Bohm, D., The Special Theory of Relativity, W. A. Benjamin,
+New York, 1965.
+French, A. P., Albert Einstein: A Centenary Volume. Harvard
+University Press, Cambridge, Mass., 1979. An excellent
+collection of contributions from many people about
+Einstein’s life and work.
+Lorentz, H. A., A. Einstein, H. Minkowski, and W. Weyl, The
+Principle of Relativity: A Collection of Original
+Memoirs on the Special and General Theory of Relativity
+(trans. W. Perrett and J. B. Jeffery), Dover, New York,
+1923. Two of Einstein’s papers reprinted here are of in-
+terest in connection with this chapter: “On the
+Electrodynamics of Moving Bodies” [Annalen der
+Physik, 17 (1905)], and “Does the Inertia of a Body
+Depend upon Its Energy Content?” [Annalen der Physik,
+17 (1905)].
+Ohanian, H. C., Special Relativity: A Modern Introduction,
+Physics Curriculum & Instruction, 2001.
+Pais, A., Subtle Is the Lord . . . , Oxford University Press,
+Oxford, 1982.
+Resnick, R., Introduction to Relativity, Wiley, New York,
+1968.
+Resnick, R., and D. Halliday, Basic Concepts in Relativity and
+Early Quantum Theory, 2d ed., Macmillan, New York,
+1992.
+Rosser, W. G. V., The Theory of Relativity, Butterworth,
+London, 1964.
+Taylor, E. F., and J. A. Wheeler, Spacetime Physics, 2d ed.,
+W. H. Freeman and Co., 1992. A good book with many
+examples, problems, and diagrams.
+6. Force in relativity
+The force F  ma is not invariant in relativity. Relativistic force is defined as
+2-8
+7. General relativity
+Principle of equivalence
+A homogeneous gravitational field is completely equivalent to a uniformly
+accelerated reference frame.
+F  dp
+dt  d(mu)
+dt
+Notes
+1. This Gedankenexperiment (thought experiment) is based
+on one first suggested by G. N. Lewis and R. C. Tolman,
+Philosophical Magazine, 18, 510, (1909).
+2. You can see that this is so by rotating Figure 2-1a through
+180° in its own plane; it then matches Figure 2-1b exactly.
+3. C. G. Adler, American Journal of Physics, 55, 739 (1987).
+4. This idea grew out of the results of the measurements of
+masses in chemical reactions in the nineteenth century, which,
+within the limits of experimental uncertainties of the time,
+were always observed to conserve mass. The conservation of
+energy had a similar origin in the experiments of James Joule
+(1818–1889) as interpreted by Hermann von Helmholtz
+(1821–1894). This is not an unusual way for conservation
+laws to originate; they still do it this way.
+5. The approximation of Equation 2-10 used in this discus-
+sion was, of course, not developed from Newton’s equations.
+The rest energy mc2 has no classical counterpart.
+6. “Facilitates” means that we don’t have to make frequent
+unit conversions or carry along large powers of 10 with nearly
+every factor in many calculations. However, a word of caution
+is in order. Always remember that the eV is not a basic SI unit.
+When making calculations whose results are to be in SI units,
+don’t forget to convert the eV!
+7. A. Einstein, Annalen der Physik, 17, 1905.
+8. Strictly speaking, the time component should be written
+ict, where 
+The i is the origin of the minus sign in
+the spacetime interval, as well as in Equation 2-32 for the
+energy/momentum four-vector and other four-vectors in both
+special and general relativity. Its inclusion was a contribution of
+Hermann Minkowski (1864–1909), a Russian-German mathe-
+matician who developed the geometric interpretation of relativ-
+ity and who was one of Einstein’s professors at Zurich.
+Consideration of the four-dimensional geometry is beyond the
+scope of our discussions, so we will not be concerned with the i.
+i  (1)1>2.
+MODERN PHYSICS
+Fifth Edition
+Paul A. Tipler
+Formerly of Oakland University
+Ralph A. Llewellyn
+University of Central Florida
+W. H. Freeman and Company • New York This page intentionally left blank The 
+indicates material that appears only on the Web site: www.whfreeman.com/tiplermodernphysics5e.
+The 
+indicates material of high interest to students.
+PART 1 Relativity and Quantum Mechanics: 
+The Foundations of Modern Physics
+1
+CHAPTER 1
+Relativity I
+3
+1-1
+The Experimental Basis of Relativity
+4
+Michelson-Morley Experiment
+11
+1-2
+Einstein’s Postulates
+11
+1-3
+The LorentzTransformation
+17
+Calibrating theSpacetime Axes
+28
+1-4
+Time Dilation and Length Contraction
+29
+1-5
+The Doppler Effect
+41
+Transverse Doppler Effect
+44
+1-6
+TheTwin Paradox and OtherSurprises
+45
+The Case of the Identically Accelerated Twins
+48
+Superluminal Speeds
+52
+CHAPTER 2
+Relativity II
+65
+2-1
+Relativistic Momentum
+66
+2-2
+Relativistic Energy
+70
+From Mechanics, AnotherSurprise
+80
+2-3
+Mass/Energy Conversion and Binding Energy
+81
+2-4
+Invariant Mass
+84
+Contents","Error processing file-based query: a Tensor with 1331 elements cannot be converted to Scalar. Try again?"
+"2025-06-16 12:07:15","What are Einstein's two postulates of special relativity?","file","neutral","Matched","ach of the two arms is 
+4 km long. [CalTech/LIGO.] TOPIC
+RELEVANT EQUATIONS AND REMARKS
+Notes
+109
+General References
+The following general references are written at a level appro-
+priate for readers of this book.
+Bohm, D., The Special Theory of Relativity, W. A. Benjamin,
+New York, 1965.
+French, A. P., Albert Einstein: A Centenary Volume. Harvard
+University Press, Cambridge, Mass., 1979. An excellent
+collection of contributions from many people about
+Einstein’s life and work.
+Lorentz, H. A., A. Einstein, H. Minkowski, and W. Weyl, The
+Principle of Relativity: A Collection of Original
+Memoirs on the Special and General Theory of Relativity
+(trans. W. Perrett and J. B. Jeffery), Dover, New York,
+1923. Two of Einstein’s papers reprinted here are of in-
+terest in connection with this chapter: “On the
+Electrodynamics of Moving Bodies” [Annalen der
+Physik, 17 (1905)], and “Does the Inertia of a Body
+Depend upon Its Energy Content?” [Annalen der Physik,
+17 (1905)].
+Ohanian, H. C., Special Relativity: A Modern Introduction,
+Physics Curriculum & Instruction, 2001.
+Pais, A., Subtle Is the Lord . . . , Oxford University Press,
+Oxford, 1982.
+Resnick, R., Introduction to Relativity, Wiley, New York,
+1968.
+Resnick, R., and D. Halliday, Basic Concepts in Relativity and
+Early Quantum Theory, 2d ed., Macmillan, New York,
+1992.
+Rosser, W. G. V., The Theory of Relativity, Butterworth,
+London, 1964.
+Taylor, E. F., and J. A. Wheeler, Spacetime Physics, 2d ed.,
+W. H. Freeman and Co., 1992. A good book with many
+examples, problems, and diagrams.
+6. Force in relativity
+The force F  ma is not invariant in relativity. Relativistic force is defined as
+2-8
+7. General relativity
+Principle of equivalence
+A homogeneous gravitational field is completely equivalent to a uniformly
+accelerated reference frame.
+F  dp
+dt  d(mu)
+dt
+Notes
+1. This Gedankenexperiment (thought experiment) is based
+on one first suggested by G. N. Lewis and R. C. Tolman,
+Philosophical Magazine, 18, 510, (1909).
+2. You can see that this is so by rotating Figure 2-1a through
+180° in its own plane; it then matches Figure 2-1b exactly.
+3. C. G. Adler, American Journal of Physics, 55, 739 (1987).
+4. This idea grew out of the results of the measurements of
+masses in chemical reactions in the nineteenth century, which,
+within the limits of experimental uncertainties of the time,
+were always observed to conserve mass. The conservation of
+energy had a similar origin in the experiments of James Joule
+(1818–1889) as interpreted by Hermann von Helmholtz
+(1821–1894). This is not an unusual way for conservation
+laws to originate; they still do it this way.
+5. The approximation of Equation 2-10 used in this discus-
+sion was, of course, not developed from Newton’s equations.
+The rest energy mc2 has no classical counterpart.
+6. “Facilitates” means that we don’t have to make frequent
+unit conversions or carry along large powers of 10 with nearly
+every factor in many calculations. However, a word of caution
+is in order. Always remember that the eV is not a basic SI unit.
+When making calculations whose results are to be in SI units,
+don’t forget to convert the eV!
+7. A. Einstein, Annalen der Physik, 17, 1905.
+8. Strictly speaking, the time component should be written
+ict, where 
+The i is the origin of the minus sign in
+the spacetime interval, as well as in Equation 2-32 for the
+energy/momentum four-vector and other four-vectors in both
+special and general relativity. Its inclusion was a contribution of
+Hermann Minkowski (1864–1909), a Russian-German mathe-
+matician who developed the geometric interpretation of relativ-
+ity and who was one of Einstein’s professors at Zurich.
+Consideration of the four-dimensional geometry is beyond the
+scope of our discussions, so we will not be concerned with the i.
+i  (1)1>2.
+o 
+the future
+Where did 
+the knowledge 
+come from? 56
+Chapter 1
+Relativity I
+2. Einstein’s postulates
+The laws of physics are the same in all inertial reference frames. The speed of light is c,
+independent of the motion of the source.
+3. Relativity of simultaneity
+Events simultaneous in one reference frame are not in general simultaneous in any other
+inertial frame.
+4. Lorentz transformation
+1-18
+with
+5. Time dilation
+Proper time is the time interval between two events that occur at the same space point. If
+that interval is t 
+then the time interval in S is
+t 
+t 
+where
+1-26
+6. Length contraction
+The proper length of a rod is the length Lp measured in the rest system of the rod. In S,
+moving at speed v with respect to the rod, the length measured is
+1-28
+7. Spacetime interval
+All observers in inertial frames measure the same interval s between pairs of events in
+spacetime, where
+1-31
+8. Doppler effect
+Source/
+observer approaching
+Source/
+observer receding
+General References
+f  B
+1  
+1   f0
+f  B
+1  
+1   f0
+(¢s)2  (c¢t)2  (¢x)2
+L  Lp>
+  (1  v2>c2)1>2
+
+
+,
+
+  (1  v2>c2)1>2
+t  (t  vx>c2)
+x  (x  vt)y  y z  z
+The following general references are written at a level appro-
+priate for readers of this book.
+Bohm, D., The Special Theory of Relativity, W. A. Benjamin,
+New York, 1965.
+French, A. P., Special Relativity, Norton, 1968. Includes an
+excellent discussion of the historical basis of relativity.
+Gamow, G., Mr. Tompkins in Paperback, Cambridge
+University Press, Cambridge, 1965. Contains the de-
+lightful Mr. Tompkins stories. In one of these Mr.
+Tompkins visits a dream world where the speed of light
+is only about 10 mi/h and relativistic effects are quite
+noticeable.
+Lorentz, H. A., A. Einstein, H. Minkowski, and W. Weyl, The
+Principle of Relativity: A Collection of Original
+Memoirs on the Special and General Theory of Relativity
+(trans. W. Perrett and J. B. Jeffery), Dover, New York,
+1923. A delightful little book containing Einstein’s orig-
+inal paper [“On the Electrodynamics of Moving Bodies,”
+Annalen der Physik, 17 (1905)] and several other origi-
+nal papers on special relativity.
+Ohanian, H. C., Special Relativity: A Modern Introduction,
+Physics Curriculum & Instruction, 2001.
+Pais, A., Subtle Is the Lord . . . , Oxford University Press,
+Oxford, 1982.
+Resnick, R., and D. Halliday, Basic Concepts in Relativity and
+Early Quantum Theory, 2d ed., Macmillan, 1992.
+Rindler, W., Essential Relativity, Van Nostrand Reinhold,
+New York, 1969.
+Taylor, E. F., and J. A. Wheeler, Spacetime Physics, 2d ed.,
+W. H. Freeman and Co. 1992. This is a good book with
+many examples, problems, and diagrams.
+TOPIC
+RELEVANT EQUATIONS AND REMARKS
+pany • New York This page intentionally left blank The 
+indicates material that appears only on the Web site: www.whfreeman.com/tiplermodernphysics5e.
+The 
+indicates material of high interest to students.
+PART 1 Relativity and Quantum Mechanics: 
+The Foundations of Modern Physics
+1
+CHAPTER 1
+Relativity I
+3
+1-1
+The Experimental Basis of Relativity
+4
+Michelson-Morley Experiment
+11
+1-2
+Einstein’s Postulates
+11
+1-3
+The LorentzTransformation
+17
+Calibrating theSpacetime Axes
+28
+1-4
+Time Dilation and Length Contraction
+29
+1-5
+The Doppler Effect
+41
+Transverse Doppler Effect
+44
+1-6
+TheTwin Paradox and OtherSurprises
+45
+The Case of the Identically Accelerated Twins
+48
+Superluminal Speeds
+52
+CHAPTER 2
+Relativity II
+65
+2-1
+Relativistic Momentum
+66
+2-2
+Relativistic Energy
+70
+From Mechanics, AnotherSurprise
+80
+2-3
+Mass/Energy Conversion and Binding Energy
+81
+2-4
+Invariant Mass
+84
+Contents","Error processing file-based query: a Tensor with 1236 elements cannot be converted to Scalar. Try again?"
+"2025-06-16 12:12:51","What is the highest mark in computer subject?","file","positive","Matched","
+muyB
+21  (u2
+xB  u2
+yB)>c2
+pyB
+pyA
+pyA  pyB, Problems
+111
+2-6.
+At what value of 
+does the measured mass of a particle exceed its rest mass by
+(a) 10%, (b) a factor of 5, and (c) a factor of 20?
+2-7.
+A cosmic ray proton is moving at such a speed that it can travel from the Moon to Earth
+in 1.5 s. (a) At what fraction of the speed of light is the proton moving? (b) What is its kinetic
+energy? (c) What value would be measured for its mass by an observer in Earth’s reference
+frame? (d) What percent error is made in the kinetic energy by using the classical relation? (The
+Earth-Moon distance is 3.8  105 km. Ignore Earth’s rotation.)
+2-8.
+How much work must be done on a proton to increase its speed from (a) 0.15c to
+0.16c? (b) 0.85c to 0.86c? (c) 0.95c to 0.96c? Notice that the change in the speed is the same
+in each case.
+2-9.
+The Relativistic Heavy Ion Collider (RHIC) at Brookhaven is colliding fully ionized gold
+(Au) nuclei accelerated to an energy of 200 GeV per nucleon. Each Au nucleus contains 197
+nucleons. (a) What is the speed of each Au nucleus just before collision? (b) What is the mo-
+mentum of each at that instant? (c) What energy and momentum would be measured for one of
+the Au nuclei by an observer in the rest system of the other Au nucleus?
+2-10. (a) Compute the rest energy of 1 g of dirt. (b) If you could convert this energy entirely
+into electrical energy and sell it for 10 cents per kilowatt-hour, how much money would you
+get? (c) If you could power a 100-W lightbulb with the energy, for how long could you keep the
+bulb lit?
+2-11. An electron with rest energy of 0.511 MeV moves with speed u  0.2c. Find its total en-
+ergy, kinetic energy, and momentum.
+2-12. A proton with rest energy of 938 MeV has a total energy of 1400 MeV. (a) What is its
+speed? (b) What is its momentum?
+2-13. The orbital speed of the Sun relative to the center of the Milky Way is about 250 km s.
+By what fraction do the relativistic and Newtonian values differ for (a) the Sun’s momentum
+and (b) the Sun’s kinetic energy?
+2-14. An electron in a hydrogen atom has a speed about the proton of 
+m s. (a) By
+what percent do the relativistic and Newtonian values of 
+differ? (b) By what percent do the
+momentum values differ?
+2-15. Suppose that you seal an ordinary 60-W lightbulb and a suitable battery inside a trans-
+parent enclosure and suspend the system from a very sensitive balance. (a) Compute the
+change in the mass of the system if the lamp is on continuously for one year at full power.
+(b) What difference, if any, would it make if the inner surface of the container were a perfect
+reflector?
+Section 2-3 Mass/Energy Conversion and Binding Energy
+2-16. Use Appendix A and Table 2-1 to find how much energy is needed to remove one proton
+from a 
+atom, leaving a 
+atom plus a proton and an electron.
+2-17. Use Appendix A and Table 2-1 to find how much energy is required to remove one of the
+neutrons from a 
+atom to yield a 
+atom plus a neutron.
+2-18. The energy released when sodium and chlorine combine to form NaCl is 4.2 eV. (a) What
+is the increase in mass (in unified mass units) when a molecule of NaCl is dissociated into an
+atom of Na and an atom of Cl? (b) What percentage of error is made in neglecting this mass
+difference? (The mass of Na is about 23 u and that of Cl is about 35.5 u.)
+2-19. In a nuclear fusion reaction two 
+atoms are combined to produce one 
+(a) Calculate
+the decrease in rest mass in unified mass units. (b) How much energy is released in this reaction?
+(c) How many such reactions must take place per second to produce 1 W of power?
+2-20. An elementary particle of mass M completely absorbs a photon, after which its mass is
+1.01M. (a) What was the energy of the incoming photon? (b) Why is that energy greater than
+0.01Mc2?
+2-21. When a beam of high-energy protons collides with protons at rest in the laboratory (e.g.,
+in a container of water or liquid hydrogen), neutral pions 
+are produced by the reaction
+Compute the threshold energy of the protons in the beam for this reac-
+tion to occur. (See Table 2-1 and Example 2-11.)
+p  p S p  p  0.
+(0)
+4He.
+2H
+2H
+3H
+3H
+4He
+Ek
+>
+2.2  106
+>
+u>c
+ersey Institute of Technology; Charles Glashauser, Rutgers–The State University of New Jersey; Roger Hanson, University of Northern
+Iowa; Gary G. Ihas, University of Florida; Yuichi Kubota, University of Minnesota;
+David Lamp, Texas Tech University; Philip Lippel, University of Texas at Arlington;
+A. E. Livingston, University of Notre Dame; Steve Meloma, Gustavus Adolphus
+College; Benedict Y. Oh, Pennsylvania State University; Paul Sokol, Pennsylvania
+State University; Thor F. Stromberg, New Mexico State University; Maurice Webb,
+University of Wisconsin at Madison; and Jesse Weil, University of Kentucky.
+All offered valuable suggestions for improvements, and we appreciate their help.
+In addition, we give a special thanks to all the physicists and students from
+around the world who took time to send us kind words about the third and fourth
+editions and offered suggestions for improvements.
+Finally, though certainly not least, we are grateful for the support, encouragement,
+and patience of our families throughout the project. We especially want to thank
+Mark Llewellyn for his preparation of the Instructor’s Solutions Manual and the
+Student’s Solutions Manual and for his numerous helpful suggestions from the very
+beginning of the project, Eric Llewellyn for his photographic and computer-generated
+images, David Jonsson at Uppsala University for his critical reading of every chapter
+of the fourth edition, and Jeanette Picerno for her imaginative work on the Web site.
+Finally, to the entire Modern Physics team at W. H. Freeman and Company goes our
+sincerest appreciation for their skill, hard work, understanding about deadlines, and
+support in bringing it all together.
+Paul A. Tipler,
+Ralph A. Llewellyn,
+Berkeley, California
+Oviedo, Florida
+Preface
+xv
+1, E1  h2>2m
+2
+1. 1, 1, 1.
+Figure 6-10 The function that satisfies the
+Schrödinger equation with 
+ 4L inside the well
+is not an acceptable wave function because it
+becomes infinite at large x. Although at x  L, the
+function is heading toward zero (slope is
+negative), the rate of increase of the slope 
+is so
+great that the slope becomes positive before the
+function becomes zero, and the function then
+increases. Since 
+has the same sign as 
+the
+slope always increases and the function increases
+without bound. [This computer-generated plot
+courtesy of Paul Doherty, The Exploratorium.]
+',
+'
+'","Error processing file-based query: a Tensor with 1174 elements cannot be converted to Scalar. Try again?"
+"2025-06-16 12:16:27","What is the Compton effect?","file","neutral","Matched","folded shapes of proteins in
+biological materials. 3-4 X Rays and the Compton Effect
+137
+φ
+X-ray tube
+(Mo target)
+R
+S1
+Defining
+slit
+S2
+Calcite
+crystal
+Bragg
+spectrometer
+Ionization
+chamber
+Shutter
+Figure 3-16 Schematic sketch of Compton’s apparatus. X rays from the tube strike the 
+carbon block 
+and are scattered into a Bragg-type crystal spectrometer. In this diagram,
+the scattering angle is 
+The beam was defined by slits 
+and 
+Although the entire
+spectrum is being scattered by 
+the spectrometer scanned the region around the 
+line of
+molybdenum.
+K
+R,
+S2.
+S1
+30°.
+R
+Compton Effect
+It had been observed that scattered x rays were “softer” than those in the incident
+beam, that is, were absorbed more readily. Compton16 pointed out that if the scatter-
+ing process were considered a “collision” between a photon of energy 
+(and mo-
+mentum 
+) and an electron, the recoiling electron would absorb part of the inci-
+dent photon’s energy. The energy 
+of the scattered photon would therefore be less
+than the incident one and thus of lower frequency 
+and momentum 
+(The fact
+that electromagnetic radiation of energy 
+carried momentum 
+was known from
+classical theory and from the experiments of Nichols and Hull in 1903. This relation
+is also consistent with the relativistic expression 
+for a particle
+with zero rest energy.) Compton applied the laws of conservation of momentum and
+energy in their relativistic form (see Chapter 2) to the collision of a photon with an
+isolated electron to obtain the change in the wavelength 
+of the photon as a
+function of the scattering angle 
+The result, called Compton’s equation and derived
+in a More section on the home page, is
+3-25
+The change in wavelength is thus predicted to be independent of the original wave-
+length. The quantity 
+has the dimensions of length and is called the Compton
+wavelength of the electron. Its value is
+Because 
+is small, it is difficult to observe unless 
+is very small so that the
+fractional change 
+is appreciable. For this reason the Compton effect is
+generally only observed for x rays and gamma radiation.
+Compton verified his result experimentally using the characteristic x-ray line of
+wavelength 0.0711 nm from molybdenum for the incident monochromatic photons
+and scattering these photons from electrons in graphite. The wavelength of the scat-
+tered photons was measured using a Bragg crystal spectrometer. His experimental
+arrangement is shown in Figure 3-16; Figure 3-17 shows his results. The first peak at
+(
+2  
+1)>
+1
+00 K.
+40-W
+1.36  103 W>m2,
+u(
+)
+20,000 K.
+27.0 	m 144
+Chapter 3
+Quantization of Charge, Light, and Energy
+ux
+uy
+y1
+y2
+x2
+x1
+ux
+θ
+Deflection
+plates
+3-34. X-ray tubes currently used by dentists often have accelerating voltages of 
+What
+is the minimum wavelength of the x rays they produce?
+3-35. Find the momentum of a photon in 
+and in 
+if the wavelength is (a)
+(b)
+(c)
+and (d)
+3-36. Gamma rays emitted by radioactive nuclei also exhibit measurable Compton scattering.
+Suppose a 
+photon from a positron-electron annihilation scatters at 
+from a free
+electron. What are the energies of the scattered photon and the recoiling electron? Relative to
+the initial direction of the 
+photon, what is the direction of the recoiling electron’s
+velocity vector?
+3-37. The wavelength of Compton-scattered photons is measured at 
+If 
+is to be
+1 percent, what should the wavelength of the incident photon be?
+3-38. Compton used photons of wavelength 
+(a) What is the energy of these pho-
+tons? (b) What is the wavelength of the photons scattered at 
+(c) What is the energy
+of the photons scattered at 
+(d) What is the recoil energy of the electrons if 
+3-39. Compute 
+for photons scattered at 
+from (a) free protons, (b) free electrons, and
+(c)
+molecules in air.
+3-40. Compton’s equation (Equation 3-25) indicates that a graph of 
+versus 
+should be a straight line whose slope 
+allows a determination of 
+Given that the wave-
+length of 
+in Figure 3-17 is 
+compute 
+for each scattering angle in the figure and
+graph the results versus 
+What is the slope of the line?
+3-41. (a) Compute the Compton wavelength of an electron and a proton. (b) What is the en-
+ergy of a photon whose wavelength is equal to the Compton wavelength of (1) the electron and
+(2) the proton?
+Level II
+3-42. When light of wavelength 
+is incident on potassium, photoelectrons with stopping
+potential of 
+are emitted. If the wavelength of the incident light is changed to 
+the stopping potential is 
+Using only these numbers together with the values of the speed
+of light and the electron charge, (a) find the work function of potassium and (b) compute a value
+for Planck’s constant.
+3-43. Assuming that the difference between Thomson’s calculated 
+in his second experiment
+(Figure 3-19) and the currently accepted value was due entirely to his neglecting the horizontal
+component of Earth’s magnetic field outside the deflection plates, what value for that component
+does the difference imply? (Thomson’s data:
+x1  5 cm, y2>x2  8>110.)
+e  1.5  104 V>m,
+B  5.5  104 T,
+e>m
+1.90 V.
+300 nm,
+0.52 V
+450 nm
+(1  cos).
+were shifted by 0.01 percent?
+
+¢
+  
+2  
+1
+104
+m 3-4 X Rays and the Compton Effect
+139
+EXAMPLE 3-8 X Rays from TV The acceleration voltage of the electrons in a typi-
+cal television picture tube is 
+What is the minimum wavelength x ray pro-
+duced when these electrons strike the inner front surface of the tube?
+SOLUTION
+From Equation 3-24, we have
+These x rays penetrate matter very effectively. Manufacturers provide essential
+shields to protect against the hazard.
+EXAMPLE 3-9 Compton Effect In a particular Compton scattering experiment it is
+found that the incident wavelength 
+is shifted by 
+when the scattering
+angle 
+(a) What is the value of 
+(b) What will be the wavelength 
+of
+the shifted photon when the scattering angle is 
+SOLUTION
+1. For question (a) , the value of 
+is found from Equation 3-25:
+2. That the scattered wavelength 
+is shifted by 
+from 
+means that
+3. Combining these yields:
+4. Question (b) is also solved with the aid of Equation 3-25, rearranged as
+5. Substituting 
+and 
+from above yields
+A Final Comment
+In this chapter, together with Section 2-4 of the previous chapter, we have introduced
+and discussed at some length the three primary ways by which photons interact with
+matter: (1) the photoelectric effect, (2) the Compton effect, and (3) pair production.
+As we proceed with our explorations of modern physics throughout the remainder of
+the book, we will have many occasions to apply what we have learned here to aid in
+our understanding of myriad phenomena, ranging from atomic structure to the fusion
+“furnaces” of stars.
+ 0.245 nm
+ 0.243  0.002","Error processing file-based query: a Tensor with 1134 elements cannot be converted to Scalar. Try again?"
+"2025-06-16 12:17:12","hi","file","neutral","Matched","N/A","I couldn’t find relevant info in the file. Can you try a different question?"
+"2025-06-17 10:38:05","hii","general","neutral","Matched","N/A","Hey, hii there! What's up? Got a cool question for me today?"

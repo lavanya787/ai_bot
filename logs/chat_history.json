@@ -1,0 +1,32 @@
+[
+  {
+    "title": "\ud83e\udd16 Train Model",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Train a machine learning model"
+      },
+      {
+        "role": "assistant",
+        "content": "Hello! I'm your AI assistant. Upload a file to get started!"
+      }
+    ]
+  },
+  {
+    "title": "\ud83d\udcca Analyze Data",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Analyze my uploaded dataset"
+      },
+      {
+        "role": "assistant",
+        "content": "No datasets available for analysis. Please upload a CSV or Excel file."
+      }
+    ]
+  },
+  {
+    "title": "Conversation 3",
+    "messages": []
+  }
+]

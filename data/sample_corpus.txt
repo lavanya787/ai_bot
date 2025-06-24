@@ -1,0 +1,6 @@
+hello there how can I help you today
+this book talks about neural networks
+what are the scores of student A
+explain convolutional layers
+how to calculate SGPA from marks
+summarize the third chapter
