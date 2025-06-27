@@ -1,43 +1,68 @@
 import os
-import pandas as pd
+import re
 import json
 import fitz  # PyMuPDF
+import docx
+import PyPDF2
 import numpy as np
-from docx import Document
-from PIL import Image
-import pytesseract
-from contextlib import contextmanager
-import tempfile
-import re
-from typing import List, Dict, Any
 import logging
+import tempfile
+import pandas as pd
+from PIL import Image
 from langdetect import detect, DetectorFactory
+from contextlib import contextmanager
+from typing import List
 from deep_translator import GoogleTranslator
 from concurrent.futures import ThreadPoolExecutor
-import PyPDF2
-import docx
+from docx import Document
+import pytesseract
 
-DetectorFactory.seed = 0
+# ---------------------- Logging Setup ----------------------
+log_dir = "logs"
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, "processor.log")
 
 logger = logging.getLogger("processor")
-logging.basicConfig(level=logging.INFO)
+logger.setLevel(logging.INFO)
 
-# Optional NLP tools
+# Console Handler
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
+# File Handler (append mode explicitly set)
+file_handler = logging.FileHandler(log_file, mode='a', encoding="utf-8")
+file_handler.setLevel(logging.INFO)
+
+# Formatter
+formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+console_handler.setFormatter(formatter)
+file_handler.setFormatter(formatter)
+
+# Add handlers only once
+if not logger.handlers:
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+
+# Reduce log noise from other libraries
+logging.getLogger("pdfminer").setLevel(logging.ERROR)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+
+# Optional dependencies
+try:
+    import pdfplumber
+    USE_PDFPLUMBER = True
+except ImportError:
+    USE_PDFPLUMBER = False
+
 try:
     import spacy
     nlp = spacy.load("en_core_web_sm")
-    nlp.max_length = 100_000_000  # Increased from default 1M
+    nlp.max_length = 100_000_000
     SPACY_AVAILABLE = True
 except Exception:
     nlp = None
     SPACY_AVAILABLE = False
-
-
-try:
-    import pdfplumber
-    PDFPLUMBER_AVAILABLE = True
-except ImportError:
-    PDFPLUMBER_AVAILABLE = False
 
 try:
     import easyocr
@@ -46,7 +71,7 @@ try:
 except Exception:
     EASY_OCR_AVAILABLE = False
 
-# ---------------------- UTILS ----------------------
+# ---------------------- Utils ----------------------
 
 @contextmanager
 def open_tempfile(file, suffix):
@@ -71,7 +96,14 @@ def translate_to_english(text: str) -> str:
         logger.warning(f"Translation failed: {e}")
         return text
 
-# ------------------ TEXT EXTRACTION ------------------
+def preprocess_extracted_text(text: str) -> str:
+    text = re.sub(r'\n{2,}', '\n', text)
+    text = re.sub(r'\s{2,}', ' ', text)
+    text = re.sub(r'\.{4,}', '.', text)
+    text = re.sub(r'Page\s+\d+', '', text, flags=re.IGNORECASE)
+    return text.strip()
+
+# ------------------ Text Extractors ------------------
 
 def extract_text_from_image(file):
     try:
@@ -79,34 +111,9 @@ def extract_text_from_image(file):
             result = easyocr_reader.readtext(np.array(Image.open(file)), detail=0)
             return " ".join(result)
         else:
-            image = Image.open(file)
-            return pytesseract.image_to_string(image).strip()
+            return pytesseract.image_to_string(Image.open(file)).strip()
     except Exception as e:
         return f"[OCR ERROR] {e}"
-
-def extract_text_from_pdf(file):
-    try:
-        file.seek(0)
-        with fitz.open(stream=file.read(), filetype="pdf") as doc:
-            return "\n".join(page.get_text() for page in doc)
-    except Exception as e:
-        return f"[PDF ERROR] {e}"
-
-def extract_text_from_pdf_plumber(file):
-    try:
-        file.seek(0)
-        with pdfplumber.open(file) as pdf:
-            return "\n".join([page.extract_text() or "" for page in pdf.pages])
-    except Exception as e:
-        return f"[PDFPlumber ERROR] {e}"
-
-def extract_text_from_docx(file):
-    try:
-        with open_tempfile(file, ".docx") as path:
-            doc = Document(path)
-            return "\n".join([para.text for para in doc.paragraphs])
-    except Exception as e:
-        return f"[DOCX ERROR] {e}"
 
 def extract_text_from_txt(file):
     try:
@@ -130,6 +137,160 @@ def extract_text_from_json(file):
         return json.dumps(data, indent=2)
     except Exception as e:
         return f"[JSON ERROR] {e}"
+
+def extract_text_from_docx(file):
+    try:
+        with open_tempfile(file, ".docx") as path:
+            doc = Document(path)
+            return "\n".join([para.text for para in doc.paragraphs])
+    except Exception as e:
+        return f"[DOCX ERROR] {e}"
+
+def extract_text_from_pdf(file):
+    def ocr_pdf_images(file):
+        try:
+            file.seek(0)
+            images = []
+            with fitz.open(stream=file.read(), filetype="pdf") as doc:
+                for page in doc:
+                    pix = page.get_pixmap(dpi=300)
+                    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                    images.append(img)
+
+            ocr_text = ""
+            for img in images:
+                if EASY_OCR_AVAILABLE:
+                    result = easyocr_reader.readtext(np.array(img), detail=0)
+                    ocr_text += " ".join(result) + "\n"
+                else:
+                    ocr_text += pytesseract.image_to_string(img) + "\n"
+
+            return ocr_text.strip()
+        except Exception as e:
+            logger.error(f"[OCR fallback failed] {e}")
+            return "[OCR fallback failed]"
+
+    try:
+        file.seek(0)
+        if USE_PDFPLUMBER:
+            with pdfplumber.open(file) as pdf:
+                text = "\n".join([page.extract_text() or "" for page in pdf.pages])
+                if text.strip():
+                    return text
+                else:
+                    logger.warning("[pdfplumber] Extracted text is empty.")
+    except Exception as e:
+        logger.warning(f"[pdfplumber] failed: {e}")
+
+    try:
+        file.seek(0)
+        with fitz.open(stream=file.read(), filetype="pdf") as doc:
+            text = "\n".join(page.get_text() for page in doc)
+            if text.strip():
+                return text
+            else:
+                logger.warning("[fitz] Extracted text is empty.")
+    except Exception as e:
+        logger.warning(f"[fitz] failed: {e}")
+
+    try:
+        file.seek(0)
+        reader = PyPDF2.PdfReader(file)
+        text = "\n".join([p.extract_text() or "" for p in reader.pages])
+        if text.strip():
+            return text
+        else:
+            logger.warning("[PyPDF2] Extracted text is empty.")
+    except Exception as e:
+        logger.error(f"[PyPDF2] failed: {e}")
+
+    # 🧠 OCR fallback
+    logger.warning("Attempting OCR fallback for scanned PDF...")
+    file.seek(0)
+    return ocr_pdf_images(file)
+
+def extract_text(file):
+    name = file.name.lower()
+
+    if name.endswith((".png", ".jpg", ".jpeg")):
+        text = extract_text_from_image(file)
+    elif name.endswith(".pdf"):
+        text = extract_text_from_pdf(file)
+    elif name.endswith(".docx"):
+        text = extract_text_from_docx(file)
+    elif name.endswith(".txt"):
+        text = extract_text_from_txt(file)
+    elif name.endswith(".csv"):
+        text = extract_text_from_csv(file)
+    elif name.endswith(".json"):
+        text = extract_text_from_json(file)
+    else:
+        return "[Unsupported file type: only PDF, DOCX, TXT, CSV, JSON, PNG, JPG]"
+
+    text = preprocess_extracted_text(text)
+
+    if not text.strip() or text.startswith("[PDF extraction failed]"):
+        logger.warning(f"[EMPTY TEXT] Extracted text is empty or invalid for: {file.name}")
+        return "[ERROR] Empty or invalid content"
+
+    lang = detect_language(text)
+    if lang != "en" and lang != "unknown":
+        logger.info("Translating document to English...")
+        text = translate_to_english(text)
+
+    return text
+
+# ------------------ Parallel Chunking ------------------
+
+def chunk_text(text: str, chunk_size: int = 1200) -> List[str]:
+    if not text or len(text.strip()) < 50:
+        logger.warning("❌ Cannot chunk: Text is empty or too short.")
+        return []
+
+    if text.startswith("[ERROR]") or "Unsupported file type" in text:
+        logger.warning("⚠️ Skipping chunking due to invalid file type or extraction failure.")
+        return []
+
+    try:
+        if SPACY_AVAILABLE and nlp:
+            doc = nlp(text)
+            sentences = [sent.text.strip() for sent in doc.sents]
+        else:
+            sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    except Exception as e:
+        logger.warning(f"Chunk fallback due to error: {e}")
+        sentences = text.split(". ")
+
+    chunks = []
+
+    def process_chunk(start_idx):
+        chunk = ""
+        idx = start_idx
+        while idx < len(sentences) and len(chunk) + len(sentences[idx]) < chunk_size:
+            chunk += sentences[idx] + " "
+            idx += 1
+        return chunk.strip()
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        i = 0
+        futures = []
+        while i < len(sentences):
+            futures.append(executor.submit(process_chunk, i))
+            j = i
+            chunk_len = 0
+            while j < len(sentences) and chunk_len + len(sentences[j]) < chunk_size:
+                chunk_len += len(sentences[j])
+                j += 1
+            i = j
+
+        for future in futures:
+            chunk = future.result()
+            if len(chunk.split()) >= 10:
+                chunks.append(chunk)
+
+    return chunks
+
+# ------------------ Data Extraction for QA Models ------------------
 
 def extract_rows_from_file(file_path):
     ext = file_path.split('.')[-1].lower()
@@ -159,73 +320,3 @@ def extract_rows_from_file(file_path):
     else:
         df = pd.DataFrame({'question': df.iloc[:, 0], 'context': df.iloc[:, 0], 'is_answer': 1})
         return df
-
-def extract_text(file):
-    name = file.name.lower()
-    if name.endswith((".png", ".jpg", ".jpeg")):
-        text = extract_text_from_image(file)
-    elif name.endswith(".pdf"):
-        text = extract_text_from_pdf_plumber(file) if PDFPLUMBER_AVAILABLE else extract_text_from_pdf(file)
-    elif name.endswith(".docx"):
-        text = extract_text_from_docx(file)
-    elif name.endswith(".txt"):
-        text = extract_text_from_txt(file)
-    elif name.endswith(".csv"):
-        text = extract_text_from_csv(file)
-    elif name.endswith(".json"):
-        text = extract_text_from_json(file)
-    else:
-        return "[Unsupported file type: only PDF, DOCX, TXT, CSV, JSON, PNG, JPG]"
-
-    lang = detect_language(text)
-    if lang != "en" and lang != "unknown":
-        logger.info("Translating document to English...")
-        text = translate_to_english(text)
-
-    return text
-
-# ------------------ PARALLEL CHUNKING ------------------
-
-def chunk_text(text: str, chunk_size: int = 1200) -> List[str]:
-    if not text or len(text.strip()) < 50:
-        return []
-
-    try:
-        if SPACY_AVAILABLE and nlp:
-            doc = nlp(text)
-            sentences = [sent.text.strip() for sent in doc.sents]
-        else:
-            sentences = re.split(r'(?<=[.!?])\s+', text.strip())
-    except Exception as e:
-        logger.warning(f"Chunk fallback due to error: {e}")
-        sentences = text.split(". ")
-
-    chunks = []
-    current_chunk = ""
-
-    def process_chunk(start_idx):
-        chunk = ""
-        idx = start_idx
-        while idx < len(sentences) and len(chunk) + len(sentences[idx]) < chunk_size:
-            chunk += sentences[idx] + " "
-            idx += 1
-        return chunk.strip()
-
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        i = 0
-        futures = []
-        while i < len(sentences):
-            futures.append(executor.submit(process_chunk, i))
-            j = i
-            chunk_len = 0
-            while j < len(sentences) and chunk_len + len(sentences[j]) < chunk_size:
-                chunk_len += len(sentences[j])
-                j += 1
-            i = j
-
-        for future in futures:
-            chunk = future.result()
-            if len(chunk.split()) >= 10:
-                chunks.append(chunk)
-
-    return chunks

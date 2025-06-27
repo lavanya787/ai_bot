@@ -1,0 +1,78 @@
+# 🐍 Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.egg
+.Python
+*.log
+
+# 💻 Virtual Environment
+venv/
+env/
+.venv/
+.menv/
+menv/
+ENV/
+env.bak/
+env_old/
+pip-wheel-metadata/
+
+# 📦 IDEs & Editors
+.vscode/
+.idea/
+.history/
+*.sublime-workspace
+*.sublime-project
+
+# 🧪 Jupyter
+.ipynb_checkpoints/
+
+# 🔍 Search/Indexing
+.DS_Store
+Thumbs.db
+
+# 🗃️ Data & Outputs
+logs/
+faiss_logs/
+*.npy
+*.pkl
+*.jsonl
+*.db
+*.sqlite3
+
+# 📊 Temporary Files
+*.tmp
+*.bak
+*.swp
+*.cache
+*.pdf
+
+# 🔐 Credentials or sensitive data
+.env
+.env.*
+
+# 🧠 Model Checkpoints
+saved_models/
+embedding_store/
+vector_db/
+chat_history.json
+thur_app.py
+adding.py
+# 📈 Reports and outputs
+*.pdf
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.html
+*.pth
+reports/
+rag_data/
+
+# 🚀 Streamlit or runtime files
+*.streamlit/
+*.tflite
+*.onnx

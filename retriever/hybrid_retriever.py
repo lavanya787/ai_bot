@@ -1,60 +1,60 @@
-import re
-from collections import Counter
-import math
+from retriever.bm25_retriever import BM25Retriever
+from retriever.tfidf_retriever import TFIDFRetriever
+from vector_db.faiss_indexer import VectorDB
+import numpy as np
+import hashlib
+import json
+import os
 
-class HybridRetriever:
-    def __init__(self, chunks, weight_bm25=0.7, weight_jaccard=0.3):
-        self.chunks = chunks
-        self.tokenized_chunks = [self._tokenize(chunk) for chunk in chunks]
-        self.df = self._compute_df(self.tokenized_chunks)
-        self.avgdl = sum(len(doc) for doc in self.tokenized_chunks) / len(self.tokenized_chunks)
-        self.k1 = 1.5
-        self.b = 0.75
-        self.weight_bm25 = weight_bm25
-        self.weight_jaccard = weight_jaccard
+CACHE_FILE = "retriever/cache/retrieval_cache.json"
+os.makedirs("retriever/cache", exist_ok=True)
 
-    def _tokenize(self, text):
-        return re.findall(r"\b\w+\b", text.lower())
 
-    def _compute_df(self, docs):
-        df = {}
-        for doc in docs:
-            for word in set(doc):
-                df[word] = df.get(word, 0) + 1
-        return df
+def _query_hash(query):
+    return hashlib.md5(query.encode()).hexdigest()
 
-    def _bm25_score(self, query_tokens, doc_tokens):
-        score = 0
-        freqs = Counter(doc_tokens)
-        N = len(self.chunks)
-        doc_len = len(doc_tokens)
+def cache_result(query, results):
+    cache = {}
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "r") as f:
+            cache = json.load(f)
+    cache[_query_hash(query)] = results
+    with open(CACHE_FILE, "w") as f:
+        json.dump(cache, f)
 
-        for term in query_tokens:
-            if term in freqs:
-                df = self.df.get(term, 0)
-                idf = math.log(1 + (N - df + 0.5) / (df + 0.5))
-                tf = freqs[term]
-                denom = tf + self.k1 * (1 - self.b + self.b * (doc_len / self.avgdl))
-                score += idf * tf * (self.k1 + 1) / denom
-        return score
+def get_cached(query):
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "r") as f:
+            cache = json.load(f)
+        return cache.get(_query_hash(query))
+    return None
+    
+def deduplicate_results(results):
+    seen = set()
+    deduped = []
+    for r in results:
+        if r not in seen:
+            seen.add(r)
+            deduped.append(r)
+    return deduped
 
-    def _jaccard_similarity(self, query_tokens, doc_tokens):
-        set_q = set(query_tokens)
-        set_d = set(doc_tokens)
-        intersection = set_q & set_d
-        union = set_q | set_d
-        return len(intersection) / len(union) if union else 0
+def retrieve_context(query, k=5):
+    # 1. BM25
+    bm25 = BM25Retriever()
+    bm25_results = bm25.retrieve(query, top_k=k)
 
-    def retrieve(self, query, top_k=3):
-        query_tokens = self._tokenize(query)
-        scores = []
+    # 2. TF-IDF
+    tfidf = TFIDFRetriever()
+    tfidf_results = tfidf.retrieve(query, top_k=k)
 
-        for idx, doc_tokens in enumerate(self.tokenized_chunks):
-            bm25 = self._bm25_score(query_tokens, doc_tokens)
-            jaccard = self._jaccard_similarity(query_tokens, doc_tokens)
-            combined = (self.weight_bm25 * bm25) + (self.weight_jaccard * jaccard)
-            scores.append((idx, combined))
+    # 3. Vector-based (FAISS)
+    vector_db = VectorDB(dim=384)  # or 768 or whatever your embedding size is
+    from models.qa_model import get_embedding  # you should define this
+    query_vec = get_embedding(query).reshape(1, -1).astype(np.float32)
+    vector_results = vector_db.search(query_vec, k=k)
 
-        scores.sort(key=lambda x: x[1], reverse=True)
-        top_indices = [i for i, _ in scores[:top_k]]
-        return [self.chunks[i] for i in top_indices]
+    # Combine and deduplicate
+    all_results = bm25_results + tfidf_results + vector_results
+    hybrid_context = deduplicate_results(all_results)[:k]
+
+    return hybrid_context

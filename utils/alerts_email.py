@@ -4,52 +4,53 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 import os
 import datetime
+import time
 
-# 🔒 Replace these with your actual email credentials and receiver
 EMAIL_ADDRESS = "lavanyarajganeshan1004@gmail.com"
-EMAIL_PASSWORD = "wksu bdoz mhue vsut"
+EMAIL_PASSWORD = "wksubdozmhuevsut"
 EMAIL_RECEIVER = "lavanyarajganeshan123@gmail.com"
 
-def send_alert_email(subject, html_content, attachment_paths=None, log_file=None):
+def send_alert_email(subject, html_content, attachment_paths=None, log_file=None, max_retries=3, retry_delay=5):
     """
     Sends an HTML email with optional file attachments and logs the result.
-
-    :param subject: Email subject line
-    :param html_content: Body of the email in HTML
-    :param attachment_paths: List of file paths to attach (optional)
-    :param log_file: Path to save log entries (optional)
+    Automatically retries on failure.
     """
-    try:
-        msg = MIMEMultipart()
-        msg["From"] = EMAIL_ADDRESS
-        msg["To"] = EMAIL_RECEIVER
-        msg["Subject"] = subject
+    timestamp = datetime.datetime.now().isoformat()
 
-        # Attach HTML message
-        msg.attach(MIMEText(html_content, "html"))
+    # Compose the email once (outside the retry loop)
+    msg = MIMEMultipart()
+    msg["From"] = EMAIL_ADDRESS
+    msg["To"] = EMAIL_RECEIVER
+    msg["Subject"] = subject
+    msg.attach(MIMEText(html_content, "html"))
 
-        # Attach files
-        if attachment_paths:
-            for path in attachment_paths:
-                with open(path, "rb") as file:
-                    part = MIMEApplication(file.read(), Name=os.path.basename(path))
-                    part["Content-Disposition"] = f'attachment; filename="{os.path.basename(path)}"'
-                    msg.attach(part)
+    if attachment_paths:
+        for path in attachment_paths:
+            with open(path, "rb") as file:
+                part = MIMEApplication(file.read(), Name=os.path.basename(path))
+                part["Content-Disposition"] = f'attachment; filename="{os.path.basename(path)}"'
+                msg.attach(part)
 
-        # Send email
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-            smtp.send_message(msg)
+    # Retry logic
+    for attempt in range(1, max_retries + 1):
+        try:
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+                smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+                smtp.send_message(msg)
 
-        # Log result
-        if log_file:
-            with open(log_file, "a") as f:
-                timestamp = datetime.datetime.now().isoformat()
-                f.write(f"[{timestamp}] ✅ Email sent: {subject}\n")
+            # Log success
+            if log_file:
+                with open(log_file, "a", encoding="utf-8") as f:
+                    f.write(f"[{timestamp}] ✅ Email sent: {subject} (Attempt {attempt})\n")
+            return  # success — exit function
 
-    except Exception as e:
-        if log_file:
-            with open(log_file, "a") as f:
-                timestamp = datetime.datetime.now().isoformat()
-                f.write(f"[{timestamp}] ❌ Email error: {e}\n")
-        print(f"❌ Failed to send email: {e}")
+        except Exception as e:
+            if log_file:
+                with open(log_file, "a", encoding="utf-8") as f:
+                    f.write(f"[{timestamp}] ❌ Attempt {attempt} failed: {e}\n")
+            print(f"❌ Attempt {attempt} failed: {e}")
+
+            if attempt < max_retries:
+                time.sleep(retry_delay)
+            else:
+                print("❌ All retries failed.")

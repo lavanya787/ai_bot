@@ -4,6 +4,8 @@ import tempfile
 import hashlib
 from datetime import datetime
 import logging
+import nltk
+nltk.download('stopwords')
 
 # Safe imports with fallbacks
 try:
@@ -26,11 +28,26 @@ except ImportError:
         def generate_response(self, prompt, task='answer'):
             return "LLMHandler not available. Please install llm_handler.py and dependencies."
 
+# Import functions from file 1
+from file_processing.processor import extract_text
+from utils.preprocessing import Preprocessor
+from utils.logger import Logger
+from utils.domain_detector import detect_domain
+from llm_handler import LLMHandler
+from rag_domain_trainer import store_and_train, get_file_hash
+
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Enhanced ChatBot class with LLM integration
+# Initialize components from file 1
+log = Logger().logger
+preprocessor = Preprocessor()
+# Function to count model parameters
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+# Enhanced ChatBot class with LLM integration and merged functionality
 class ChatBot:
     def __init__(self):
         self.datasets = {}
@@ -57,6 +74,7 @@ class ChatBot:
         
         try:
             response = self.llm_handler.generate_response(prompt, task)
+            Logger.logger(prompt, response, status="success", chunk_used="LLMHandler")
             return response
         except Exception as e:
             return f"Error generating response: {str(e)}. Try rephrasing or uploading more documents."
@@ -83,16 +101,47 @@ I can help you with:
         return help_text
     
     def add_document(self, name, doc_dict):
-        self.documents[name] = doc_dict
         content = doc_dict.get("content", "")
-        
-        if LLM_AVAILABLE and self.llm_handler and content:
+        file_obj = doc_dict.get("file")
+
+        # Try to extract text if content is empty but file exists
+        if not content and file_obj:
             try:
-                self.llm_handler.index_document(name, content)
+                content = extract_text(file_obj)
+            except Exception as e:
+                log.warning(f"Extract failed: {e}")
+                return
+
+        # Apply preprocessing from file 1
+        cleaned = preprocessor.general_preprocessing(content)
+        self.documents[name] = {"content": cleaned, "file": file_obj}
+
+        # Auto domain detection + training + indexing from file 1
+        domain = detect_domain(cleaned)
+        log.info(f"Detected domain for {name}: {domain}")
+
+        try:
+            # Save file temporarily to disk for hashing and processing
+            tmp_path = os.path.join("rag_data", f"{datetime.now().timestamp()}_{name}")
+            os.makedirs("rag_data", exist_ok=True)
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                f.write(cleaned)
+
+            # Let the pipeline handle saving, domain detection, hashing, model training
+            store_and_train(tmp_path)
+        except Exception as e:
+            log.warning(f"store_and_train() failed: {e}")
+
+        
+        # LLM indexing
+        if LLM_AVAILABLE and self.llm_handler and cleaned:
+            try:
+                self.llm_handler.index_document(name, cleaned)
             except Exception as e:
                 logger.error(f"Failed to index document {name}: {e}")
-                st.error(f"Failed to index {name}: {str(e)}. Please ensure a trained model checkpoint is available.")
+                st.warning(f"LLM indexing failed: {e}")
         
+        # Dataset detection for tabular data
         if any(delimiter in content for delimiter in [',', '\t', '|']):
             lines = content.split('\n')
             if len(lines) > 1:
@@ -269,7 +318,7 @@ def render_sidebar():
                         tmp_path = tmp.name
                     
                     content = extract_text_from_file(tmp_path, file.name)
-                    st.session_state.chatbot.add_document(file.name, {"content": content, "type": file.type})
+                    st.session_state.chatbot.add_document(file.name, {"content": content, "file": file, "type": file.type})
                     
                     st.session_state.processed_files.append({
                         "filename": file.name,
@@ -280,7 +329,10 @@ def render_sidebar():
                     
                     os.unlink(tmp_path)
                     progress_bar.progress((i + 1) / total_files)
-            
+            with st.sidebar:
+                if st.button("🔍 Model Status"):
+                    status = st.session_state.chatbot.llm_handler.get_status()
+                    st.json(status)
             st.success(f"✅ Processed {len(uploaded_files)} files! Ready to answer questions.")
             st.info("💡 Try asking: 'Analyze my documents' or 'What information do you have?'")
             st.rerun()

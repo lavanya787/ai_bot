@@ -1,0 +1,22 @@
+epochs: 5
+batch_size: 16
+learning_rate: 0.001
+embedding_dim: 128
+hidden_dim: 256
+max_len: 50
+
+reward_model:
+  checkpoint: "saved_models/reward_model.pt"
+  type: "linear"  # or "mlp"
+
+ppo:
+  enabled: true
+  feedback_buffer_limit: 20
+  gamma: 0.95
+  epsilon: 0.2
+  lr: 0.0005
+  max_steps_per_prompt: 20
+  ppo_epochs: 4
+
+checkpoint_dir: "saved_models"
+log_dir: "logs"

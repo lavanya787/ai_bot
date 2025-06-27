@@ -36,7 +36,7 @@ class GenericDomainConfig:
                 df[f'{col}_weekday'] = df[col].dt.weekday
             except Exception:
                 if self.logger:
-                    self.logger.log_warning(f"Date conversion failed for {col}: {e}")
+                    self.logger.log_warning(f"Date conversion failed for {col}:")
 
         # Numeric features
         for col in detection_result.get('numeric_cols', []):

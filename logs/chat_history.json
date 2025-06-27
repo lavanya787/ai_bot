@@ -1,32 +1,16 @@
 [
   {
-    "title": "\ud83e\udd16 Train Model",
+    "title": "explain compton effect",
     "messages": [
       {
         "role": "user",
-        "content": "Train a machine learning model"
+        "content": "explain compton effect"
       },
       {
         "role": "assistant",
-        "content": "Hello! I'm your AI assistant. Upload a file to get started!"
+        "content": "Based on your documents, here's what I found:\n\n"
       }
-    ]
-  },
-  {
-    "title": "\ud83d\udcca Analyze Data",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Analyze my uploaded dataset"
-      },
-      {
-        "role": "assistant",
-        "content": "No datasets available for analysis. Please upload a CSV or Excel file."
-      }
-    ]
-  },
-  {
-    "title": "Conversation 3",
-    "messages": []
+    ],
+    "created_at": "2025-06-25T11:49:05.053967"
   }
 ]

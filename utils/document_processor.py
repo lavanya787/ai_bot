@@ -6,14 +6,15 @@ import numpy as np
 from typing import List
 from sentence_transformers import SentenceTransformer
 import fitz  # PyMuPDF
-import docx  # python-docx
+import docx
 import speech_recognition as sr
 from PIL import Image
 import pytesseract
 import logging
-from typing import List
 from concurrent.futures import ThreadPoolExecutor
-# Optional: spaCy
+import pptx
+from pptx import Presentation
+
 try:
     import spacy
     nlp = spacy.load("en_core_web_sm")
@@ -24,6 +25,7 @@ except Exception:
 
 logger = logging.getLogger("processor")
 logging.basicConfig(level=logging.INFO)
+
 class DocumentProcessor:
     def __init__(self, base_dir="faiss_logs", model_name="all-MiniLM-L6-v2", device="cpu"):
         self.base_dir = base_dir
@@ -32,32 +34,35 @@ class DocumentProcessor:
 
     def file_type_detector(self, file_name: str) -> str:
         ext = os.path.splitext(file_name)[-1].lower()
-        if ext == ".txt":
-            return "text"
-        elif ext == ".pdf":
-            return "pdf"
-        elif ext == ".docx":
-            return "docx"
-        elif ext in [".wav", ".mp3", ".m4a"]:
-            return "audio"
-        elif ext in [".png", ".jpg", ".jpeg"]:
-            return "image"
-        else:
-            return "unknown"
+        return {
+            ".txt": "text",
+            ".pdf": "pdf",
+            ".docx": "docx",
+            ".wav": "audio",
+            ".mp3": "audio",
+            ".m4a": "audio",
+            ".png": "image",
+            ".jpg": "image",
+            ".jpeg": "image",
+            ".csv": "csv",
+            ".xls": "excel",
+            ".xlsx": "excel",
+            ".json": "json",
+            ".ppt": "ppt",
+            ".pptx": "ppt"
+        }.get(ext, "unknown")
 
     def read_file(self, file, file_type: str) -> str:
+        file.seek(0)
         if file_type == "text":
-            file.seek(0)
             return file.read().decode("utf-8", errors="ignore")
         elif file_type == "pdf":
-            file.seek(0)
             text = ""
             with fitz.open(stream=file.read(), filetype="pdf") as doc:
                 for page in doc:
                     text += page.get_text()
             return text
         elif file_type == "docx":
-            file.seek(0)
             doc = docx.Document(file)
             return "\n".join([para.text for para in doc.paragraphs])
         elif file_type == "audio":
@@ -71,15 +76,33 @@ class DocumentProcessor:
         elif file_type == "image":
             image = Image.open(file)
             return pytesseract.image_to_string(image)
+        elif file_type == "csv":
+            import pandas as pd
+            df = pd.read_csv(file)
+            return "\n".join(df.astype(str).apply(lambda row: " | ".join(row), axis=1))
+        elif file_type == "excel":
+            import pandas as pd
+            df = pd.read_excel(file)
+            return "\n".join(df.astype(str).apply(lambda row: " | ".join(row), axis=1))
+        elif file_type == "json":
+            import json
+            data = json.load(file)
+            return json.dumps(data, indent=2)
+        elif file_type == "ppt":
+            prs = Presentation(file)
+            slides = []
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    if hasattr(shape, "text") and shape.text.strip():
+                        slides.append(shape.text.strip())
+            return "\n".join(slides)
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
 
-# Inside class DocumentProcessor:
-    
     def chunk_text(self, text: str, chunk_size: int = 1200) -> List[str]:
         if not text or len(text.strip()) < 50:
             return []
-    
+
         try:
             if SPACY_AVAILABLE and nlp:
                 doc = nlp(text)
@@ -89,37 +112,44 @@ class DocumentProcessor:
         except Exception as e:
             logger.warning(f"Chunk fallback due to error: {e}")
             sentences = text.split(". ")
-    
+
         chunks = []
-        current_chunk = ""
-    
-        def process_chunk(start_idx):
-            chunk = ""
-            idx = start_idx
-            while idx < len(sentences) and len(chunk) + len(sentences[idx]) < chunk_size:
-                chunk += sentences[idx] + " "
-                idx += 1
-            return chunk.strip()
-    
         with ThreadPoolExecutor(max_workers=4) as executor:
-            i = 0
             futures = []
+            i = 0
             while i < len(sentences):
-                futures.append(executor.submit(process_chunk, i))
-                j = i
-                chunk_len = 0
-                while j < len(sentences) and chunk_len + len(sentences[j]) < chunk_size:
-                    chunk_len += len(sentences[j])
-                    j += 1
-                i = j
-    
+                chunk = []
+                total_len = 0
+                while i < len(sentences) and total_len + len(sentences[i]) < chunk_size:
+                    chunk.append(sentences[i])
+                    total_len += len(sentences[i])
+                    i += 1
+                current_chunk = chunk.copy()
+                futures.append(executor.submit(lambda x: " ".join(x).strip(), current_chunk))
+
             for future in futures:
-                chunk = future.result()
-                if len(chunk.split()) >= 10:
-                    chunks.append(chunk)
-    
+                result = future.result()
+                if len(result.split()) >= 10:
+                    chunks.append(result)
+
         return chunks
-        
+
+    def chunk_by_heading(self, text: str) -> List[str]:
+        pattern = r'\n\s*(?:Chapter|CHAPTER|\d+\.\s+)[^\n]+\n'
+        matches = list(re.finditer(pattern, text))
+        if not matches:
+            return self.chunk_text(text)
+
+        sections = []
+        for i, match in enumerate(matches):
+            start = match.end()
+            end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+            section = text[start:end].strip()
+            if section:
+                title = match.group(0).strip()
+                sections.append(f"{title}\n{section}")
+        return sections
+
     def build_faiss_index(self, chunks: List[str], file_name: str, batch_size=32) -> str:
         file_id = os.path.splitext(file_name)[0].replace(" ", "_").lower()
         folder = os.path.join(self.base_dir, file_id)
@@ -145,15 +175,20 @@ class DocumentProcessor:
 
         return folder
 
-    def process_and_index_file(self, file, file_name: str) -> str:
+    def process_and_index_file(self, file, file_name: str, llm_handler=None) -> str:
         file_type = self.file_type_detector(file_name)
         if file_type == "unknown":
             raise ValueError(f"Unsupported file format: {file_name}")
 
         text = self.read_file(file, file_type)
-        chunks = self.process_raw_text_chunks(text)
+        chunks = self.chunk_by_heading(text) if "chapter" in text.lower() else self.chunk_text(text)
         if not chunks:
             raise ValueError(f"No valid content extracted from file: {file_name}")
+
+        if llm_handler:
+            for i, chunk in enumerate(chunks):
+                llm_handler.index_document(f"{file_name}_chunk_{i}", chunk)
+
         return self.build_faiss_index(chunks, file_name)
 
     def search(self, query: str, file_name: str, top_k: int = 5) -> List[str]:
@@ -169,4 +204,4 @@ class DocumentProcessor:
         query_embedding = self.model.encode([query], convert_to_numpy=True)
         D, I = index.search(np.array(query_embedding).astype("float32"), top_k)
 
-        return [chunks[i] for i in I[0]]
+        return [chunks[i] for i in I[0] if i < len(chunks)]

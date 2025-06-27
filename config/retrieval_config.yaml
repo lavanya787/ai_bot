@@ -1,0 +1,19 @@
+retrievers:
+  bm25:
+    weight: 0.33
+    enabled: true
+
+  tfidf:
+    weight: 0.33
+    enabled: true
+
+  vector:
+    weight: 0.34
+    enabled: true
+    vector_dim: 128
+    index_path: "embedding_store/embeddings.npy"
+    meta_path: "embedding_store/meta.json"
+
+cache_enabled: true
+cache_path: "retriever/cache/retrieval_cache.json"
+meta_retriever_fallback: true

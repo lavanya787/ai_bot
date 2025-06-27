@@ -1,4 +1,3 @@
-# evaluate.py
 import os
 import json
 import csv
@@ -8,13 +7,16 @@ import pandas as pd
 from datetime import datetime
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from rouge import Rouge
-from sklearn.metrics import classification_report, accuracy_score, f1_score, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import (
+    classification_report, accuracy_score, f1_score,
+    confusion_matrix, ConfusionMatrixDisplay
+)
 from transformers import Trainer
 from torch.utils.data import Dataset
 import streamlit as st
 
 # ----------------------------
-# For Chatbot/Text Generation
+# Text Generation Evaluation
 # ----------------------------
 def evaluate_generation(predictions, references):
     smooth_fn = SmoothingFunction().method1
@@ -25,6 +27,7 @@ def evaluate_generation(predictions, references):
     rouge = Rouge()
     rouge_scores = rouge.get_scores(predictions, references, avg=True)
     avg_bleu = sum(bleu_scores) / len(bleu_scores)
+
     return {
         "BLEU": round(avg_bleu, 4),
         "ROUGE-1": round(rouge_scores["rouge-1"]["f"], 4),
@@ -32,6 +35,9 @@ def evaluate_generation(predictions, references):
         "ROUGE-L": round(rouge_scores["rouge-l"]["f"], 4),
     }
 
+# ----------------------------
+# Logging Utilities
+# ----------------------------
 def log_to_json(path, new_entry):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     logs = []
@@ -60,19 +66,21 @@ def evaluate_and_log(predictions, references, model_name="default_model", log_di
     record = {"timestamp": timestamp, "model": model_name, **metrics}
     log_to_json(os.path.join(log_dir, "evaluation_logs.json"), record)
     log_to_csv(os.path.join(log_dir, "evaluation_logs.csv"), record, fieldnames=record.keys())
-
+    return record
 
 # ----------------------------
-# For Transformer Classification
+# Classification Evaluation for Transformers
 # ----------------------------
 class EvalDataset(Dataset):
     def __init__(self, encodings, labels):
         self.encodings = encodings
         self.labels = labels
+
     def __getitem__(self, idx):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
         item['labels'] = torch.tensor(self.labels[idx], dtype=torch.long)
         return item
+
     def __len__(self):
         return len(self.labels)
 
@@ -106,9 +114,9 @@ def evaluate_transformer(model, tokenizer, eval_df):
     }
 
 # ----------------------------
-# For BiLSTM Classification
+# LSTM Evaluation
 # ----------------------------
-def evaluate_lstm_classifier(model, dataloader, label_names=None, title="Confusion Matrix"):
+def evaluate_lstm_classifier(model, dataloader, label_names=None):
     model.eval()
     all_preds, all_labels = [], []
 
@@ -150,12 +158,11 @@ def smart_evaluate(task_type, **kwargs):
             label_names=kwargs.get("label_names")
         )
     elif task_type == "generation":
-        evaluate_and_log(
+        return evaluate_and_log(
             predictions=kwargs["predictions"],
             references=kwargs["references"],
             model_name=kwargs.get("model_name", "default_model"),
             log_dir=kwargs.get("log_dir", "logs")
         )
-        return None
     else:
         raise ValueError(f"Unknown task_type: {task_type}")
