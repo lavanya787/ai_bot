@@ -16,6 +16,8 @@ from deep_translator import GoogleTranslator
 from concurrent.futures import ThreadPoolExecutor
 from docx import Document
 import pytesseract
+import pdfplumber
+
 
 # ---------------------- Logging Setup ----------------------
 log_dir = "logs"
@@ -208,6 +210,68 @@ def extract_text_from_pdf(file):
     logger.warning("Attempting OCR fallback for scanned PDF...")
     file.seek(0)
     return ocr_pdf_images(file)
+
+def extract_text_from_file(file_path, file_name):
+    try:
+        file_ext = file_name.lower()
+
+        # CSV Files
+        if file_ext.endswith('.csv'):
+            df = pd.read_csv(file_path)
+            content = df.to_string(index=False)
+            return content
+
+        # Excel Files
+        elif file_ext.endswith(('.xlsx', '.xls')):
+            df = pd.read_excel(file_path)
+            content = df.to_string(index=False)
+            return content
+
+        # PDF Files
+        elif file_ext.endswith('.pdf'):
+            try:
+                reader = PyPDF2.PdfReader(file_path)
+                all_pages = [page.extract_text() or "" for page in reader.pages]
+                content = "\n".join(all_pages).strip()
+                if content:
+                    return content
+            except Exception as e:
+                print(f"[PyPDF2] Failed: {e}. Retrying with pdfplumber...")
+
+            try:
+                with pdfplumber.open(file_path) as pdf:
+                    all_pages = [page.extract_text() or "" for page in pdf.pages]
+                content = "\n".join(all_pages).strip()
+                return content
+            except Exception as e:
+                return f"❌ Could not extract text from PDF: {str(e)}"
+
+        # DOCX Files
+        elif file_ext.endswith('.docx'):
+            doc = docx.Document(file_path)
+            content = "\n".join(para.text for para in doc.paragraphs if para.text.strip())
+            return content
+
+        # DOC Files (old Word format)
+        elif file_ext.endswith('.doc'):
+            try:
+                content = pytesseract.process(file_path).decode('utf-8')
+                return content
+            except Exception as e:
+                return f"❌ Could not extract text from DOC file: {str(e)}"
+
+        # Plain Text Files
+        elif file_ext.endswith('.txt'):
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return f.read()
+
+        # Fallback for unknown extensions
+        else:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return f.read()
+
+    except Exception as e:
+        return f"❌ Could not read the file: {str(e)}"
 
 def extract_text(file):
     name = file.name.lower()

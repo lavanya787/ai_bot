@@ -4,10 +4,15 @@ import torch.nn.functional as F
 import numpy as np
 from typing import Optional, List, Tuple
 
-
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, max_len=5000):
+    def __init__(self,config,vocab, d_model, max_len=5000):
         super().__init__()
+        self.config = config
+        self.device = config.get("device", "cpu")  # ✅ Add this line
+
+        self.embedding = nn.Embedding(len(vocab), config["d_model"])
+        self.pos_encoding = self._positional_encoding(config["max_len"], config["d_model"])
+
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, d_model, 2) * -(np.log(10000.0) / d_model))
@@ -18,7 +23,6 @@ class PositionalEncoding(nn.Module):
 
     def forward(self, x):
         return x + self.pe[:, :x.size(1)]
-
 
 class MultiHeadSelfAttention(nn.Module):
     def __init__(self, d_model, num_heads):
@@ -81,100 +85,115 @@ class TransformerDecoder(nn.Module):
             x = layer(x, mask)
         return self.fc_out(x)
 
+class TransformerGenerator(nn.Module):
+    def __init__(self, vocab_size, d_model=512, nhead=8, num_layers=6, dim_feedforward=2048, max_len=512):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, d_model)
+        self.positional_encoding = self._create_positional_encoding(max_len, d_model)
 
-class TransformerModel:
-    def __init__(self, vocab: dict, config: dict):
+        encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=nhead, dim_feedforward=dim_feedforward)
+        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        self.decoder = nn.Linear(d_model, vocab_size)
+
+    def _create_positional_encoding(self, max_len, d_model):
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len).unsqueeze(1).float()
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-torch.log(torch.tensor(10000.0)) / d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        return pe.unsqueeze(0)
+
+    def forward(self, x):
+        x = self.embedding(x) + self.positional_encoding[:, :x.size(1), :].to(x.device)
+        x = self.transformer(x)
+        return self.decoder(x)
+
+    def generate(self, start_token_id, max_len=50):
+        generated = [start_token_id]
+        input = torch.tensor([generated], dtype=torch.long)
+
+        for _ in range(max_len - 1):
+            logits = self.forward(input)
+            next_token = torch.argmax(logits[:, -1, :], dim=-1).item()
+            generated.append(next_token)
+            input = torch.tensor([generated], dtype=torch.long)
+        return generated
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import numpy as np
+
+class TransformerModel(nn.Module):
+    def __init__(self, vocab, config):
+        super().__init__()
         self.vocab = vocab
-        self.inv_vocab = {v: k for k, v in vocab.items()}
-        self.device = config.get("device", "cpu")
+        self.idx2word = {v: k for k, v in vocab.items()}
+        self.word2idx = vocab
+        self.config = config
+        self.vocab_size = len(vocab)
 
-        self.model = TransformerDecoder(
-            vocab_size=len(vocab),
+        self.device = torch.device(config["device"])  # ✅ define early
+
+        self.embedding = nn.Embedding(self.vocab_size, config["d_model"])
+        self.pos_encoding = self._positional_encoding(config["max_len"], config["d_model"])
+
+        encoder_layer = nn.TransformerEncoderLayer(
             d_model=config["d_model"],
-            n_layers=config["n_layers"],
-            num_heads=config["num_heads"],
-            ff_dim=config["ff_dim"],
-            max_len=config["max_len"]
-        ).to(self.device)
+            nhead=config["num_heads"],
+            dim_feedforward=config["ff_dim"]
+        )
+        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=config["n_layers"])
+        self.output_layer = nn.Linear(config["d_model"], self.vocab_size)
 
-    def encode_prompt(self, text: str) -> torch.Tensor:
-        tokens = [self.vocab.get(tok, self.vocab.get("<UNK>", 1)) for tok in text.split()]
+        self.to(self.device)
+
+    def _positional_encoding(self, max_len, d_model):
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2) * -(np.log(10000.0) / d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        return pe.unsqueeze(0).to(self.device)
+
+    def encode_prompt(self, text):
+        tokens = [self.word2idx.get(t, self.word2idx.get("<UNK>", 1)) for t in text.lower().split()]
         return torch.tensor(tokens, dtype=torch.long, device=self.device).unsqueeze(0)
 
-    def decode_output(self, tokens: List[int]) -> str:
-        return " ".join([self.inv_vocab.get(t, "<UNK>") for t in tokens])
+    def forward(self, x):
+        seq_len = x.size(1)
+        x = self.embedding(x) + self.pos_encoding[:, :seq_len, :]
+        x = self.transformer(x)
+        return self.output_layer(x)
 
-    def generate(
-        self,
-        prompt: str,
-        max_new_tokens=20,
-        strategy="greedy",
-        temperature=1.0,
-        top_k=10,
-        top_p=0.9,
-        beam_width=3,
-        tone_prefix: Optional[str] = None,
-    ) -> str:
-        if tone_prefix:
-            prompt = f"[{tone_prefix}] {prompt}"
-
+    def generate(self, prompt, max_new_tokens=30, temperature=1.0, top_k=0, top_p=0.0):
+        self.eval()
         input_ids = self.encode_prompt(prompt)
-        generated = input_ids.tolist()[0]
+        generated = input_ids.clone()
 
-        self.model.eval()
-        with torch.no_grad():
-            if strategy == "beam":
-                return self._beam_search(input_ids, beam_width, max_new_tokens)
-            for _ in range(max_new_tokens):
-                x = torch.tensor([generated], dtype=torch.long, device=self.device)
-                logits = self.model(x)[:, -1, :] / temperature
-                probs = F.softmax(logits, dim=-1)
+        for _ in range(max_new_tokens):
+            outputs = self.forward(generated)
+            logits = outputs[:, -1, :] / temperature
+            probs = F.softmax(logits, dim=-1)
 
-                if strategy == "greedy":
-                    next_token = torch.argmax(probs, dim=-1).item()
-                elif strategy == "top_k":
-                    top_k_probs, top_k_idx = torch.topk(probs, top_k)
-                    next_token = top_k_idx[0][torch.multinomial(top_k_probs[0], 1)].item()
-                elif strategy == "top_p":
-                    sorted_probs, sorted_idx = torch.sort(probs, descending=True)
-                    cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
-                    mask = cumulative_probs <= top_p
-                    mask[..., 0] = 1
-                    filtered_idx = sorted_idx[0][mask[0]]
-                    filtered_probs = sorted_probs[0][mask[0]]
-                    next_token = filtered_idx[torch.multinomial(filtered_probs, 1)].item()
-                elif strategy == "top_k_top_p":
-                    top_k_probs, top_k_idx = torch.topk(probs, top_k)
-                    sorted_probs, sorted_idx = torch.sort(top_k_probs[0], descending=True)
-                    cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
-                    mask = cumulative_probs <= top_p
-                    mask[0] = 1
-                    filtered_idx = top_k_idx[0][mask]
-                    filtered_probs = top_k_probs[0][mask]
-                    next_token = filtered_idx[torch.multinomial(filtered_probs, 1)].item()
-                else:
-                    raise ValueError("Unsupported strategy")
+            if top_k > 0:
+                topk_probs, topk_indices = torch.topk(probs, top_k)
+                probs = torch.zeros_like(probs).scatter_(1, topk_indices, topk_probs)
+                probs = probs / probs.sum()
 
-                generated.append(next_token)
+            elif top_p > 0.0:
+                sorted_probs, sorted_indices = torch.sort(probs, descending=True)
+                cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
+                sorted_indices_to_remove = cumulative_probs > top_p
+                sorted_probs[sorted_indices_to_remove] = 0
+                probs = torch.zeros_like(probs).scatter_(1, sorted_indices, sorted_probs)
+                probs = probs / probs.sum()
 
-        return self.decode_output(generated)
+            next_token = torch.multinomial(probs, num_samples=1)
+            generated = torch.cat([generated, next_token], dim=1)
 
-    def _beam_search(self, input_ids: torch.Tensor, beam_width: int, max_len: int) -> str:
-        beams = [(input_ids.tolist()[0], 0)]  # (tokens, log_prob)
-        for _ in range(max_len):
-            candidates = []
-            for tokens, score in beams:
-                x = torch.tensor([tokens], dtype=torch.long, device=self.device)
-                logits = self.model(x)[:, -1, :]
-                probs = F.log_softmax(logits, dim=-1)
-                topk_probs, topk_idx = torch.topk(probs, beam_width)
+            if next_token.item() == self.word2idx.get("<EOS>", -1):
+                break
 
-                for i in range(beam_width):
-                    new_tokens = tokens + [topk_idx[0][i].item()]
-                    new_score = score + topk_probs[0][i].item()
-                    candidates.append((new_tokens, new_score))
-
-            beams = sorted(candidates, key=lambda x: x[1], reverse=True)[:beam_width]
-
-        best_tokens = beams[0][0]
-        return self.decode_output(best_tokens)
+        output_tokens = generated.squeeze().tolist()
+        return " ".join([self.idx2word.get(idx, "<UNK>") for idx in output_tokens])

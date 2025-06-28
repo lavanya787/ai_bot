@@ -5,10 +5,19 @@ from llm_handler import LLMHandler
 from utils.visualizer import plot_loss
 from utils.logger import Logger
 from utils.text_utils import load_documents_from_folder  # (Optional: if extracted to utils)
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-# Setup logger
-log_manager = Logger()
-logger = log_manager.logger
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    stream=sys.stdout,  # Ensure it's not default stderr
+    encoding="utf-8",   # ✅ Add this to allow emojis and Unicode
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 def main(data_dir, epochs, batch_size, save_path, log_path, plot_path):

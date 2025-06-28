@@ -3,163 +3,171 @@ import os
 import json
 import torch
 import torch.nn as nn
-import matplotlib.pyplot as plt
+import torch.optim as optim
 import pandas as pd
-from datetime import datetime
+import re
 from torch.utils.data import Dataset, DataLoader
-from torch.nn.utils.rnn import pad_sequence
-from intent.classifier import BiLSTMClassifier
-from utils.text_utils import tokenize_text
-from evaluation.evaluate import smart_evaluate
+from sklearn.model_selection import train_test_split
+from tqdm import tqdm
+from intent.classifier import TransformerIntentClassifier
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix
+from datetime import datetime
 
+# ----------- CONFIG -----------
+MAX_VOCAB_SIZE = 80000
+EMBEDDING_DIM = 512
+HIDDEN_SIZE = 768
+NUM_LAYERS = 6
+NUM_HEADS = 6
+MAX_SEQ_LENGTH = 256
+BATCH_SIZE = 32
+EPOCHS = 20
+LEARNING_RATE = 3e-4
+DROPOUT = 0.2
+GRAD_CLIP = 1.0
+
+INTENT_MODEL_PATH = 'intent/intent_model.pth'
+VOCAB_PATH = 'intent/intent_vocab.json'
+TOKENIZER_PATH = 'intent/vocab.json'
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# ----------- UTILITIES -----------
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r"[^a-z0-9\s]", "", text)
+    return text.strip()
+
+def tokenize(text):
+    return clean_text(text).split()
+
+# ----------- BUILD VOCAB -----------
+def build_vocab(texts):
+    word_freq = {}
+    for text in texts:
+        for token in tokenize(text):
+            word_freq[token] = word_freq.get(token, 0) + 1
+    sorted_vocab = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[:MAX_VOCAB_SIZE - 2]
+    word2idx = {"<PAD>": 0, "<UNK>": 1}
+    for idx, (word, _) in enumerate(sorted_vocab, start=2):
+        word2idx[word] = idx
+    with open(TOKENIZER_PATH, 'w') as f:
+        json.dump(word2idx, f)
+    return word2idx
+
+def encode(text, word2idx):
+    return [word2idx.get(token, word2idx["<UNK>"]) for token in tokenize(text)][:MAX_SEQ_LENGTH]
+
+# ----------- DATASET -----------
 class IntentDataset(Dataset):
-    def __init__(self, data, stoi, label_map, task="intent"):
-        self.data = data
-        self.stoi = stoi
-        self.label_map = label_map
-        self.task = task
+    def __init__(self, texts, labels, word2idx, label2id):
+        self.texts = texts
+        self.labels = labels
+        self.word2idx = word2idx
+        self.label2id = label2id
 
     def __len__(self):
-        return len(self.data)
+        return len(self.texts)
 
     def __getitem__(self, idx):
-        row = self.data.iloc[idx]
-        tokens = tokenize_text(row["query"])
-        x = torch.tensor([self.stoi.get(tok, self.stoi["<unk>"]) for tok in tokens])
-        y = torch.tensor(self.label_map[row[self.task]])
-        return x, y
+        x = encode(self.texts[idx], self.word2idx)
+        x += [0] * (MAX_SEQ_LENGTH - len(x))  # Pad
+        y = self.label2id[self.labels[idx]]
+        return torch.tensor(x), torch.tensor(y)
 
-def collate_fn(batch):
-    sequences, labels = zip(*batch)
-    padded = pad_sequence(sequences, batch_first=True, padding_value=0)
-    return padded, torch.tensor(labels)
+# ----------- TRAINING -----------
+def train_loop(model, dataloader, optimizer, criterion):
+    model.train()
+    total_loss = 0
+    for x, y in tqdm(dataloader):
+        x, y = x.to(device), y.to(device)
+        optimizer.zero_grad()
+        logits = model(x)
+        loss = criterion(logits, y)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), GRAD_CLIP)
+        optimizer.step()
+        total_loss += loss.item()
+    return total_loss / len(dataloader)
 
-def train_from_df(df, epochs=5, batch_size=4):
-    if not all(col in df.columns for col in ["query", "intent", "sentiment"]):
-        raise ValueError("DataFrame must contain 'query', 'intent', and 'sentiment' columns")
+def evaluate(model, dataloader, label_names=None):
+    model.eval()
+    all_preds = []
+    all_labels = []
 
-    if df.empty:
-        raise ValueError("DataFrame is empty")
+    with torch.no_grad():
+        for x, y in dataloader:
+            x, y = x.to(device), y.to(device)
+            outputs = model(x)
+            preds = torch.argmax(outputs, dim=1)
+            all_preds.extend(preds.cpu().tolist())
+            all_labels.extend(y.cpu().tolist())
 
-    if df["intent"].nunique() < 1 or df["sentiment"].nunique() < 1:
-        raise ValueError("At least one unique intent and sentiment required")
+    # Compute metrics
+    accuracy = accuracy_score(all_labels, all_preds)
+    precision, recall, f1, _ = precision_recall_fscore_support(all_labels, all_preds, average='weighted')
+    cm = confusion_matrix(all_labels, all_preds).tolist()
 
-    tokens = set(["<unk>"])
-    for q in df["query"]:
-        tokens.update(tokenize_text(q))
-    stoi = {w: i for i, w in enumerate(sorted(tokens))}
-
-    unique_intents = sorted(df["intent"].unique().tolist())
-    unique_sentiments = sorted(df["sentiment"].unique().tolist())
-
-    intent_labels = {label: i for i, label in enumerate(unique_intents)}
-    sentiment_labels = {label: i for i, label in enumerate(unique_sentiments)}
-    intent_map = {str(i): label for i, label in enumerate(unique_intents)}
-    sentiment_map = {str(i): label for i, label in enumerate(unique_sentiments)}
-
-    embedding_dim = 64
-    hidden_dim = 128
-
-    intent_model = BiLSTMClassifier(input_dim=len(stoi), embedding_dim=embedding_dim,
-                                    hidden_dim=hidden_dim, output_dim=len(intent_labels))
-    sentiment_model = BiLSTMClassifier(input_dim=len(stoi), embedding_dim=embedding_dim,
-                                       hidden_dim=hidden_dim, output_dim=len(sentiment_labels))
-
-    criterion = nn.CrossEntropyLoss()
-    intent_opt = torch.optim.Adam(intent_model.parameters(), lr=0.001)
-    sentiment_opt = torch.optim.Adam(sentiment_model.parameters(), lr=0.001)
-
-    intent_ds = IntentDataset(df, stoi, intent_labels, task="intent")
-    sentiment_ds = IntentDataset(df, stoi, sentiment_labels, task="sentiment")
-    intent_loader = DataLoader(intent_ds, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
-    sentiment_loader = DataLoader(sentiment_ds, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
-
-    i_losses, s_losses = [], []
-
-    for epoch in range(epochs):
-        intent_model.train()
-        sentiment_model.train()
-        i_total, s_total = 0, 0
-
-        for x, y in intent_loader:
-            intent_opt.zero_grad()
-            out = intent_model(x)
-            loss = criterion(out, y)
-            loss.backward()
-            intent_opt.step()
-            i_total += loss.item()
-
-        for x, y in sentiment_loader:
-            sentiment_opt.zero_grad()
-            out = sentiment_model(x)
-            loss = criterion(out, y)
-            loss.backward()
-            sentiment_opt.step()
-            s_total += loss.item()
-
-        i_losses.append(i_total / len(intent_loader))
-        s_losses.append(s_total / len(sentiment_loader))
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    base_path = f"intent/{timestamp}"
-    os.makedirs(base_path, exist_ok=True)
-
-    torch.save(intent_model.state_dict(), f"{base_path}/intent_model.pth")
-    torch.save(sentiment_model.state_dict(), f"{base_path}/sentiment_model.pth")
-
-    with open(f"{base_path}/intent_vocab.json", "w") as f:
-        json.dump({
-            "stoi": stoi,
-            "intent_labels": intent_map,
-            "sentiment_labels": sentiment_map
-        }, f)
-
-    with open("intent/latest_model.json", "w") as f:
-        json.dump({"latest_path": base_path}, f)
-
-    model_config = {
-        "intent": {
-            "input_dim": len(stoi),
-            "embedding_dim": embedding_dim,
-            "hidden_dim": hidden_dim,
-            "output_dim": len(intent_labels)
-        },
-        "sentiment": {
-            "input_dim": len(stoi),
-            "embedding_dim": embedding_dim,
-            "hidden_dim": hidden_dim,
-            "output_dim": len(sentiment_labels)
-        }
-    }
-
-    with open(f"{base_path}/model_config.json", "w") as f:
-        json.dump(model_config, f)
-
-    # Save loss plot
-    plt.figure(figsize=(8, 4))
-    plt.plot(i_losses, label="Intent Loss")
-    plt.plot(s_losses, label="Sentiment Loss")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.title("Training Loss")
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(f"{base_path}/loss_plot.png")
-    plt.close()
-
-    # Evaluate and save metrics
-    intent_eval = smart_evaluate("lstm_classification", model=intent_model,
-                                 dataloader=intent_loader, label_names=list(intent_labels.keys()))
-    sentiment_eval = smart_evaluate("lstm_classification", model=sentiment_model,
-                                    dataloader=sentiment_loader, label_names=list(sentiment_labels.keys()))
-
+    # Log results
     metrics = {
-        "intent": intent_eval,
-        "sentiment": sentiment_eval,
-        "timestamp": timestamp
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,
+        "f1_score": f1,
+        "confusion_matrix": cm
     }
 
-    with open(f"{base_path}/training_metrics.json", "w") as f:
-        json.dump(metrics, f, indent=2)
+    os.makedirs("logs/intent_metrics", exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    with open(f"logs/intent_metrics/intent_eval_{ts}.json", "w") as f:
+        json.dump(metrics, f, indent=4)
 
-    return intent_model, sentiment_model, stoi, intent_map, sentiment_map, i_losses, s_losses
+    return accuracy
+# ----------- MAIN FINE-TUNE ENTRY -----------
+def train_model(df: pd.DataFrame):
+    assert "sentence" in df.columns and "intent" in df.columns, "DataFrame must contain 'sentence' and 'intent' columns."
+
+    texts, labels = df["sentence"].tolist(), df["intent"].tolist()
+    label2id = {label: idx for idx, label in enumerate(sorted(set(labels)))}
+    with open(VOCAB_PATH, 'w') as f:
+        json.dump(label2id, f)
+
+    word2idx = build_vocab(texts)
+    X_train, X_val, y_train, y_val = train_test_split(texts, labels, test_size=0.2, random_state=42)
+
+    train_ds = IntentDataset(X_train, y_train, word2idx, label2id)
+    val_ds = IntentDataset(X_val, y_val, word2idx, label2id)
+    train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
+    val_loader = DataLoader(val_ds, batch_size=BATCH_SIZE)
+
+    model = TransformerIntentClassifier(
+        vocab_size=len(word2idx),
+        embed_dim=EMBEDDING_DIM,
+        num_heads=NUM_HEADS,
+        hidden_dim=HIDDEN_SIZE,
+        num_classes=len(label2id),
+        num_layers=NUM_LAYERS,
+        max_len=MAX_SEQ_LENGTH
+    ).to(device)
+
+    # 🔁 Load previous weights if available
+    if os.path.exists(INTENT_MODEL_PATH):
+        try:
+            model.load_state_dict(torch.load(INTENT_MODEL_PATH))
+            print("🔁 Loaded existing model weights for fine-tuning.")
+        except Exception as e:
+            print(f"⚠️ Could not load previous model weights: {e}")
+
+    optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE)
+    criterion = nn.CrossEntropyLoss()
+
+    for epoch in range(EPOCHS):
+        loss = train_loop(model, train_loader, optimizer, criterion)
+        acc = evaluate(model, val_loader)
+        print(f"Epoch {epoch+1}/{EPOCHS} | Loss: {loss:.4f} | Accuracy: {acc:.4f}")
+
+    torch.save(model.state_dict(), INTENT_MODEL_PATH)
+    print(f"✅ Model fine-tuned and saved to {INTENT_MODEL_PATH}")
+
+if __name__ == "__main__":
+    train_model()

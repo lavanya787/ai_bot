@@ -1,50 +1,96 @@
+import os
+import json
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import re
-from utils.text_utils import tokenize_text
 
-class BiLSTMClassifier(nn.Module):
-    def __init__(self, input_dim, hidden_dim=64, output_dim=2):
-        super(BiLSTMClassifier, self).__init__()
-        if output_dim < 1:
-            raise ValueError(f"output_dim must be at least 1, got {output_dim}")
-        self.embedding = nn.Embedding(input_dim, hidden_dim)
-        self.lstm = nn.LSTM(hidden_dim, hidden_dim, batch_first=True, bidirectional=True)
-        self.fc = nn.Linear(hidden_dim * 2, output_dim)
+# -------- CONFIG --------
+MODEL_PATH = 'intent/intent_model.pth'
+VOCAB_PATH = 'intent/intent_vocab.json'
+TOKENIZER_PATH = 'intent/vocab.json'
+MAX_SEQ_LENGTH = 256
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# -------- UTILITIES --------
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r"[^a-z0-9\s]", "", text)
+    return text.strip()
+
+def tokenize(text):
+    return clean_text(text).split()
+
+def encode(text, word2idx):
+    return [word2idx.get(token, word2idx.get("<UNK>", 1)) for token in tokenize(text)][:MAX_SEQ_LENGTH]
+
+# -------- MODEL --------
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_model, max_len=512):
+        super().__init__()
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2) * (-torch.log(torch.tensor(10000.0)) / d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        self.pe = pe.unsqueeze(0)
 
     def forward(self, x):
-        embedded = self.embedding(x)
-        lstm_out, _ = self.lstm(embedded)
-        last_hidden = lstm_out[:, -1, :]
-        return self.fc(last_hidden)
+        return x + self.pe[:, :x.size(1), :].to(x.device)
 
-def classify_query_intent(text, model_i, model_s, stoi, intent_map, sentiment_map):
-    if not isinstance(text, str) or not text.strip():
-        return "general", "neutral"
+class TransformerIntentClassifier(nn.Module):
+    def __init__(self, vocab_size, embed_dim, num_heads, hidden_dim, num_classes, num_layers=6, max_len=MAX_SEQ_LENGTH):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_dim)
+        self.pos_encoder = PositionalEncoding(embed_dim, max_len)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=embed_dim, nhead=num_heads, dim_feedforward=hidden_dim)
+        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        self.fc = nn.Linear(embed_dim, num_classes)
 
-    tokens = [stoi.get(tok, stoi.get("<unk>", 0)) for tok in tokenize_text(text)][:512]
+    def forward(self, x):
+        x = self.embedding(x)              # [B, T, D]
+        x = self.pos_encoder(x)            # [B, T, D]
+        x = self.transformer(x)            # [B, T, D]
+        x = x.mean(dim=1)                  # [B, D] - Global Average Pooling
+        return self.fc(x)                  # [B, num_classes]
 
-    if not tokens or any(not isinstance(t, (int, float)) for t in tokens):
-        return "general", "neutral"
+# -------- PREDICTOR --------
+class IntentClassifier:
+    def __init__(self):
+        if not os.path.exists(TOKENIZER_PATH) or not os.path.exists(VOCAB_PATH) or not os.path.exists(MODEL_PATH):
+            raise FileNotFoundError("🛑 Required model or vocab files are missing.")
 
-    try:
-        x = torch.tensor(tokens, dtype=torch.long).unsqueeze(0)
-        with torch.no_grad():
-            intent_out = model_i(x)
-            sent_out = model_s(x)
+        with open(TOKENIZER_PATH) as f:
+            self.word2idx = json.load(f)
 
-            intent_idx = torch.argmax(intent_out, dim=1).item()
-            sent_idx = torch.argmax(sent_out, dim=1).item()
+        with open(VOCAB_PATH) as f:
+            self.label2id = json.load(f)
 
-            intent = intent_map.get(str(intent_idx), "general")
-            sentiment = sentiment_map.get(str(sent_idx), "neutral")
+        self.id2label = {v: k for k, v in self.label2id.items()}
 
-            # Optional debug
-            print(f"[DEBUG] Intent probs: {torch.softmax(intent_out, dim=1)}")
-            print(f"[DEBUG] Sentiment probs: {torch.softmax(sent_out, dim=1)}")
+        self.model = TransformerIntentClassifier(
+            vocab_size=len(self.word2idx),
+            embed_dim=512,
+            num_heads=6,
+            hidden_dim=768,
+            num_classes=len(self.label2id),
+            num_layers=6,
+            max_len=MAX_SEQ_LENGTH
+        ).to(device)
 
-            return intent, sentiment
+        self.model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+        self.model.eval()
 
-    except Exception as e:
-        print(f"Error in classify_query_intent: {e}")
-        return "general", "neutral"
+# Singleton classifier instance
+_classifier_instance = None
+
+def predict_intent(text: str) -> str:
+    """
+    Utility function to predict intent from a text input.
+    Reuses a singleton instance of the IntentClassifier for performance.
+    """
+    global _classifier_instance
+    if _classifier_instance is None:
+        _classifier_instance = IntentClassifier()
+    return _classifier_instance.predict(text)

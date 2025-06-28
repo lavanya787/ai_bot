@@ -1,5 +1,6 @@
 # utils/text_utils.py
 import re
+import os
 import pandas as pd
 import nltk
 from nltk.corpus import stopwords
@@ -68,3 +69,15 @@ def create_training_data(chunks, domain="education"):
         "label": labels,
         "domain": [domain] * len(chunks)
     })
+
+def load_documents_from_folder(folder_path, allowed_exts=None):
+    allowed_exts = allowed_exts or [".txt", ".md", ".csv", ".json"]
+    documents = []
+
+    for filename in os.listdir(folder_path):
+        if any(filename.lower().endswith(ext) for ext in allowed_exts):
+            with open(os.path.join(folder_path, filename), "r", encoding="utf-8") as f:
+                documents.append((filename, f.read()))
+    
+    return documents
+

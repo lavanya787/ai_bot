@@ -1,18 +1,17 @@
 import os
 import time
 import json
-import fitz  # PyMuPDF
-import docx
-import pandas as pd
 import shutil
 from datetime import datetime
 from rag_domain_trainer import store_and_train, get_file_hash
 from utils.domain_detector import detect_domain, log_domain_usage
-from utils.alerts_email import send_alert_email  # ✅ IMPORT ALERTS
+from utils.alerts_email import send_alert_email
+from file_processing.processor import extract_text_from_file
 
 WATCH_DIR = "rag_data"
 ERROR_DIR = os.path.join(WATCH_DIR, "_errors")
-LOG_FILE = f"logs/runner_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+LOG_DIR = "logs"
+LOG_FILE = os.path.join(LOG_DIR, f"runner_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
 CHECK_INTERVAL = 10  # seconds
 
 def get_processed_hashes(domain_folder):
@@ -25,36 +24,6 @@ def get_processed_hashes(domain_folder):
         return {entry["hash"] for entry in metadata}
     except json.JSONDecodeError:
         return set()
-
-def extract_text_from_file(file_path, ext):
-    try:
-        if ext.endswith(".pdf"):
-            doc = fitz.open(file_path)
-            return "\n".join(page.get_text() for page in doc)
-
-        elif ext.endswith((".txt", ".csv", ".json")):
-            with open(file_path, "r", encoding="utf-8") as f:
-                return f.read()
-
-        elif ext.endswith(".docx"):
-            doc = docx.Document(file_path)
-            return "\n".join([para.text for para in doc.paragraphs])
-
-        elif ext.endswith(".xlsx"):
-            df = pd.read_excel(file_path)
-            return df.astype(str).apply(" ".join).str.cat(sep=" ")
-
-        elif ext.endswith(".doc"):
-            print(f"⚠️ .doc (legacy format) not supported: {file_path}")
-            return ""
-
-        else:
-            print(f"⚠️ Unsupported file type: {file_path}")
-            return ""
-
-    except Exception as e:
-        print(f"❌ Error reading file '{file_path}': {e}")
-        return ""
 
 def move_to_error_and_alert(file_path, reason):
     os.makedirs(ERROR_DIR, exist_ok=True)
@@ -70,9 +39,10 @@ def move_to_error_and_alert(file_path, reason):
         log_file=LOG_FILE
     )
 
-def scan_and_move_files():
+def move_file_to_domain_folder():
     print(f"👀 Watching '{WATCH_DIR}/' for new documents...")
     os.makedirs(WATCH_DIR, exist_ok=True)
+    os.makedirs(LOG_DIR, exist_ok=True)
 
     while True:
         files = [
@@ -83,7 +53,6 @@ def scan_and_move_files():
 
         for fname in files:
             full_path = os.path.join(WATCH_DIR, fname)
-            ext = fname.lower()
 
             try:
                 file_hash = get_file_hash(full_path)
@@ -92,9 +61,12 @@ def scan_and_move_files():
                 move_to_error_and_alert(full_path, "hashing_failed")
                 continue
 
-            text = extract_text_from_file(full_path, ext)
-            if not text.strip():
-                print(f"⚠️ No content extracted from: {fname}")
+            try:
+                text = extract_text_from_file(full_path, fname)
+                if not text.strip():
+                    raise ValueError("Empty content")
+            except Exception as e:
+                print(f"⚠️ Error extracting text from {fname}: {e}")
                 move_to_error_and_alert(full_path, "empty_or_invalid_content")
                 continue
 
@@ -114,10 +86,17 @@ def scan_and_move_files():
                 os.remove(full_path)
                 continue
 
+            # Move the file to domain folder
             new_path = os.path.join(domain_folder, fname)
-            os.rename(full_path, new_path)
-            print(f"📥 Moved '{fname}' to domain: {domain}")
+            try:
+                os.rename(full_path, new_path)
+                print(f"📥 Moved '{fname}' to domain: {domain}")
+            except Exception as e:
+                print(f"❌ Failed to move {fname}: {e}")
+                move_to_error_and_alert(full_path, "move_failed")
+                continue
 
+            # Log usage and train
             try:
                 log_domain_usage(domain)
                 store_and_train(new_path)
@@ -128,4 +107,4 @@ def scan_and_move_files():
         time.sleep(CHECK_INTERVAL)
 
 if __name__ == "__main__":
-    scan_and_move_files()
+    move_file_to_domain_folder()

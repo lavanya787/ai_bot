@@ -1,6 +1,32 @@
 import torch
 import torch.nn as nn
 
+class LSTMGenerator(nn.Module):
+    def __init__(self, vocab_size, embedding_dim=256, hidden_dim=512, num_layers=2):
+        super(LSTMGenerator, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, vocab_size)
+
+    def forward(self, x, hidden=None):
+        embed = self.embedding(x)
+        output, hidden = self.lstm(embed, hidden)
+        logits = self.fc(output)
+        return logits, hidden
+
+    def generate(self, start_token_id, max_length=50):
+        input = torch.tensor([[start_token_id]], dtype=torch.long)
+        hidden = None
+        generated = [start_token_id]
+
+        for _ in range(max_length):
+            logits, hidden = self.forward(input, hidden)
+            next_token = torch.argmax(logits[:, -1, :], dim=-1)
+            generated.append(next_token.item())
+            input = next_token.unsqueeze(0)
+
+        return generated
+
 class LSTMModel(nn.Module):
     def __init__(self, vocab_size, hidden_size, output_size):
         super().__init__()

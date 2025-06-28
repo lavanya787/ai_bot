@@ -1,13 +1,11 @@
 import streamlit as st
 import os
 import tempfile
-import hashlib
 from datetime import datetime
 import logging
-import nltk
-nltk.download('stopwords')
+from io import BytesIO
 
-# Safe imports with fallbacks
+# Safe imports
 try:
     import spacy
     nlp = spacy.load("en_core_web_sm")
@@ -16,229 +14,28 @@ except ImportError:
     SPACY_AVAILABLE = False
 
 try:
-    from llm_handler import LLMHandler
     LLM_AVAILABLE = True
 except ImportError:
     LLM_AVAILABLE = False
-    class LLMHandler:
-        def __init__(self):
-            pass
-        def index_document(self, filename, content):
-            pass
-        def generate_response(self, prompt, task='answer'):
-            return "LLMHandler not available. Please install llm_handler.py and dependencies."
 
-# Import functions from file 1
-from file_processing.processor import extract_text
+# Custom modules
+from file_processing.processor import extract_text_from_file
 from utils.preprocessing import Preprocessor
 from utils.logger import Logger
-from utils.domain_detector import detect_domain
-from llm_handler import LLMHandler
-from rag_domain_trainer import store_and_train, get_file_hash
+from chatbot_module import ChatBot
+from model_orchestrator import model_training_ui
+from scripts.auto_domain_mover import move_file_to_domain_folder
+from utils.pdf_export import export_chat_to_pdf  # ✅
+from utils.voice_input import record_and_transcribe  # ✅ Add this at the top
 
-# Setup logging
+# Setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Initialize components from file 1
 log = Logger().logger
 preprocessor = Preprocessor()
-# Function to count model parameters
-def count_parameters(model):
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-# Enhanced ChatBot class with LLM integration and merged functionality
-class ChatBot:
-    def __init__(self):
-        self.datasets = {}
-        self.documents = {}
-        self.trained_models = {}
-        self.llm_handler = LLMHandler() if LLM_AVAILABLE else None
-    
-    def generate_response(self, prompt):
-        if not self.documents:
-            return "Hello! Please upload some files first so I can analyze them and provide better responses."
-        
-        if not LLM_AVAILABLE or not self.llm_handler:
-            return "LLMHandler is not available. Please ensure llm_handler.py is installed."
-        
-        # Determine task based on prompt
-        if "analyze" in prompt.lower() or "data" in prompt.lower():
-            task = "analyze"
-        elif "summary" in prompt.lower() or "summarize" in prompt.lower():
-            task = "summarize"
-        elif "help" in prompt.lower():
-            return self._get_help_response()
-        else:
-            task = "answer"
-        
-        try:
-            response = self.llm_handler.generate_response(prompt, task)
-            Logger.logger(prompt, response, status="success", chunk_used="LLMHandler")
-            return response
-        except Exception as e:
-            return f"Error generating response: {str(e)}. Try rephrasing or uploading more documents."
-    
-    def _get_help_response(self):
-        help_text = """🤖 **AI Assistant Help**
-
-I can help you with:
-• **Document Analysis** - Analyze structure, content, and key insights
-• **Content Summarization** - Provide summaries of your documents  
-• **Question Answering** - Answer questions based on uploaded content
-• **Data Insights** - Extract patterns and information from your files
-
-**Currently loaded documents:**
-"""
-        for doc_name in self.documents.keys():
-            help_text += f"• {doc_name}\n"
-        
-        help_text += "\n**Try asking:**\n"
-        help_text += "• 'Analyze my documents'\n"
-        help_text += "• 'Summarize the content'\n" 
-        help_text += "• 'What information do you have about [topic]?'\n"
-        
-        return help_text
-    
-    def add_document(self, name, doc_dict):
-        content = doc_dict.get("content", "")
-        file_obj = doc_dict.get("file")
-
-        # Try to extract text if content is empty but file exists
-        if not content and file_obj:
-            try:
-                content = extract_text(file_obj)
-            except Exception as e:
-                log.warning(f"Extract failed: {e}")
-                return
-
-        # Apply preprocessing from file 1
-        cleaned = preprocessor.general_preprocessing(content)
-        self.documents[name] = {"content": cleaned, "file": file_obj}
-
-        # Auto domain detection + training + indexing from file 1
-        domain = detect_domain(cleaned)
-        log.info(f"Detected domain for {name}: {domain}")
-
-        try:
-            # Save file temporarily to disk for hashing and processing
-            tmp_path = os.path.join("rag_data", f"{datetime.now().timestamp()}_{name}")
-            os.makedirs("rag_data", exist_ok=True)
-            with open(tmp_path, "w", encoding="utf-8") as f:
-                f.write(cleaned)
-
-            # Let the pipeline handle saving, domain detection, hashing, model training
-            store_and_train(tmp_path)
-        except Exception as e:
-            log.warning(f"store_and_train() failed: {e}")
-
-        
-        # LLM indexing
-        if LLM_AVAILABLE and self.llm_handler and cleaned:
-            try:
-                self.llm_handler.index_document(name, cleaned)
-            except Exception as e:
-                logger.error(f"Failed to index document {name}: {e}")
-                st.warning(f"LLM indexing failed: {e}")
-        
-        # Dataset detection for tabular data
-        if any(delimiter in content for delimiter in [',', '\t', '|']):
-            lines = content.split('\n')
-            if len(lines) > 1:
-                doc_id = hashlib.md5(name.encode()).hexdigest()
-                self.datasets[doc_id] = {
-                    'data': lines,
-                    'filename': name,
-                    'type': 'tabular'
-                }
-
-    def auto_train_models(self, doc_id):
-        if doc_id in self.datasets:
-            dataset = self.datasets[doc_id]
-            data_size = len(dataset.get('data', []))
-            
-            self.trained_models[doc_id] = {
-                'model_type': 'classification' if data_size > 10 else 'regression',
-                'accuracy': min(0.95, 0.7 + (data_size / 100)),
-                'features': min(10, max(3, data_size // 5)),
-                'trained_at': datetime.now().isoformat()
-            }
-            
-            model_info = self.trained_models[doc_id]
-            return f"✅ {model_info['model_type'].title()} model trained with {model_info['accuracy']:.2%} accuracy using {model_info['features']} features"
-        else:
-            return f"⚠️ No dataset found for {doc_id} - upload CSV/Excel files for training"
-
-# Optimized file extraction
-def extract_text_from_file(file_path, file_name, max_pages=5, max_rows=500):
-    try:
-        if file_name.lower().endswith('.csv'):
-            import pandas as pd
-            try:
-                df = pd.read_csv(file_path, nrows=max_rows)
-                content = f"CSV Data Summary:\n"
-                content += f"Rows: {len(df)}, Columns: {len(df.columns)}\n"
-                content += f"Column names: {', '.join(df.columns.tolist())}\n\n"
-                content += "Sample data:\n"
-                content += df.head().to_string()
-                return content
-            except:
-                pass
-        
-        elif file_name.lower().endswith(('.xlsx', '.xls')):
-            import pandas as pd
-            try:
-                df = pd.read_excel(file_path, nrows=max_rows)
-                content = f"Excel Data Summary:\n"
-                content += f"Rows: {len(df)}, Columns: {len(df.columns)}\n"
-                content += f"Column names: {', '.join(df.columns.tolist())}\n\n"
-                content += "Sample data:\n"
-                content += df.head().to_string()
-                return content
-            except:
-                pass
-        elif file_name.lower().endswith('.pdf'):
-            try:
-                import PyPDF2
-                reader = PyPDF2.PdfReader(file_path)
-                academic_pages = [p.extract_text() or "" for p in reader.pages[10:40]]  # Skip first 10 pages (usually front matter)
-                content = "\n".join(filter(lambda x: len(x.strip()) > 100, academic_pages))  # Skip blank/short pages
-                logger.info(f"✅ Extracted {len(content)} chars of academic content from {file_name}")
-
-                if content.strip():
-                    return content
-            except Exception as e:
-                logger.warning(f"PyPDF2 failed for {file_name}: {e}. Trying pdfplumber.")
-            
-            try:
-                import pdfplumber
-                with pdfplumber.open(file_path) as pdf:
-                    content = "\n".join([page.extract_text() or "" for page in pdf.pages[:max_pages]])
-                logger.info(f"Extracted {len(content)} chars from {file_name} with pdfplumber")
-                return content
-            except Exception as e:
-                logger.error(f"pdfplumber failed for {file_name}: {e}")
-                return f"Could not extract text from {file_name}: {str(e)}"
-        
-        elif file_name.lower().endswith('.docx'):
-            import docx
-            doc = docx.Document(file_path)
-            content = "\n".join([para.text for para in doc.paragraphs[:500]])
-            return content
-        
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read(max(500000, os.path.getsize(file_path)))
-            return content if content.strip() else "File appears to be empty or unreadable"
-            
-    except Exception as e:
-        return f"Could not read file: {str(e)}"
-
-def save_chat_state():
-    pass
-
-def load_chat_history():
-    return []
-
+# Session state
 def initialize_session_state():
     defaults = {
         'chat_history': [{"title": "New Chat", "messages": [], "created_at": datetime.now().isoformat()}],
@@ -247,234 +44,190 @@ def initialize_session_state():
         'current_view': 'chat',
         'show_welcome': True
     }
-    
     if 'chatbot' not in st.session_state:
         st.session_state['chatbot'] = ChatBot()
-    
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
+# Welcome UI
 def show_welcome():
     st.title("🤖 AI Document Assistant")
     st.write("Upload files and start chatting with your documents!")
-    
     col1, col2, col3 = st.columns(3)
-    with col1:
-        st.info("📄 Upload documents for analysis")
-    with col2:
-        st.info("💬 Ask questions about your files")
-    with col3:
-        st.info("🧠 Get AI-powered insights")
-    
+    with col1: st.info("📄 Upload documents for analysis")
+    with col2: st.info("💬 Ask questions about your files")
+    with col3: st.info("🧠 Get AI-powered insights")
     if st.button("Start New Conversation", type="primary"):
         st.session_state.show_welcome = False
         st.rerun()
 
+# Sidebar
 def render_sidebar():
     with st.sidebar:
         st.header("🤖 AI Assistant")
-        
         if st.button("➕ New Chat", use_container_width=True):
-            new_chat = {
-                "title": "New Chat",
-                "messages": [],
-                "created_at": datetime.now().isoformat()
-            }
+            new_chat = {"title": "New Chat", "messages": [], "created_at": datetime.now().isoformat()}
             st.session_state.chat_history.append(new_chat)
             st.session_state.selected_chat_index = len(st.session_state.chat_history) - 1
             st.session_state.show_welcome = False
             st.rerun()
-        
+
         st.divider()
-        
         st.subheader("💬 Chats")
         for i, chat in enumerate(st.session_state.chat_history):
             is_selected = (i == st.session_state.selected_chat_index)
-            button_type = "primary" if is_selected else "secondary"
-            
-            if st.button(f"{chat['title'][:20]}...", key=f"chat_{i}", 
-                        type=button_type, use_container_width=True):
-                st.session_state.selected_chat_index = i
-                st.session_state.show_welcome = False
-                st.rerun()
-        
+            col1, col2 = st.columns([6, 1])
+            with col1:
+                if st.button(chat["title"][:25], key=f"chat_{i}", use_container_width=True):
+                    st.session_state.selected_chat_index = i
+                    st.session_state.show_welcome = False
+                    st.rerun()
+            with col2:
+                if st.button("✏️", key=f"rename_{i}"):
+                    new_title = st.text_input("Rename chat", chat["title"], key=f"title_{i}")
+                    if new_title:
+                        st.session_state.chat_history[i]["title"] = new_title
+                        st.rerun()
+
         st.divider()
-        
         st.subheader("📤 Upload Files")
-        uploaded_files = st.file_uploader(
-            "Choose files",
-            type=["pdf", "txt", "docx", "csv", "xlsx"],
-            accept_multiple_files=True
-        )
-        
+        uploaded_files = st.file_uploader("Choose files", type=["pdf", "txt", "docx", "csv", "xlsx"], accept_multiple_files=True)
+
         if uploaded_files and st.button("Process Files", type="primary"):
             with st.spinner("Processing files..."):
-                progress_bar = st.progress(0)
-                total_files = len(uploaded_files)
+                progress = st.progress(0)
                 for i, file in enumerate(uploaded_files):
                     with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.name}") as tmp:
                         tmp.write(file.read())
                         tmp_path = tmp.name
-                    
+
                     content = extract_text_from_file(tmp_path, file.name)
                     st.session_state.chatbot.add_document(file.name, {"content": content, "file": file, "type": file.type})
-                    
+
                     st.session_state.processed_files.append({
                         "filename": file.name,
                         "type": file.type,
                         "size": len(content),
                         "processed_at": datetime.now().isoformat()
                     })
-                    
-                    os.unlink(tmp_path)
-                    progress_bar.progress((i + 1) / total_files)
-            with st.sidebar:
-                if st.button("🔍 Model Status"):
-                    status = st.session_state.chatbot.llm_handler.get_status()
-                    st.json(status)
-            st.success(f"✅ Processed {len(uploaded_files)} files! Ready to answer questions.")
-            st.info("💡 Try asking: 'Analyze my documents' or 'What information do you have?'")
-            st.rerun()
-        
-        if st.session_state.processed_files:
-            st.subheader("📁 Processed Files")
-            for file in st.session_state.processed_files[-3:]:
-                st.text(f"✅ {file['filename']}")
-                st.caption(f"Size: {file.get('size', 0):,} chars | {file.get('type', 'Unknown')}")
-                
-        if hasattr(st.session_state.chatbot, 'datasets') and st.session_state.chatbot.datasets:
-            st.subheader("🗂️ Training Data")
-            st.text(f"📊 {len(st.session_state.chatbot.datasets)} datasets ready")
-            
-        if hasattr(st.session_state.chatbot, 'trained_models') and st.session_state.chatbot.trained_models:
-            st.subheader("🤖 Trained Models") 
-            st.text(f"🧠 {len(st.session_state.chatbot.trained_models)} models ready")
 
+                    try:
+                        move_file_to_domain_folder(tmp_path)
+                    except Exception as e:
+                        st.error(f"Error moving file: {e}")
+
+                    os.unlink(tmp_path)
+                    progress.progress((i + 1) / len(uploaded_files))
+
+            st.success("✅ Files processed successfully!")
+            st.rerun()
+
+        if st.session_state.processed_files:
+            st.subheader("📁 Recently Processed")
+            for f in st.session_state.processed_files[-3:]:
+                st.markdown(f"✅ `{f['filename']}` | {f.get('size', 0):,} chars | {f.get('type', 'Unknown')}")
+
+# Chat area
 def render_chat():
     if st.session_state.show_welcome:
         show_welcome()
         return
-    
+
     chat_idx = st.session_state.selected_chat_index
-    if chat_idx >= len(st.session_state.chat_history):
-        st.error("Please select a chat")
-        return
-    
-    chat = st.session_state.chat_history[-1]
-    
+    chat = st.session_state.chat_history[chat_idx]
+
     st.header(f"💬 {chat['title']}")
-    if chat["messages"]:
-        with st.columns([1])[0]:
-            if st.button("Clear Chat"):
-                chat["messages"] = []
-                st.rerun()
-    
+    if chat["messages"] and st.button("🧹 Clear Chat"):
+        chat["messages"] = []
+        st.rerun()
+
     for msg in chat["messages"]:
-        if msg["role"] == "user":
-            with st.chat_message("user"):
-                st.write(msg["content"])
-        else:
-            with st.chat_message("assistant"):
-                st.markdown(msg["content"])
-    
-    if prompt := st.chat_input("Ask me anything..."):
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        prompt = st.chat_input("Ask me anything...")
+    with col2:
+        audio_bytes = st.file_uploader("🎙️ Voice Input", type=["webm"], label_visibility="collapsed")
+        if audio_bytes is not None:
+            with st.spinner("Transcribing..."):
+                prompt = record_and_transcribe(audio_bytes)
+                st.success(f"📣 You said: {prompt}")
         chat["messages"].append({"role": "user", "content": prompt})
-        
-        with st.chat_message("user"):
-            st.write(prompt)
-        
+        with st.chat_message("user"): st.markdown(prompt)
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 response = st.session_state.chatbot.generate_response(prompt)
                 st.markdown(response)
-        
         chat["messages"].append({"role": "assistant", "content": response})
-        
+
         if len(chat["messages"]) == 2 and chat["title"] == "New Chat":
             chat["title"] = prompt[:30] + ("..." if len(prompt) > 30 else "")
-        
-        save_chat_state()
         st.rerun()
 
+    # Export
+    if chat["messages"]:
+        with st.expander("📥 Download Chat History"):
+            md = f"# Chat: {chat['title']}\n\n"
+            for msg in chat["messages"]:
+                md += f"{'**User**' if msg['role']=='user' else '**Assistant**'}: {msg['content']}\n\n"
+            st.download_button("⬇️ Markdown", md, file_name=f"{chat['title']}.md", mime="text/markdown")
+
+            if st.button("⬇️ Generate PDF"):
+                pdf_bytes = export_chat_to_pdf(chat["title"], chat["messages"])
+                st.download_button("📄 Download PDF", data=pdf_bytes, file_name=f"{chat['title']}.pdf", mime="application/pdf")
+
+# Training UI
 def render_training():
     st.header("🧠 Model Training")
-    
     if not st.session_state.chatbot.documents:
-        st.warning("Please upload some documents first!")
+        st.warning("Please upload documents first.")
         return
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Documents", len(st.session_state.chatbot.documents))
-    with col2:
-        dataset_count = len(getattr(st.session_state.chatbot, 'datasets', {}))
-        st.metric("Datasets", dataset_count)
-    
-    if hasattr(st.session_state.chatbot, 'datasets') and st.session_state.chatbot.datasets:
-        st.subheader("Available Datasets")
-        for doc_id, dataset in st.session_state.chatbot.datasets.items():
-            with st.expander(f"### Dataset: {dataset.get('filename', doc_id[:10])}..."):
-                st.write(f"- **Type**: {dataset.get('type', 'Unknown')}")
-                st.write(f"- **Records**: {len(dataset.get('data', []))}")
-                
-                if st.button(f"Train Model", key=f"train_{doc_id}"):
-                    with st.spinner("Training..."):
-                        result = st.session_state.chatbot.auto_train_models(doc_id)
-                        st.success(result)
-    
-    st.divider()
-    
-    if st.button("Train All Models", type="primary", use_container_width=True):
-        if hasattr(st.session_state.chatbot, 'datasets') and st.session_state.chatbot.datasets:
-            with st.spinner("Training all models..."):
-                results = []
-                for doc_id in st.session_state.chatbot.datasets.keys():
-                    result = st.session_state.chatbot.auto_train_models(doc_id)
-                    results.append(result)
-                
-                st.success("Training completed!")
-                for result in results:
-                    st.write(result)
-        else:
-            st.warning("No datasets available. Upload CSV/Excel files.")
-    
-    if hasattr(st.session_state.chatbot, 'trained_models') and st.session_state.chatbot.trained_models:
-        st.subheader("Trained Models")
-        for doc_id, model in st.session_state.chatbot.trained_models.items():
-            with st.expander(f"Model: {doc_id[:10]}..."):
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Model Type", model.get('model_type', 'Unknown'))
-                    st.metric("Accuracy" ,f"{model.get('accuracy', 0):.2%}")
-                with col2:
-                    st.metric("Features", model.get('features', 0))
-                    st.write(f"- {model.get('trained_at', '')[:10]}")
 
+    col1, col2 = st.columns(2)
+    col1.metric("Documents", len(st.session_state.chatbot.documents))
+    col2.metric("Datasets", len(getattr(st.session_state.chatbot, 'datasets', {})))
+
+    if hasattr(st.session_state.chatbot, 'datasets'):
+        st.subheader("📊 Available Datasets")
+        for doc_id, dataset in st.session_state.chatbot.datasets.items():
+            with st.expander(f"Dataset: {dataset.get('filename', doc_id[:10])}"):
+                st.write(f"- Type: {dataset.get('type', 'Unknown')}")
+                st.write(f"- Records: {len(dataset.get('data', []))}")
+                if st.button("Train", key=f"train_{doc_id}"):
+                    with st.spinner("Training..."):
+                        res = st.session_state.chatbot.auto_train_models(doc_id)
+                        st.success(res)
+
+    if hasattr(st.session_state.chatbot, 'trained_models'):
+        st.subheader("📌 Trained Models")
+        for doc_id, model in st.session_state.chatbot.trained_models.items():
+            with st.expander(f"Model: {doc_id[:10]}"):
+                st.metric("Type", model.get("model_type", "N/A"))
+                st.metric("Accuracy", f"{model.get('accuracy', 0):.2%}")
+                st.caption(f"Trained: {model.get('trained_at', '')[:10]}")
+
+# Entry Point
 def main():
-    st.set_page_config(
-        page_title="AI Document Assistant",
-        page_icon="🤖",
-        layout="wide"
-    )
-    
+    st.set_page_config(page_title="AI Bot Assistant", layout="wide", page_icon="🤖")
     initialize_session_state()
     render_sidebar()
-    
+
     if st.session_state.current_view == "chat":
         render_chat()
     elif st.session_state.current_view == "train":
         render_training()
-    
+
+    st.divider()
     col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Chat Mode", use_container_width=True):
-            st.session_state.current_view = "chat"
-            st.rerun()
-    with col2:
-        if st.button("Training Mode", use_container_width=True):
-            st.session_state.current_view = "train"
-            st.rerun()
+    if col1.button("💬 Chat Mode", use_container_width=True):
+        st.session_state.current_view = "chat"
+        st.rerun()
+    if col2.button("📊 Train Mode", use_container_width=True):
+        st.session_state.current_view = "train"
+        st.rerun()
 
 if __name__ == "__main__":
     main()

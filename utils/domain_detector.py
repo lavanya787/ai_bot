@@ -13,14 +13,6 @@ DOMAIN_KEYWORDS = {
         "student", "exam", "grade", "subject", "marks", "syllabus", "teacher", "university",
         "assignment", "semester", "attendance", "course", "question paper", "school"
     ],
-    "finance": [
-        "investment", "stock", "loan", "balance", "profit", "loss", "equity",
-        "revenue", "bank", "account", "financial", "budget", "tax", "income", "expense"
-    ],
-    "healthcare": [
-        "patient", "diagnosis", "doctor", "symptom", "treatment", "hospital",
-        "prescription", "medical", "medication", "nurse", "clinic", "disease", "therapy"
-    ],
     "qa": [
         "question", "answer", "faq", "support", "helpdesk", "ticket", "chatbot",
         "inquiry", "troubleshooting", "resolution"
