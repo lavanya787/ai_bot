@@ -1,0 +1,3 @@
+This is a default sample document for testing the QA system.
+It contains multiple sentences to ensure chunking and embedding work correctly.
+Add more text files to this corpus directory for better performance.

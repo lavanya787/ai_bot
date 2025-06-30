@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class LSTMGenerator(nn.Module):
-    def __init__(self, vocab_size, embedding_dim=256, hidden_dim=512, num_layers=2):
+    def __init__(self, vocab_size, embedding_dim=128, hidden_dim=256, num_layers=2):
         super(LSTMGenerator, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
         self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers, batch_first=True)

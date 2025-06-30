@@ -4,7 +4,7 @@ import tempfile
 from datetime import datetime
 import logging
 from io import BytesIO
-
+import sys
 # Safe imports
 try:
     import spacy
@@ -25,12 +25,13 @@ from utils.logger import Logger
 from chatbot_module import ChatBot
 from model_orchestrator import model_training_ui
 from scripts.auto_domain_mover import move_file_to_domain_folder
-from utils.pdf_export import export_chat_to_pdf  # ✅
-from utils.voice_input import record_and_transcribe  # ✅ Add this at the top
+from utils.pdf_export import export_chat_to_pdf
+from utils.voice_input import record_and_transcribe
 
 # Setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+sys.stdout.reconfigure(encoding='utf-8')
 
 log = Logger().logger
 preprocessor = Preprocessor()
@@ -38,7 +39,7 @@ preprocessor = Preprocessor()
 # Session state
 def initialize_session_state():
     defaults = {
-        'chat_history': [{"title": "New Chat", "messages": [], "created_at": datetime.now().isoformat()}],
+        'chat_history': [{"title": "Welcome Chat", "messages": [], "created_at": datetime.now().isoformat()}],
         'selected_chat_index': 0,
         'processed_files': [],
         'current_view': 'chat',
@@ -50,54 +51,93 @@ def initialize_session_state():
         if key not in st.session_state:
             st.session_state[key] = value
 
-# Welcome UI
+# Welcome UI - Updated to match the landing page design
 def show_welcome():
-    st.title("🤖 AI Document Assistant")
-    st.write("Upload files and start chatting with your documents!")
-    col1, col2, col3 = st.columns(3)
-    with col1: st.info("📄 Upload documents for analysis")
-    with col2: st.info("💬 Ask questions about your files")
-    with col3: st.info("🧠 Get AI-powered insights")
-    if st.button("Start New Conversation", type="primary"):
-        st.session_state.show_welcome = False
-        st.rerun()
+    st.markdown("<div style='text-align: center; padding: 2rem 0;'>", unsafe_allow_html=True)
+    st.markdown("# 🤖 AI Document Assistant")
+    st.markdown("### Upload your documents and start intelligent conversations. Get AI-powered insights, summaries, and answers from your files with advanced machine learning.")
+    
+    # Feature cards in columns
+    col1, col2, col3 = st.columns(3, gap="large")
+    
+    with col1:
+        st.markdown("""
+        <div style='text-align: center; padding: 1.5rem; background: #f8f9fa; border-radius: 12px; margin: 1rem 0;'>
+            <div style='font-size: 2rem; margin-bottom: 1rem;'>📄</div>
+            <h4>Document Processing</h4>
+            <p>Upload PDFs, Word docs, text files, and spreadsheets for intelligent analysis</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div style='text-align: center; padding: 1.5rem; background: #f8f9fa; border-radius: 12px; margin: 1rem 0;'>
+            <div style='font-size: 2rem; margin-bottom: 1rem;'>💬</div>
+            <h4>Smart Conversations</h4>
+            <p>Ask questions about your documents and get contextual, intelligent responses</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div style='text-align: center; padding: 1.5rem; background: #f8f9fa; border-radius: 12px; margin: 1rem 0;'>
+            <div style='font-size: 2rem; margin-bottom: 1rem;'>🧠</div>
+            <h4>AI Training</h4>
+            <p>Train custom models on your data for enhanced performance and accuracy</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Center the button
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        if st.button("Start New Conversation →", type="primary", use_container_width=True):
+            st.session_state.show_welcome = False
+            st.rerun()
 
-# Sidebar
+# Sidebar - Simplified and cleaner
 def render_sidebar():
     with st.sidebar:
-        st.header("🤖 AI Assistant")
-        if st.button("➕ New Chat", use_container_width=True):
+        st.markdown("### 🤖 AI Assistant")
+        
+        if st.button("+ New Chat", use_container_width=True, type="primary"):
             new_chat = {"title": "New Chat", "messages": [], "created_at": datetime.now().isoformat()}
             st.session_state.chat_history.append(new_chat)
             st.session_state.selected_chat_index = len(st.session_state.chat_history) - 1
             st.session_state.show_welcome = False
             st.rerun()
 
-        st.divider()
-        st.subheader("💬 Chats")
+        st.markdown("---")
+        st.markdown("**RECENT CHATS**")
+        
         for i, chat in enumerate(st.session_state.chat_history):
-            is_selected = (i == st.session_state.selected_chat_index)
-            col1, col2 = st.columns([6, 1])
-            with col1:
-                if st.button(chat["title"][:25], key=f"chat_{i}", use_container_width=True):
-                    st.session_state.selected_chat_index = i
-                    st.session_state.show_welcome = False
-                    st.rerun()
-            with col2:
-                if st.button("✏️", key=f"rename_{i}"):
-                    new_title = st.text_input("Rename chat", chat["title"], key=f"title_{i}")
-                    if new_title:
-                        st.session_state.chat_history[i]["title"] = new_title
-                        st.rerun()
+            chat_title = chat["title"] if chat["title"] != "New Chat" else f"Chat {i+1}"
+            msg_count = len(chat["messages"])
+            
+            if st.button(f"💬 {chat_title[:20]}", key=f"chat_{i}", use_container_width=True):
+                st.session_state.selected_chat_index = i
+                st.session_state.show_welcome = False
+                st.rerun()
+            
+            if msg_count > 0:
+                st.caption(f"{msg_count} messages")
 
-        st.divider()
-        st.subheader("📤 Upload Files")
-        uploaded_files = st.file_uploader("Choose files", type=["pdf", "txt", "docx", "csv", "xlsx"], accept_multiple_files=True)
+        st.markdown("---")
+        st.markdown("**DOCUMENTS**")
+        
+        # File upload section
+        uploaded_files = st.file_uploader(
+            "Upload Files", 
+            type=["pdf", "txt", "docx", "csv", "xlsx"], 
+            accept_multiple_files=True,
+            label_visibility="collapsed"
+        )
+        st.caption("PDF, Word, Text, CSV, Excel files supported")
 
-        if uploaded_files and st.button("Process Files", type="primary"):
+        if uploaded_files and st.button("Process Files", type="secondary", use_container_width=True):
             with st.spinner("Processing files..."):
-                progress = st.progress(0)
-                for i, file in enumerate(uploaded_files):
+                for file in uploaded_files:
                     with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.name}") as tmp:
                         tmp.write(file.read())
                         tmp_path = tmp.name
@@ -118,17 +158,11 @@ def render_sidebar():
                         st.error(f"Error moving file: {e}")
 
                     os.unlink(tmp_path)
-                    progress.progress((i + 1) / len(uploaded_files))
 
-            st.success("✅ Files processed successfully!")
+            st.success("✅ Files processed!")
             st.rerun()
 
-        if st.session_state.processed_files:
-            st.subheader("📁 Recently Processed")
-            for f in st.session_state.processed_files[-3:]:
-                st.markdown(f"✅ `{f['filename']}` | {f.get('size', 0):,} chars | {f.get('type', 'Unknown')}")
-
-# Chat area
+# Chat area - Updated to match the conversation interface
 def render_chat():
     if st.session_state.show_welcome:
         show_welcome()
@@ -137,81 +171,131 @@ def render_chat():
     chat_idx = st.session_state.selected_chat_index
     chat = st.session_state.chat_history[chat_idx]
 
-    st.header(f"💬 {chat['title']}")
-    if chat["messages"] and st.button("🧹 Clear Chat"):
-        chat["messages"] = []
-        st.rerun()
+    # Chat header
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.markdown(f"### 💬 {chat['title']}")
+        st.caption(f"0 messages • Last updated {datetime.now().strftime('%I:%M %p')}")
+    with col2:
+        if chat["messages"] and st.button("🧹", help="Clear Chat"):
+            chat["messages"] = []
+            st.rerun()
 
+    # Empty state when no messages
+    if not chat["messages"]:
+        st.markdown("<div style='text-align: center; padding: 3rem 0;'>", unsafe_allow_html=True)
+        st.markdown("### 💬 Start a conversation")
+        st.markdown("Ask me anything about your uploaded documents. I can help analyze, summarize, and answer questions about your content.")
+        
+        # Quick action buttons
+        col1, col2, col3, col4 = st.columns(4)
+        quick_actions = [
+            ("Summarize my documents", "Summarize my documents"),
+            ("What are the key points?", "What are the key points?"),
+            ("Analyze the content", "Analyze the content"),
+            ("Find specific information", "Find specific information")
+        ]
+        
+        for i, (label, prompt) in enumerate(quick_actions):
+            with [col1, col2, col3, col4][i]:
+                if st.button(label, key=f"quick_{i}"):
+                    # Add the quick action as user message and generate response
+                    chat["messages"].append({"role": "user", "content": prompt})
+                    response = st.session_state.chatbot.generate_response(prompt)
+                    chat["messages"].append({"role": "assistant", "content": response})
+                    if chat["title"] == "New Chat":
+                        chat["title"] = prompt[:30] + ("..." if len(prompt) > 30 else "")
+                    st.rerun()
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # Display chat messages
     for msg in chat["messages"]:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    col1, col2 = st.columns([4, 1])
-    with col1:
-        prompt = st.chat_input("Ask me anything...")
-    with col2:
-        audio_bytes = st.file_uploader("🎙️ Voice Input", type=["webm"], label_visibility="collapsed")
-        if audio_bytes is not None:
-            with st.spinner("Transcribing..."):
-                prompt = record_and_transcribe(audio_bytes)
-                st.success(f"📣 You said: {prompt}")
+    # Chat input
+    if prompt := st.chat_input("Ask me anything about your documents..."):
         chat["messages"].append({"role": "user", "content": prompt})
-        with st.chat_message("user"): st.markdown(prompt)
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 response = st.session_state.chatbot.generate_response(prompt)
                 st.markdown(response)
+        
         chat["messages"].append({"role": "assistant", "content": response})
-
+        
         if len(chat["messages"]) == 2 and chat["title"] == "New Chat":
             chat["title"] = prompt[:30] + ("..." if len(prompt) > 30 else "")
         st.rerun()
 
-    # Export
-    if chat["messages"]:
-        with st.expander("📥 Download Chat History"):
-            md = f"# Chat: {chat['title']}\n\n"
-            for msg in chat["messages"]:
-                md += f"{'**User**' if msg['role']=='user' else '**Assistant**'}: {msg['content']}\n\n"
-            st.download_button("⬇️ Markdown", md, file_name=f"{chat['title']}.md", mime="text/markdown")
+    # Mode selector at bottom
+    st.markdown("---")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("💬 Chat Mode", use_container_width=True, type="primary" if st.session_state.current_view == "chat" else "secondary"):
+            st.session_state.current_view = "chat"
+            st.rerun()
+    with col2:
+        if st.button("🔬 Training Mode", use_container_width=True, type="primary" if st.session_state.current_view == "train" else "secondary"):
+            st.session_state.current_view = "train"
+            st.rerun()
 
-            if st.button("⬇️ Generate PDF"):
-                pdf_bytes = export_chat_to_pdf(chat["title"], chat["messages"])
-                st.download_button("📄 Download PDF", data=pdf_bytes, file_name=f"{chat['title']}.pdf", mime="application/pdf")
-
-# Training UI
+# Training UI - Simplified
 def render_training():
-    st.header("🧠 Model Training")
+    st.markdown("### 🧠 Model Training")
+    
     if not st.session_state.chatbot.documents:
-        st.warning("Please upload documents first.")
+        st.info("📁 Please upload documents first to start training models.")
         return
 
     col1, col2 = st.columns(2)
-    col1.metric("Documents", len(st.session_state.chatbot.documents))
-    col2.metric("Datasets", len(getattr(st.session_state.chatbot, 'datasets', {})))
+    with col1:
+        st.metric("📄 Documents", len(st.session_state.chatbot.documents))
+    with col2:
+        st.metric("🤖 Datasets", len(getattr(st.session_state.chatbot, 'datasets', {})))
 
-    if hasattr(st.session_state.chatbot, 'datasets'):
-        st.subheader("📊 Available Datasets")
+    if hasattr(st.session_state.chatbot, 'datasets') and st.session_state.chatbot.datasets:
+        st.markdown("**📊 Available Datasets**")
         for doc_id, dataset in st.session_state.chatbot.datasets.items():
-            with st.expander(f"Dataset: {dataset.get('filename', doc_id[:10])}"):
-                st.write(f"- Type: {dataset.get('type', 'Unknown')}")
-                st.write(f"- Records: {len(dataset.get('data', []))}")
-                if st.button("Train", key=f"train_{doc_id}"):
-                    with st.spinner("Training..."):
-                        res = st.session_state.chatbot.auto_train_models(doc_id)
-                        st.success(res)
-
-    if hasattr(st.session_state.chatbot, 'trained_models'):
-        st.subheader("📌 Trained Models")
-        for doc_id, model in st.session_state.chatbot.trained_models.items():
-            with st.expander(f"Model: {doc_id[:10]}"):
-                st.metric("Type", model.get("model_type", "N/A"))
-                st.metric("Accuracy", f"{model.get('accuracy', 0):.2%}")
-                st.caption(f"Trained: {model.get('trained_at', '')[:10]}")
+            with st.expander(f"📊 {dataset.get('filename', doc_id[:20])}"):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Type", dataset.get('type', 'Unknown'))
+                with col2:
+                    st.metric("Records", len(dataset.get('data', [])))
+                with col3:
+                    if st.button("🚀 Train", key=f"train_{doc_id}"):
+                        with st.spinner("Training model..."):
+                            result = st.session_state.chatbot.auto_train_models(doc_id)
+                            st.success(f"✅ {result}")
 
 # Entry Point
 def main():
-    st.set_page_config(page_title="AI Bot Assistant", layout="wide", page_icon="🤖")
+    st.set_page_config(
+        page_title="AI Document Assistant", 
+        layout="wide", 
+        page_icon="🤖",
+        initial_sidebar_state="expanded"
+    )
+    
+    # Custom CSS for better styling
+    st.markdown("""
+    <style>
+    .stButton > button {
+        border-radius: 8px;
+    }
+    .stSelectbox > div > div {
+        border-radius: 8px;
+    }
+    .stTextInput > div > div {
+        border-radius: 8px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     initialize_session_state()
     render_sidebar()
 
@@ -219,15 +303,6 @@ def main():
         render_chat()
     elif st.session_state.current_view == "train":
         render_training()
-
-    st.divider()
-    col1, col2 = st.columns(2)
-    if col1.button("💬 Chat Mode", use_container_width=True):
-        st.session_state.current_view = "chat"
-        st.rerun()
-    if col2.button("📊 Train Mode", use_container_width=True):
-        st.session_state.current_view = "train"
-        st.rerun()
 
 if __name__ == "__main__":
     main()

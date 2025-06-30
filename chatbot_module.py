@@ -4,26 +4,6 @@ import hashlib
 from datetime import datetime
 import logging
 import pandas as pd
-
-# NLP + Fallbacks
-try:
-    import spacy
-    nlp = spacy.load("en_core_web_sm")
-    SPACY_AVAILABLE = True
-except ImportError:
-    SPACY_AVAILABLE = False
-
-try:
-    from llm_handler import LLMHandler
-    LLM_AVAILABLE = True
-except ImportError:
-    LLM_AVAILABLE = False
-    class LLMHandler:
-        def index_document(self, filename, content): pass
-        def generate_response(self, prompt, task='answer'):
-            return "LLMHandler not available. Please install llm_handler.py and dependencies."
-
-# Imports
 from file_processing.processor import extract_text
 from utils.domain_detector import detect_domain
 from utils.logger import Logger
@@ -32,6 +12,9 @@ from utils.preprocessing import Preprocessor
 from intent.classifier import IntentClassifier
 from intent.train_classifier import train_model
 from models.qa_model import QAHandler
+from llm_handler import LLMHandler
+
+LLM_AVAILABLE = True
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -46,7 +29,7 @@ class ChatBot:
         self.trained_models = {}
         self.intent_dataset = None
         self.llm_handler = LLMHandler() if LLM_AVAILABLE else None
-        self.intent_classifier = IntentClassifier() if os.path.exists("intent/intent_model.pth") else None
+        self.intent_classifier = IntentClassifier()  # Always instantiate
         self.qa_handler = QAHandler()
 
     def generate_response(self, prompt):
@@ -55,12 +38,11 @@ class ChatBot:
 
         # Intent detection
         detected_intent = "ask_question"
-        if self.intent_classifier:
-            try:
-                detected_intent = self.intent_classifier.predict(prompt)
-                logger.info(f"🧠 Detected intent: {detected_intent}")
-            except Exception as e:
-                logger.warning(f"⚠️ Intent detection failed: {e}")
+        try:
+            detected_intent = self.intent_classifier.predict(prompt)
+            logger.info(f"🧠 Detected intent: {detected_intent}")
+        except Exception as e:
+            logger.warning(f"⚠️ Intent detection failed: {e}")
 
         # Map intent to task
         intent_task_map = {
@@ -70,7 +52,12 @@ class ChatBot:
             "train_model": "train",
             "get_sentiment": "sentiment",
             "book_flight": "external_action",
-            "set_reminder": "external_action"
+            "set_reminder": "external_action",
+            "question": "answer",
+            "generate": "generate",
+            "sentiment": "sentiment",
+            "rag_query": "answer",
+            "default": "answer"
         }
         task = intent_task_map.get(detected_intent, "answer")
 
@@ -84,6 +71,11 @@ class ChatBot:
                 return self.qa_handler.answer(prompt)
             except Exception as e:
                 logger.warning(f"🔁 QA fallback to LLM: {e}")
+        elif task == "generate" and self.llm_handler:
+            try:
+                return self.llm_handler.generate_response(prompt, task="generate")
+            except Exception as e:
+                logger.warning(f"🔁 Generate fallback: {e}")
 
         # LLM fallback
         try:
@@ -97,7 +89,7 @@ class ChatBot:
         content = doc_dict.get("content", "")
         file_obj = doc_dict.get("file")
 
-        # Step 1: Extract content if needed
+        # Step 1: Extract text
         if not content and file_obj:
             try:
                 content = extract_text(file_obj)
@@ -105,15 +97,55 @@ class ChatBot:
                 log.warning(f"❌ Failed to extract text: {e}")
                 return
 
-        # Step 2: Preprocess and store
+        if not content.strip():
+            log.warning(f"⚠️ Empty content after extraction for file: {name}")
+            return
+
+        # Step 2: Preprocess
         cleaned = preprocessor.general_preprocessing(content)
         self.documents[name] = {"content": cleaned, "file": file_obj}
+        content_hash = hashlib.md5(cleaned.encode()).hexdigest()
 
-        # Step 3: Domain Detection
+        # Step 3: Detect domain
         domain = detect_domain(cleaned)
         log.info(f"🌐 Detected domain for {name}: {domain}")
 
-        # Step 4: Save temp file
+        # Step 4: Prepare directory & avoid duplicates
+        domain_folder = os.path.join("trained_data", domain)
+        os.makedirs(domain_folder, exist_ok=True)
+
+        # Check for existing hash
+        for fname in os.listdir(domain_folder):
+            if fname.endswith(".txt") and content_hash in fname:
+                log.info(f"⚠️ Duplicate file detected: {fname} — skipping.")
+                return
+
+        # Step 5: Save unique cleaned content
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        cleaned_file_path = os.path.join(domain_folder, f"{timestamp}_{content_hash}_{name}.txt")
+        try:
+            with open(cleaned_file_path, "w", encoding="utf-8") as f:
+                f.write(cleaned)
+            log.info(f"✅ Saved to: {cleaned_file_path}")
+        except Exception as e:
+            log.warning(f"⚠️ Saving file failed: {e}")
+
+        # Step 6: Auto fine-tuning
+        try:
+            domain_files = [os.path.join(domain_folder, f) for f in os.listdir(domain_folder) if f.endswith(".txt")]
+            if len(domain_files) >= 3:
+                merged_content = ""
+                for fpath in domain_files:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        merged_content += f.read() + "\n"
+                log.info(f"🧠 Auto-finetuning domain model for: {domain} with {len(domain_files)} files")
+                store_and_train(None, text=merged_content, domain=domain)
+            else:
+                log.info(f"ℹ️ Not enough files for fine-tuning: {len(domain_files)}")
+        except Exception as e:
+            log.warning(f"⚠️ Fine-tuning failed: {e}")
+
+        # Step 7: Upload to RAG store
         try:
             tmp_path = os.path.join("rag_data", f"{datetime.now().timestamp()}_{name}")
             os.makedirs("rag_data", exist_ok=True)
@@ -123,9 +155,10 @@ class ChatBot:
         except Exception as e:
             log.warning(f"⚠️ store_and_train() failed: {e}")
 
-        # Step 5: Intent CSV/JSON detection
+        # Step 8: Intent dataset handling
         if name.endswith((".csv", ".json")):
             try:
+                file_obj.seek(0)
                 df = pd.read_csv(file_obj) if name.endswith(".csv") else pd.read_json(file_obj)
                 if {"sentence", "intent"}.issubset(df.columns):
                     self.intent_dataset = df
@@ -140,16 +173,16 @@ class ChatBot:
             except Exception as e:
                 logger.warning(f"⚠️ Intent fine-tuning failed: {e}")
 
-        # Step 6: LLM Indexing
+        # Step 9: LLM Indexing
         if LLM_AVAILABLE and self.llm_handler:
             try:
                 self.llm_handler.index_document(name, cleaned)
             except Exception as e:
-                logger.warning(f"LLM Indexing failed: {e}")
+                logger.warning(f"⚠️ LLM Indexing failed: {e}")
                 st.warning(f"LLM indexing failed for {name}: {e}")
 
-        # Step 7: Tabular detection
-        if any(delimiter in content for delimiter in [',', '\t', '|']):
+        # Step 10: Tabular content detection
+        if any(delim in content for delim in [',', '\t', '|']):
             lines = content.split('\n')
             if len(lines) > 1:
                 doc_id = hashlib.md5(name.encode()).hexdigest()
@@ -172,3 +205,11 @@ class ChatBot:
             model = self.trained_models[doc_id]
             return f"✅ Trained {model['model_type']} model (Acc: {model['accuracy']:.2%})"
         return "⚠️ Dataset not found."
+
+    def auto_train_models_from_user(self):
+        # Placeholder for user-triggered training
+        results = []
+        for doc_id in self.datasets:
+            result = self.auto_train_models(doc_id)
+            results.append(result)
+        return "\n".join(results) if results else "⚠️ No datasets available for training."

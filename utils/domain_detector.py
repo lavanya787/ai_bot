@@ -1,10 +1,14 @@
 import json
 import os
 import re
+import csv
 from collections import defaultdict
+from datetime import datetime
+from typing import Union
 from googletrans import Translator
 
-LOG_PATH = "logs/domain_usage.json"
+LOG_PATH_JSON = "logs/domain_usage.json"
+LOG_PATH_CSV = "logs/domain_scores.csv"
 translator = Translator()
 
 # 🔍 Domain-wise keyword mappings
@@ -45,61 +49,103 @@ def translate_to_english(text):
         translated = translator.translate(text, dest="en")
         return translated.text
     except Exception:
-        return text  # Fallback to original if translation fails
+        return text  # Fallback to original
 
 
-def detect_domain(text: str) -> str:
+def detect_domain(text: str, top_n: int = 2) -> Union[str, list]:
     """
-    Detect domain from raw text content using keyword match count.
+    Detect domain from raw text content using keyword TF-IDF style scoring.
     """
     text = text.lower()
-    counts = {domain: 0 for domain in DOMAIN_KEYWORDS}
+    tokens = re.findall(r'\b\w+\b', text)
+    word_freq = defaultdict(int)
+    for word in tokens:
+        word_freq[word] += 1
 
+    scores = {}
     for domain, keywords in DOMAIN_KEYWORDS.items():
+        domain_score = 0
         for keyword in keywords:
-            if re.search(rf"\\b{re.escape(keyword)}\\b", text):
-                counts[domain] += 1
+            tf = word_freq.get(keyword, 0)
+            idf = 1 + 1 / (1 + sum(1 for d in DOMAIN_KEYWORDS.values() if keyword in d))
+            domain_score += tf * idf
+        scores[domain] = domain_score
 
-    best_match = max(counts, key=counts.get)
-    return best_match if counts[best_match] > 0 else "general"
+    sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    filtered = [(d, round(s, 4)) for d, s in sorted_scores if s > 0]
+
+    if filtered:
+        log_domain_usage(filtered)
+        log_domain_scores(filtered, text_snippet=text)
+    else:
+        log_domain_usage("general")
+        log_domain_scores([("general", 0.0)], text_snippet=text)
+
+    return filtered[0][0] if top_n == 1 else filtered[:top_n]
 
 
 def get_domain_from_file(df) -> str:
-    """
-    Detect domain from dataframe columns + first row.
-    """
     text = " ".join(map(str, df.columns.tolist()))
     if not df.empty:
         text += " " + " ".join(map(str, df.iloc[0].astype(str).tolist()))
     return detect_domain(text)
 
 
-def log_domain_usage(domain: str):
-    """Append domain usage to a persistent log file."""
-    os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+def log_domain_usage(predictions: Union[str, list]):
+    os.makedirs(os.path.dirname(LOG_PATH_JSON), exist_ok=True)
     usage = defaultdict(int)
 
-    if os.path.exists(LOG_PATH):
+    if os.path.exists(LOG_PATH_JSON):
         try:
-            with open(LOG_PATH, "r") as f:
+            with open(LOG_PATH_JSON, "r") as f:
                 usage.update(json.load(f))
         except Exception:
-            pass  # Skip if corrupted
+            pass
 
-    usage[domain] += 1
+    if isinstance(predictions, list):
+        for domain, _ in predictions:
+            usage[domain] += 1
+    else:
+        usage[predictions] += 1
 
-    with open(LOG_PATH, "w") as f:
+    with open(LOG_PATH_JSON, "w") as f:
         json.dump(dict(usage), f, indent=2)
 
 
-# 🔧 Sample usage for test/debug
-if __name__ == "__main__":
-    sample_text = "The student appeared for the semester exam and submitted their assignment."
-    domain = detect_domain(sample_text)
-    print("Detected Domain:", domain)
+def log_domain_scores(predictions: list, text_snippet: str = ""):
+    """
+    Log domain prediction scores into a CSV file.
+    """
+    os.makedirs(os.path.dirname(LOG_PATH_CSV), exist_ok=True)
+    is_new_file = not os.path.exists(LOG_PATH_CSV)
 
-    # Optional: log usage and create folder
-    log_domain_usage(domain)
-    folder_path = f"./trained_data/{domain}"
-    os.makedirs(folder_path, exist_ok=True)
-    print(f"Created/verified folder: {folder_path}")
+    row = {
+        "timestamp": datetime.now().isoformat(),
+        "text_preview": text_snippet.strip().replace('\n', ' ')[:100]
+    }
+    for domain, score in predictions:
+        row[domain] = score
+
+    all_domains = set(row.keys())
+
+    if not is_new_file:
+        with open(LOG_PATH_CSV, newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            if reader.fieldnames:
+                all_domains.update(reader.fieldnames)
+
+    fieldnames = sorted([d for d in all_domains if d not in ["timestamp", "text_preview"]])
+    fieldnames = ["timestamp", "text_preview"] + fieldnames
+
+    with open(LOG_PATH_CSV, mode='a', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if is_new_file:
+            writer.writeheader()
+        writer.writerow(row)
+
+
+# 🧪 Test
+if __name__ == "__main__":
+    text = input("Enter text to detect domain: ")
+    result = detect_domain(text, top_n=3)
+    print("Predicted:", result)

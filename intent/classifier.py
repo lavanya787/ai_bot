@@ -4,6 +4,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import re
+import logging
+
+# -------- Logging Setup --------
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+    logger.addHandler(handler)
 
 # -------- CONFIG --------
 MODEL_PATH = 'intent/intent_model.pth'
@@ -44,7 +53,12 @@ class TransformerIntentClassifier(nn.Module):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, embed_dim)
         self.pos_encoder = PositionalEncoding(embed_dim, max_len)
-        encoder_layer = nn.TransformerEncoderLayer(d_model=embed_dim, nhead=num_heads, dim_feedforward=hidden_dim)
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=embed_dim,
+            nhead=num_heads,
+            dim_feedforward=hidden_dim,
+            batch_first=True  # Added to fix UserWarning
+        )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.fc = nn.Linear(embed_dim, num_classes)
 
@@ -58,38 +72,93 @@ class TransformerIntentClassifier(nn.Module):
 # -------- PREDICTOR --------
 class IntentClassifier:
     def __init__(self):
-        if not os.path.exists(TOKENIZER_PATH) or not os.path.exists(VOCAB_PATH) or not os.path.exists(MODEL_PATH):
-            raise FileNotFoundError("🛑 Required model or vocab files are missing.")
+        logger.info(f"Initializing IntentClassifier with paths: {TOKENIZER_PATH}, {VOCAB_PATH}, {MODEL_PATH}")
+        
+        # Create directories
+        try:
+            os.makedirs(os.path.dirname(TOKENIZER_PATH), exist_ok=True)
+            os.makedirs(os.path.dirname(VOCAB_PATH), exist_ok=True)
+            os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+        except Exception as e:
+            logger.error(f"Failed to create directories: {e}")
+            raise
 
-        with open(TOKENIZER_PATH) as f:
-            self.word2idx = json.load(f)
-
-        with open(VOCAB_PATH) as f:
-            self.label2id = json.load(f)
-
+        # Default intents
+        self.label2id = {
+            "question": 0,
+            "generate": 1,
+            "sentiment": 2,
+            "rag_query": 3,
+            "default": 4,
+            "summarize_document": 5,
+            "get_insights": 6,
+            "ask_question": 7,
+            "train_model": 8,
+            "book_flight": 9,
+            "set_reminder": 10
+        }
         self.id2label = {v: k for k, v in self.label2id.items()}
 
+        # Initialize default vocab and tokenizer if files are missing
+        try:
+            if not os.path.exists(TOKENIZER_PATH) or not os.path.exists(VOCAB_PATH):
+                logger.warning(f"Model or vocab files missing. Creating defaults at {TOKENIZER_PATH}, {VOCAB_PATH}")
+                self.word2idx = {"[PAD]": 0, "[UNK]": 1}
+                vocab = list(self.word2idx.keys()) + [f"word{i}" for i in range(1000)]
+                with open(TOKENIZER_PATH, 'w') as f:
+                    json.dump(self.word2idx, f)
+                with open(VOCAB_PATH, 'w') as f:
+                    json.dump(vocab, f)
+            else:
+                with open(TOKENIZER_PATH, 'r') as f:
+                    self.word2idx = json.load(f)
+                with open(VOCAB_PATH, 'r') as f:
+                    vocab = json.load(f)
+                    self.word2idx.update({word: idx + len(self.word2idx) for idx, word in enumerate(vocab) if word not in self.word2idx})
+        except Exception as e:
+            logger.error(f"Failed to handle vocab/tokenizer files: {e}")
+            raise
+
         self.model = TransformerIntentClassifier(
-            vocab_size=len(self.word2idx),
-            embed_dim=512,
-            num_heads=6,
-            hidden_dim=768,
-            num_classes=len(self.label2id),
-            num_layers=6,
+            vocab_size=len(self.word2idx),  #5,000-10,000
+            embed_dim=768,
+            num_heads=8,
+            hidden_dim=2048,   #feed-forward dim
+           num_classes=len(self.label2id),
+            num_layers=8,
             max_len=MAX_SEQ_LENGTH
         ).to(device)
 
-        self.model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-        self.model.eval()
+    # Save default model weights if missing
+        try:
+            if not os.path.exists(MODEL_PATH):
+                logger.warning(f"Model weights missing. Saving untrained model to {MODEL_PATH}")
+                torch.save(self.model.state_dict(), MODEL_PATH)
+            else:
+                self.model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+            self.model.eval()
+        except Exception as e:
+            logger.error(f"Failed to handle model weights: {e}")
+            raise
+
+def predict(self, text: str) -> str:
+        try:
+            input_ids = encode(text, self.word2idx)
+            input_ids += [self.word2idx["[PAD]"]] * (MAX_SEQ_LENGTH - len(input_ids))
+            input_tensor = torch.tensor([input_ids], dtype=torch.long).to(device)
+            
+            with torch.no_grad():
+                logits = self.model(input_tensor)
+                intent_idx = torch.argmax(logits, dim=-1).item()
+            return self.id2label[intent_idx]
+        except Exception as e:
+            logger.error(f"Prediction failed: {e}")
+            return "default"
 
 # Singleton classifier instance
 _classifier_instance = None
 
 def predict_intent(text: str) -> str:
-    """
-    Utility function to predict intent from a text input.
-    Reuses a singleton instance of the IntentClassifier for performance.
-    """
     global _classifier_instance
     if _classifier_instance is None:
         _classifier_instance = IntentClassifier()

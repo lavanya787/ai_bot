@@ -65,9 +65,17 @@ def train_on_all_documents():
         json.dump(vocab, f, indent=2)
 
     tokenizer_size = len(vocab)
-    embeddings = [get_embedding(c) for c in chunks]
-    embeddings = np.array(embeddings).astype("float32")
+    embeddings = []
+    for c in chunks:
+        embedding = get_embedding(c)
+        if embedding.size > 0:
+            embeddings.append(embedding)
+    
+    if not embeddings:
+        st.error("❌ No valid embeddings generated. Check corpus or get_embedding function.")
+        return
 
+    embeddings = np.array(embeddings).astype("float32")
     os.makedirs("embedding_store", exist_ok=True)
     np.save("embedding_store/embeddings.npy", embeddings)
 

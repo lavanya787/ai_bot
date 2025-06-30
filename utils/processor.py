@@ -6,57 +6,45 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def chunk_text(text: str, chunk_size: int = 600, mode: str = "sentence") -> List[str]:
+# file_processing/processor.py
+import re
+
+def chunk_text(docs, max_chunk_len=200, overlap=40):
     """
-    Chunk text based on either sentences or word count.
-    
-    Args:
-        text (str): The input document text.
-        chunk_size (int): Target size of each chunk (in words or characters depending on mode).
-        mode (str): 'sentence' for punctuation-aware chunking, 'word' for word-block chunking.
+    Splits documents into token-like chunks with optional overlap.
+    Uses sentence boundaries when possible.
 
-    Returns:
-        List[str]: List of text chunks.
+    :param docs: list of strings (corpus)
+    :param max_chunk_len: max tokens per chunk (approximate)
+    :param overlap: overlap between chunks to preserve context
+    :return: list of text chunks
     """
-    if not text or len(text.strip()) < 50:
-        logger.warning("⚠️ Provided text too short to chunk.")
-        return []
+    chunks = []
+    for doc in docs:
+        doc = re.sub(r"\s+", " ", doc.strip())
+        sentences = re.split(r'(?<=[.?!])\s+', doc)
 
-    text = re.sub(r'\s+', ' ', text.strip())  # Normalize whitespace
+        current_chunk = []
+        current_len = 0
 
-    if mode == "sentence":
-        # Break into sentences using punctuation
-        sentences = re.split(r'(?<=[.!?])\s+', text)
-        chunks = []
-        current_chunk = ""
+        for sentence in sentences:
+            sent_len = len(sentence.split())
 
-        for sent in sentences:
-            if not sent or len(sent.strip()) < 20:
-                continue
-            if len(current_chunk) + len(sent) <= chunk_size:
-                current_chunk += sent + " "
+            if current_len + sent_len <= max_chunk_len:
+                current_chunk.append(sentence)
+                current_len += sent_len
             else:
-                chunks.append(current_chunk.strip())
-                current_chunk = sent + " "
-        if current_chunk.strip():
-            chunks.append(current_chunk.strip())
+                if current_chunk:
+                    chunks.append(" ".join(current_chunk))
+                # start next chunk with optional overlap
+                overlap_tokens = " ".join(current_chunk[-overlap:]) if overlap and current_chunk else ""
+                current_chunk = [overlap_tokens, sentence] if overlap_tokens else [sentence]
+                current_len = len(" ".join(current_chunk).split())
 
-    elif mode == "word":
-        # Break based on word count
-        words = text.split()
-        num_chunks = math.ceil(len(words) / chunk_size)
-        chunks = [
-            " ".join(words[i * chunk_size: (i + 1) * chunk_size])
-            for i in range(num_chunks)
-        ]
-    else:
-        logger.error(f"❌ Unsupported chunk mode: {mode}")
-        return []
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
+    return chunks
 
-    # Final filtering: remove junk chunks
-    final_chunks = [chunk for chunk in chunks if len(chunk.split()) >= 10]
-    logger.info(f"✅ Chunked into {len(final_chunks)} segment(s) using mode='{mode}'.")
-    return final_chunks
 def get_chunking_config(filename: str) -> dict:
     """
     Dynamically selects chunking mode and size based on file type or name.

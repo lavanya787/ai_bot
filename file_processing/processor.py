@@ -49,7 +49,6 @@ if not logger.handlers:
 logging.getLogger("pdfminer").setLevel(logging.ERROR)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
-
 # Optional dependencies
 try:
     import pdfplumber
