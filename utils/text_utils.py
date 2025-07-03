@@ -70,14 +70,52 @@ def create_training_data(chunks, domain="education"):
         "domain": [domain] * len(chunks)
     })
 
+import os
+import pandas as pd
+from tqdm import tqdm
+from PyPDF2 import PdfReader  # pip install PyPDF2
+from docx import Document     # pip install python-docx
+
 def load_documents_from_folder(folder_path, allowed_exts=None):
-    allowed_exts = allowed_exts or [".txt", ".md", ".csv", ".json"]
+    allowed_exts = allowed_exts or [".txt", ".md", ".csv", ".json", ".pdf", ".docx"]
     documents = []
 
-    for filename in os.listdir(folder_path):
-        if any(filename.lower().endswith(ext) for ext in allowed_exts):
-            with open(os.path.join(folder_path, filename), "r", encoding="utf-8") as f:
-                documents.append((filename, f.read()))
-    
-    return documents
+    for filename in tqdm(os.listdir(folder_path), desc="📄 Loading files"):
+        file_path = os.path.join(folder_path, filename)
+        ext = os.path.splitext(filename)[1].lower()
 
+        if ext not in allowed_exts:
+            continue
+
+        try:
+            if ext in [".txt", ".md"]:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+
+            elif ext == ".csv":
+                df = pd.read_csv(file_path)
+                content = df.to_string()
+
+            elif ext == ".json":
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+
+            elif ext == ".pdf":
+                content = ""
+                reader = PdfReader(file_path)
+                for page in reader.pages:
+                    content += page.extract_text() or ""
+
+            elif ext == ".docx":
+                doc = Document(file_path)
+                content = "\n".join([para.text for para in doc.paragraphs])
+
+            else:
+                continue
+
+            documents.append((filename, content))
+
+        except Exception as e:
+            print(f"❌ Skipped {filename}: {e}")
+
+    return documents

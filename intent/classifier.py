@@ -4,25 +4,40 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import re
+import pandas as pd
 import logging
+import nltk
+from nltk.tokenize import word_tokenize
+from pathlib import Path
+from torch.utils.data import Dataset, DataLoader
 
-# -------- Logging Setup --------
+# Logging Setup
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 if not logger.handlers:
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
     logger.addHandler(handler)
-
-# -------- CONFIG --------
-MODEL_PATH = 'intent/intent_model.pth'
+# Ensure NLTK resources with fallback
+try:
+    for res in ["punkt", "wordnet", "stopwords"]:
+        try:
+            nltk.data.find(f"tokenizers/{res}" if res == "punkt" else f"corpora/{res}")
+        except LookupError:
+            logger.info(f"Downloading NLTK resource: {res}")
+            nltk.download(res, quiet=True)
+except ImportError:
+    logger.error("NLTK not installed. Please install with 'pip install nltk'")
+    raise ImportError("NLTK is required for IntentClassifier")
+# CONFIG
+MODEL_PATH = 'intent/intent_model.pt'
 VOCAB_PATH = 'intent/intent_vocab.json'
 TOKENIZER_PATH = 'intent/vocab.json'
 MAX_SEQ_LENGTH = 256
-
+VOCAB_SIZE = 5000
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# -------- UTILITIES --------
+# UTILITIES
 def clean_text(text):
     text = text.lower()
     text = re.sub(r"[^a-z0-9\s]", "", text)
@@ -32,9 +47,38 @@ def tokenize(text):
     return clean_text(text).split()
 
 def encode(text, word2idx):
-    return [word2idx.get(token, word2idx.get("<UNK>", 1)) for token in tokenize(text)][:MAX_SEQ_LENGTH]
+    try:
+        tokens = word_tokenize(text.lower())
+    except Exception as e:
+        logger.warning(f"Tokenization failed: {e}. Using basic split as fallback.")
+        tokens = text.lower().split()
+    return [word2idx.get(token, word2idx["[UNK]"]) for token in tokens][:MAX_SEQ_LENGTH]
 
-# -------- MODEL --------
+# DATASET
+class IntentDataset(Dataset):
+    def __init__(self, dataframe, word2idx):
+        self.data = dataframe
+        self.word2idx = word2idx
+        self.label2id = {
+            "question": 0, "generate": 1, "sentiment": 2, "rag_query": 3, "default": 4,
+            "summarize_document": 5, "get_insights": 6, "ask_question": 7, "train_model": 8,
+            "book_flight": 9, "set_reminder": 10
+        }
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+            sentence = self.data.iloc[idx]["sentence"]
+            intent = self.data.iloc[idx]["intent"]
+            input_ids = encode(sentence, self.word2idx)
+            input_ids += [self.word2idx["[PAD]"]] * (MAX_SEQ_LENGTH - len(input_ids))
+            return {
+                "input_ids": torch.tensor(input_ids, dtype=torch.long),
+                "labels": torch.tensor(self.label2id.get(intent, self.label2id["default"]), dtype=torch.long)  # Changed to "labels"
+            }
+
+# MODEL
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=512):
         super().__init__()
@@ -43,10 +87,11 @@ class PositionalEncoding(nn.Module):
         div_term = torch.exp(torch.arange(0, d_model, 2) * (-torch.log(torch.tensor(10000.0)) / d_model))
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
-        self.pe = pe.unsqueeze(0)
+        self.register_buffer("pe", pe.unsqueeze(0).float())  # ✅ safe buffer
 
     def forward(self, x):
-        return x + self.pe[:, :x.size(1), :].to(x.device)
+        x = x + self.pe[:, :x.size(1), :].clone().detach()  # ✅ clone/detach
+        return x
 
 class TransformerIntentClassifier(nn.Module):
     def __init__(self, vocab_size, embed_dim, num_heads, hidden_dim, num_classes, num_layers=6, max_len=MAX_SEQ_LENGTH):
@@ -57,7 +102,7 @@ class TransformerIntentClassifier(nn.Module):
             d_model=embed_dim,
             nhead=num_heads,
             dim_feedforward=hidden_dim,
-            batch_first=True  # Added to fix UserWarning
+            batch_first=True
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.fc = nn.Linear(embed_dim, num_classes)
@@ -69,97 +114,80 @@ class TransformerIntentClassifier(nn.Module):
         x = x.mean(dim=1)                  # [B, D] - Global Average Pooling
         return self.fc(x)                  # [B, num_classes]
 
-# -------- PREDICTOR --------
-class IntentClassifier:
+# PREDICTOR
+class IntentClassifier(nn.Module):
     def __init__(self):
-        logger.info(f"Initializing IntentClassifier with paths: {TOKENIZER_PATH}, {VOCAB_PATH}, {MODEL_PATH}")
+        super().__init__()
+        self.word2idx = {"[PAD]": 0, "[UNK]": 1}
+        self.embedding = nn.Embedding(VOCAB_SIZE, 64)
+        self.lstm = nn.LSTM(64, 128, batch_first=True, bidirectional=True)
+        self.fc = nn.Linear(256, len(IntentDataset(None, self.word2idx).label2id))
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.to(self.device)
+        self._build_vocab()
+
+    def _build_vocab(self):
+        try:
+            nltk_words = set(nltk.corpus.words.words())
+            for word in list(nltk_words)[:VOCAB_SIZE - 2]:
+                if word not in self.word2idx:
+                    self.word2idx[word] = len(self.word2idx)
+        except Exception as e:
+            logger.warning(f"NLTK corpus unavailable: {e}. Using minimal vocab")
+            for i in range(2, VOCAB_SIZE):
+                self.word2idx[f"word_{i}"] = i
+
+    def forward(self, input_ids):
+        embedded = self.embedding(input_ids)
+        output, _ = self.lstm(embedded)
+        output = output.contiguous()[:, -1, :] # Take the last hidden state
+        return self.fc(output)
+
+    def train_model(self, data):
+        if not isinstance(data, pd.DataFrame) or not all(col in data for col in ["sentence", "intent"]):
+            logger.error("DataFrame must contain 'sentence' and 'intent' columns")
+            return False
+
+        dataset = IntentDataset(data, self.word2idx)
+        dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
         
-        # Create directories
+        optimizer = torch.optim.AdamW(self.parameters(), lr=1e-5)
+        super().train(True)
+        
         try:
-            os.makedirs(os.path.dirname(TOKENIZER_PATH), exist_ok=True)
-            os.makedirs(os.path.dirname(VOCAB_PATH), exist_ok=True)
-            os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+            for epoch in range(3):
+                total_loss = 0
+                for batch in dataloader:
+                    input_ids = batch["input_ids"].to(self.device)
+                    labels = batch["labels"].to(self.device)
+                    
+                    outputs = self(input_ids)
+                    loss = F.cross_entropy(outputs, labels)
+                    total_loss += loss.item()
+                    
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
+                
+                avg_loss = total_loss / len(dataloader)
+                logger.info(f"Epoch {epoch+1}/3, Average Loss: {avg_loss:.4f}")
+            
+            torch.save(self.state_dict(), MODEL_PATH)
+            logger.info(f"IntentClassifier model saved to {MODEL_PATH}")
+            return True
         except Exception as e:
-            logger.error(f"Failed to create directories: {e}")
-            raise
+            logger.error(f"Training failed: {e}")
+            return False
 
-        # Default intents
-        self.label2id = {
-            "question": 0,
-            "generate": 1,
-            "sentiment": 2,
-            "rag_query": 3,
-            "default": 4,
-            "summarize_document": 5,
-            "get_insights": 6,
-            "ask_question": 7,
-            "train_model": 8,
-            "book_flight": 9,
-            "set_reminder": 10
-        }
-        self.id2label = {v: k for k, v in self.label2id.items()}
-
-        # Initialize default vocab and tokenizer if files are missing
-        try:
-            if not os.path.exists(TOKENIZER_PATH) or not os.path.exists(VOCAB_PATH):
-                logger.warning(f"Model or vocab files missing. Creating defaults at {TOKENIZER_PATH}, {VOCAB_PATH}")
-                self.word2idx = {"[PAD]": 0, "[UNK]": 1}
-                vocab = list(self.word2idx.keys()) + [f"word{i}" for i in range(1000)]
-                with open(TOKENIZER_PATH, 'w') as f:
-                    json.dump(self.word2idx, f)
-                with open(VOCAB_PATH, 'w') as f:
-                    json.dump(vocab, f)
-            else:
-                with open(TOKENIZER_PATH, 'r') as f:
-                    self.word2idx = json.load(f)
-                with open(VOCAB_PATH, 'r') as f:
-                    vocab = json.load(f)
-                    self.word2idx.update({word: idx + len(self.word2idx) for idx, word in enumerate(vocab) if word not in self.word2idx})
-        except Exception as e:
-            logger.error(f"Failed to handle vocab/tokenizer files: {e}")
-            raise
-
-        self.model = TransformerIntentClassifier(
-            vocab_size=len(self.word2idx),  #5,000-10,000
-            embed_dim=768,
-            num_heads=8,
-            hidden_dim=2048,   #feed-forward dim
-           num_classes=len(self.label2id),
-            num_layers=8,
-            max_len=MAX_SEQ_LENGTH
-        ).to(device)
-
-    # Save default model weights if missing
-        try:
-            if not os.path.exists(MODEL_PATH):
-                logger.warning(f"Model weights missing. Saving untrained model to {MODEL_PATH}")
-                torch.save(self.model.state_dict(), MODEL_PATH)
-            else:
-                self.model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-            self.model.eval()
-        except Exception as e:
-            logger.error(f"Failed to handle model weights: {e}")
-            raise
-
-def predict(self, text: str) -> str:
-        try:
+    def predict(self, text):
+        self.eval()
+        with torch.no_grad():
             input_ids = encode(text, self.word2idx)
             input_ids += [self.word2idx["[PAD]"]] * (MAX_SEQ_LENGTH - len(input_ids))
-            input_tensor = torch.tensor([input_ids], dtype=torch.long).to(device)
-            
-            with torch.no_grad():
-                logits = self.model(input_tensor)
-                intent_idx = torch.argmax(logits, dim=-1).item()
-            return self.id2label[intent_idx]
-        except Exception as e:
-            logger.error(f"Prediction failed: {e}")
-            return "default"
-
-# Singleton classifier instance
-_classifier_instance = None
-
-def predict_intent(text: str) -> str:
-    global _classifier_instance
-    if _classifier_instance is None:
-        _classifier_instance = IntentClassifier()
-    return _classifier_instance.predict(text)
+            input_tensor = torch.tensor([input_ids], dtype=torch.long).to(self.device)
+            outputs = self(input_tensor)
+            predicted_idx = torch.argmax(outputs, dim=1).item()
+            for intent, idx in IntentDataset(None, self.word2idx).label2id.items():
+                if idx == predicted_idx:
+                    return intent
+        return "default"

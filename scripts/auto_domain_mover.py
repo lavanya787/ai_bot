@@ -72,6 +72,10 @@ def move_file_to_domain_folder():
 
             try:
                 domain = detect_domain(text)
+
+            # 🛠️ Ensure domain is always a string
+                if isinstance(domain, list):
+                    domain = "_".join(domain)
             except Exception as e:
                 print(f"❌ Failed domain detection for {fname}: {e}")
                 move_to_error_and_alert(full_path, "domain_detection_failed")
@@ -87,7 +91,12 @@ def move_file_to_domain_folder():
                 continue
 
             # Move the file to domain folder
+            if isinstance(fname, list):
+                fname = fname[0]
+
             new_path = os.path.join(domain_folder, fname)
+            print(f"[DEBUG] fname={fname}, type={type(fname)}")
+
             try:
                 os.rename(full_path, new_path)
                 print(f"📥 Moved '{fname}' to domain: {domain}")

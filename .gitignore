@@ -61,6 +61,7 @@ vector_db/
 chat_history.json
 thur_app.py
 adding.py
+llm_hanlder_old.py
 # 📈 Reports and outputs
 *.pdf
 *.csv

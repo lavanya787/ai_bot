@@ -9,47 +9,15 @@ import logging
 import tempfile
 import pandas as pd
 from PIL import Image
-from langdetect import detect, DetectorFactory
+from langdetect import detect
 from contextlib import contextmanager
 from typing import List
 from deep_translator import GoogleTranslator
 from concurrent.futures import ThreadPoolExecutor
-from docx import Document
 import pytesseract
-import pdfplumber
+from datetime import datetime
 
-
-# ---------------------- Logging Setup ----------------------
-log_dir = "logs"
-os.makedirs(log_dir, exist_ok=True)
-log_file = os.path.join(log_dir, "processor.log")
-
-logger = logging.getLogger("processor")
-logger.setLevel(logging.INFO)
-
-# Console Handler
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-
-# File Handler (append mode explicitly set)
-file_handler = logging.FileHandler(log_file, mode='a', encoding="utf-8")
-file_handler.setLevel(logging.INFO)
-
-# Formatter
-formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-console_handler.setFormatter(formatter)
-file_handler.setFormatter(formatter)
-
-# Add handlers only once
-if not logger.handlers:
-    logger.addHandler(console_handler)
-    logger.addHandler(file_handler)
-
-# Reduce log noise from other libraries
-logging.getLogger("pdfminer").setLevel(logging.ERROR)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
-
-# Optional dependencies
+# Optional imports with fallbacks
 try:
     import pdfplumber
     USE_PDFPLUMBER = True
@@ -67,12 +35,32 @@ except Exception:
 
 try:
     import easyocr
-    easyocr_reader = easyocr.Reader(['en'], gpu=True)
+    easyocr_reader = easyocr.Reader(['en'], gpu=False)  # Set gpu=False for compatibility
     EASY_OCR_AVAILABLE = True
 except Exception:
     EASY_OCR_AVAILABLE = False
 
-# ---------------------- Utils ----------------------
+# ---------------------- Logging Setup ----------------------
+log_dir = "logs"
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, "processor.log")
+
+logger = logging.getLogger("processor")
+logger.setLevel(logging.INFO)
+
+if not logger.handlers:
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    file_handler = logging.FileHandler(log_file, mode='a', encoding="utf-8")
+    file_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s",
+                                  datefmt="%Y-%m-%d %H:%M:%S")
+    console_handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+
+# ---------------------- Utility Functions ----------------------
 
 @contextmanager
 def open_tempfile(file, suffix):
@@ -80,14 +68,19 @@ def open_tempfile(file, suffix):
         tmp.write(file.read())
         tmp.flush()
         yield tmp.name
-    os.remove(tmp.name)
+    try:
+        os.remove(tmp.name)
+    except Exception as e:
+        logger.warning(f"Failed to delete temporary file {tmp.name}: {e}")
 
 def detect_language(text: str) -> str:
     try:
+        if not text.strip():
+            return "unknown"
         lang = detect(text)
         logger.info(f"Detected language: {lang}")
         return lang
-    except:
+    except Exception:
         return "unknown"
 
 def translate_to_english(text: str) -> str:
@@ -98,29 +91,33 @@ def translate_to_english(text: str) -> str:
         return text
 
 def preprocess_extracted_text(text: str) -> str:
+    if not isinstance(text, str):
+        text = str(text)
     text = re.sub(r'\n{2,}', '\n', text)
     text = re.sub(r'\s{2,}', ' ', text)
     text = re.sub(r'\.{4,}', '.', text)
     text = re.sub(r'Page\s+\d+', '', text, flags=re.IGNORECASE)
     return text.strip()
 
-# ------------------ Text Extractors ------------------
+# ---------------------- Extractors ----------------------
 
 def extract_text_from_image(file):
     try:
         if EASY_OCR_AVAILABLE:
             result = easyocr_reader.readtext(np.array(Image.open(file)), detail=0)
-            return " ".join(result)
+            return " ".join(str(item) for item in result if item)
         else:
             return pytesseract.image_to_string(Image.open(file)).strip()
     except Exception as e:
+        logger.error(f"OCR error: {e}")
         return f"[OCR ERROR] {e}"
 
 def extract_text_from_txt(file):
     try:
         file.seek(0)
-        return file.read().decode("utf-8")
+        return file.read().decode("utf-8").strip()
     except Exception as e:
+        logger.error(f"TXT extraction error: {e}")
         return f"[TXT ERROR] {e}"
 
 def extract_text_from_csv(file):
@@ -129,6 +126,7 @@ def extract_text_from_csv(file):
         df = pd.read_csv(file)
         return "\n".join(df.astype(str).apply(" | ".join, axis=1))
     except Exception as e:
+        logger.error(f"CSV extraction error: {e}")
         return f"[CSV ERROR] {e}"
 
 def extract_text_from_json(file):
@@ -137,143 +135,85 @@ def extract_text_from_json(file):
         data = json.load(file)
         return json.dumps(data, indent=2)
     except Exception as e:
+        logger.error(f"JSON extraction error: {e}")
         return f"[JSON ERROR] {e}"
 
 def extract_text_from_docx(file):
     try:
         with open_tempfile(file, ".docx") as path:
-            doc = Document(path)
-            return "\n".join([para.text for para in doc.paragraphs])
+            doc = docx.Document(path)
+            return "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
     except Exception as e:
+        logger.error(f"DOCX extraction error: {e}")
         return f"[DOCX ERROR] {e}"
 
-def extract_text_from_pdf(file):
-    def ocr_pdf_images(file):
-        try:
-            file.seek(0)
-            images = []
-            with fitz.open(stream=file.read(), filetype="pdf") as doc:
-                for page in doc:
-                    pix = page.get_pixmap(dpi=300)
-                    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                    images.append(img)
-
-            ocr_text = ""
-            for img in images:
-                if EASY_OCR_AVAILABLE:
-                    result = easyocr_reader.readtext(np.array(img), detail=0)
-                    ocr_text += " ".join(result) + "\n"
-                else:
-                    ocr_text += pytesseract.image_to_string(img) + "\n"
-
-            return ocr_text.strip()
-        except Exception as e:
-            logger.error(f"[OCR fallback failed] {e}")
-            return "[OCR fallback failed]"
-
+def ocr_pdf_images(file):
     try:
         file.seek(0)
-        if USE_PDFPLUMBER:
-            with pdfplumber.open(file) as pdf:
-                text = "\n".join([page.extract_text() or "" for page in pdf.pages])
-                if text.strip():
-                    return text
-                else:
-                    logger.warning("[pdfplumber] Extracted text is empty.")
-    except Exception as e:
-        logger.warning(f"[pdfplumber] failed: {e}")
-
-    try:
-        file.seek(0)
+        images = []
         with fitz.open(stream=file.read(), filetype="pdf") as doc:
-            text = "\n".join(page.get_text() for page in doc)
-            if text.strip():
-                return text
-            else:
-                logger.warning("[fitz] Extracted text is empty.")
+            for page in doc:
+                pix = page.get_pixmap(dpi=150)  # Lower DPI for speed
+                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                images.append(img)
+
+        ocr_text = []
+        def process_image(img):
+            if EASY_OCR_AVAILABLE:
+                result = easyocr_reader.readtext(np.array(img), detail=0)
+                return " ".join(str(item) for item in result if item)
+            return pytesseract.image_to_string(img).strip()
+
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            ocr_text = list(executor.map(process_image, images))
+        
+        text = "\n".join(t for t in ocr_text if t.strip())
+        return text if text.strip() else "[OCR fallback failed]"
+    except Exception as e:
+        logger.error(f"OCR fallback failed: {e}")
+        return "[OCR fallback failed]"
+    
+def extract_text_from_pdf(file):
+    text = ""
+    try:
+        file.seek(0)
+        start_time = datetime.now()
+        with fitz.open(stream=file.read(), filetype="pdf") as doc:
+            logger.info(f"Processing PDF with {doc.page_count} pages")
+            text = "\n".join(page.get_text("text") for page in doc if page.get_text("text").strip())
+        if text.strip():
+            logger.info(f"[fitz] Extracted text, took {(datetime.now() - start_time).total_seconds()} seconds")
+            return preprocess_extracted_text(text)
+        else:
+            logger.warning("[fitz] Extracted text is empty, trying OCR fallback...")
     except Exception as e:
         logger.warning(f"[fitz] failed: {e}")
 
+    # OCR fallback only if necessary
     try:
         file.seek(0)
-        reader = PyPDF2.PdfReader(file)
-        text = "\n".join([p.extract_text() or "" for p in reader.pages])
+        text = ocr_pdf_images(file)
         if text.strip():
-            return text
+            logger.info(f"[OCR] Extracted text, took {(datetime.now() - start_time).total_seconds()} seconds")
+            return preprocess_extracted_text(text)
         else:
-            logger.warning("[PyPDF2] Extracted text is empty.")
+            logger.warning("[OCR] Extracted text is empty")
     except Exception as e:
-        logger.error(f"[PyPDF2] failed: {e}")
+        logger.warning(f"[OCR] failed: {e}")
 
-    # 🧠 OCR fallback
-    logger.warning("Attempting OCR fallback for scanned PDF...")
-    file.seek(0)
-    return ocr_pdf_images(file)
+    logger.warning("All extraction methods failed")
+    return "[ERROR] No text extracted"
 
-def extract_text_from_file(file_path, file_name):
-    try:
-        file_ext = file_name.lower()
-
-        # CSV Files
-        if file_ext.endswith('.csv'):
-            df = pd.read_csv(file_path)
-            content = df.to_string(index=False)
-            return content
-
-        # Excel Files
-        elif file_ext.endswith(('.xlsx', '.xls')):
-            df = pd.read_excel(file_path)
-            content = df.to_string(index=False)
-            return content
-
-        # PDF Files
-        elif file_ext.endswith('.pdf'):
-            try:
-                reader = PyPDF2.PdfReader(file_path)
-                all_pages = [page.extract_text() or "" for page in reader.pages]
-                content = "\n".join(all_pages).strip()
-                if content:
-                    return content
-            except Exception as e:
-                print(f"[PyPDF2] Failed: {e}. Retrying with pdfplumber...")
-
-            try:
-                with pdfplumber.open(file_path) as pdf:
-                    all_pages = [page.extract_text() or "" for page in pdf.pages]
-                content = "\n".join(all_pages).strip()
-                return content
-            except Exception as e:
-                return f"❌ Could not extract text from PDF: {str(e)}"
-
-        # DOCX Files
-        elif file_ext.endswith('.docx'):
-            doc = docx.Document(file_path)
-            content = "\n".join(para.text for para in doc.paragraphs if para.text.strip())
-            return content
-
-        # DOC Files (old Word format)
-        elif file_ext.endswith('.doc'):
-            try:
-                content = pytesseract.process(file_path).decode('utf-8')
-                return content
-            except Exception as e:
-                return f"❌ Could not extract text from DOC file: {str(e)}"
-
-        # Plain Text Files
-        elif file_ext.endswith('.txt'):
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return f.read()
-
-        # Fallback for unknown extensions
-        else:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return f.read()
-
-    except Exception as e:
-        return f"❌ Could not read the file: {str(e)}"
+# ---------------------- Main Extraction Function ----------------------
 
 def extract_text(file):
+    """
+    Main text extraction function.
+    Accepts a file-like object with a .name attribute.
+    Supports PNG, JPG, PDF, DOCX, TXT, CSV, JSON.
+    """
     name = file.name.lower()
+    logger.info(f"Extracting text from {name}")
 
     if name.endswith((".png", ".jpg", ".jpeg")):
         text = extract_text_from_image(file)
@@ -288,12 +228,13 @@ def extract_text(file):
     elif name.endswith(".json"):
         text = extract_text_from_json(file)
     else:
+        logger.error(f"Unsupported file type: {file.name}")
         return "[Unsupported file type: only PDF, DOCX, TXT, CSV, JSON, PNG, JPG]"
 
     text = preprocess_extracted_text(text)
 
-    if not text.strip() or text.startswith("[PDF extraction failed]"):
-        logger.warning(f"[EMPTY TEXT] Extracted text is empty or invalid for: {file.name}")
+    if not text.strip() or text.startswith("[ERROR]") or "Unsupported file type" in text:
+        logger.warning(f"Extracted text is empty or invalid for: {file.name}")
         return "[ERROR] Empty or invalid content"
 
     lang = detect_language(text)
@@ -303,21 +244,51 @@ def extract_text(file):
 
     return text
 
-# ------------------ Parallel Chunking ------------------
+# ---------------------- File-Path Based Extraction ----------------------
+
+def extract_text_from_file(file_path, file_name):
+    """
+    Extract text from a file on disk by path.
+    Supports common file types: PDF, DOCX, TXT, CSV, XLSX.
+    """
+    ext = os.path.splitext(file_path)[1].lower()
+    logger.info(f"Extracting text from file: {file_path}")
+
+    try:
+        if ext == ".csv":
+            df = pd.read_csv(file_path)
+            return preprocess_extracted_text(df.to_string(index=False))
+        elif ext in [".xlsx", ".xls"]:
+            df = pd.read_excel(file_path)
+            return preprocess_extracted_text(df.to_string(index=False))
+        elif ext == ".pdf":
+            with open(file_path, "rb") as f:
+                return extract_text_from_pdf(f)
+        elif ext == ".docx":
+            doc = docx.Document(file_path)
+            text = "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
+            return preprocess_extracted_text(text)
+        elif ext == ".txt":
+            with open(file_path, "r", encoding="utf-8") as f:
+                return preprocess_extracted_text(f.read())
+        else:
+            logger.error(f"Unsupported file type: {ext}")
+            return "[ERROR] Unsupported file type"
+    except Exception as e:
+        logger.error(f"Failed to extract text from file {file_path}: {e}")
+        return f"[ERROR] Could not read file: {e}"
+
+# ---------------------- Text Chunking ----------------------
 
 def chunk_text(text: str, chunk_size: int = 1200) -> List[str]:
     if not text or len(text.strip()) < 50:
-        logger.warning("❌ Cannot chunk: Text is empty or too short.")
-        return []
-
-    if text.startswith("[ERROR]") or "Unsupported file type" in text:
-        logger.warning("⚠️ Skipping chunking due to invalid file type or extraction failure.")
+        logger.warning("Text is empty or too short to chunk.")
         return []
 
     try:
         if SPACY_AVAILABLE and nlp:
             doc = nlp(text)
-            sentences = [sent.text.strip() for sent in doc.sents]
+            sentences = [sent.text.strip() for sent in doc.sents if sent.text.strip()]
         else:
             sentences = re.split(r'(?<=[.!?])\s+', text.strip())
     except Exception as e:
@@ -358,28 +329,32 @@ def chunk_text(text: str, chunk_size: int = 1200) -> List[str]:
 def extract_rows_from_file(file_path):
     ext = file_path.split('.')[-1].lower()
 
-    if ext == 'csv':
-        df = pd.read_csv(file_path)
-    elif ext in ['xls', 'xlsx']:
-        df = pd.read_excel(file_path)
-    elif ext == 'txt':
-        with open(file_path, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-        df = pd.DataFrame({'question': lines, 'context': lines, 'is_answer': 1})
-    elif ext == 'pdf':
-        reader = PyPDF2.PdfReader(file_path)
-        text = "\n".join([page.extract_text() or "" for page in reader.pages])
-        lines = [line.strip() for line in text.split("\n") if line.strip()]
-        df = pd.DataFrame({'question': lines, 'context': lines, 'is_answer': 1})
-    elif ext == 'docx':
-        doc = docx.Document(file_path)
-        lines = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
-        df = pd.DataFrame({'question': lines, 'context': lines, 'is_answer': 1})
-    else:
-        raise ValueError(f"Unsupported file format: {ext}")
+    try:
+        if ext == 'csv':
+            df = pd.read_csv(file_path)
+        elif ext in ['xls', 'xlsx']:
+            df = pd.read_excel(file_path)
+        elif ext == 'txt':
+            with open(file_path, 'r', encoding='utf-8') as f:
+                lines = [line.strip() for line in f.readlines() if line.strip()]
+            df = pd.DataFrame({'question': lines, 'context': lines, 'is_answer': 1})
+        elif ext == 'pdf':
+            with open(file_path, 'rb') as f:
+                text = extract_text_from_pdf(f)
+            lines = [line.strip() for line in text.split("\n") if line.strip()]
+            df = pd.DataFrame({'question': lines, 'context': lines, 'is_answer': 1})
+        elif ext == 'docx':
+            doc = docx.Document(file_path)
+            lines = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
+            df = pd.DataFrame({'question': lines, 'context': lines, 'is_answer': 1})
+        else:
+            raise ValueError(f"Unsupported file format: {ext}")
 
-    if all(col in df.columns for col in ['question', 'context', 'is_answer']):
-        return df
-    else:
-        df = pd.DataFrame({'question': df.iloc[:, 0], 'context': df.iloc[:, 0], 'is_answer': 1})
-        return df
+        if all(col in df.columns for col in ['question', 'context', 'is_answer']):
+            return df
+        else:
+            df = pd.DataFrame({'question': df.iloc[:, 0], 'context': df.iloc[:, 0], 'is_answer': 1})
+            return df
+    except Exception as e:
+        logger.error(f"Failed to extract rows from {file_path}: {e}")
+        return pd.DataFrame({'question': [], 'context': [], 'is_answer': []})

@@ -1,23 +1,31 @@
+# scripts/train_rag.py
+
 import os
+import sys
 import argparse
 import logging
+import pickle
+
+# Ensure root dir is in path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from llm_handler import LLMHandler
 from utils.visualizer import plot_loss
 from utils.logger import Logger
-from utils.text_utils import load_documents_from_folder  # (Optional: if extracted to utils)
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from utils.text_utils import load_documents_from_folder
 
-import logging
-
+# Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    stream=sys.stdout,  # Ensure it's not default stderr
-    encoding="utf-8",   # ✅ Add this to allow emojis and Unicode
+    stream=sys.stdout,
+    encoding="utf-8",
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+def load_chunks(pickle_path):
+    with open(pickle_path, "rb") as f:
+        return pickle.load(f)
 
 
 def main(data_dir, epochs, batch_size, save_path, log_path, plot_path):
@@ -31,8 +39,9 @@ def main(data_dir, epochs, batch_size, save_path, log_path, plot_path):
     handler = LLMHandler()
 
     logger.info("📥 Indexing documents...")
-    for fname, content in documents.items():
-        handler.index_document(fname, content)
+    handler.index_documents(documents)
+
+ # ✅ Fix: avoid .metadata or .page_content
 
     logger.info("🚀 Training RAG model ...")
     handler.train_on_documents(
@@ -59,6 +68,12 @@ if __name__ == "__main__":
 
     os.makedirs(os.path.dirname(args.log_path), exist_ok=True)
     os.makedirs(os.path.dirname(args.plot_path), exist_ok=True)
+    logger.info("✅ Training complete.")
+
+    # Optional: run inference CLI automatically
+    logger.info("🧠 Launching CLI for post-training inference...\n")
+    from scripts.inference_cli import cli
+    cli()
 
     main(
         data_dir=args.data_dir,

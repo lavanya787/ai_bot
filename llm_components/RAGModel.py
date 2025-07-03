@@ -1,117 +1,102 @@
-import os
-import fitz  # PyMuPDF
-import shutil
-import json
-import hashlib
-from datetime import datetime
-from llm_handler import LLMHandler
-from utils.domain_detector import detect_domain
-from file_processing.processor import extract_text_from_file
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
-SUPPORTED_EXTENSIONS = (".pdf", ".txt", ".csv", ".json")
-BASE_DIR = "rag_data"
-MODELS_DIR = "models"
-LOGS_DIR = "logs"
+class RAGModel(nn.Module):
+    def __init__(self, vocab_size: int, embed_dim: int = 128, hidden_dim: int = 256, num_layers: int = 2):
+        super(RAGModel, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=0)
+        self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
 
+        # Encoder: Bidirectional LSTM with 2 layers
+        self.encoder = nn.LSTM(embed_dim, hidden_dim, num_layers=num_layers, batch_first=True, bidirectional=True)
+        
+        # Decoder: LSTM with doubled hidden size to account for bidirectional encoder
+        self.decoder = nn.LSTM(embed_dim, hidden_dim * 2, num_layers=num_layers, batch_first=True)
+        
+        # Attention mechanism
+        self.attention = nn.MultiheadAttention(embed_dim=hidden_dim * 2, num_heads=8, batch_first=True)
+        
+        # Context projection layer
+        self.context_projection = nn.Linear(hidden_dim * 2, hidden_dim * 2)
+        
+        # Output layer
+        self.output_layer = nn.Linear(hidden_dim * 2, vocab_size)
 
-def get_file_hash(file_path):
-    with open(file_path, "rb") as f:
-        return hashlib.md5(f.read()).hexdigest()
+    def forward(self, input_ids, target_ids):
+        embedded_input = self.embedding(input_ids)
+        encoder_output, (hidden, cell) = self.encoder(embedded_input)
 
-def update_metadata(domain_folder, file_name, file_path):
-    metadata_path = os.path.join(domain_folder, "metadata.json")
-    metadata = []
+        def merge_bidir(h):
+            h = h.view(self.num_layers, 2, h.size(1), h.size(2))
+            return torch.cat([h[:, 0], h[:, 1]], dim=-1)
 
-    if os.path.exists(metadata_path):
-        try:
-            with open(metadata_path, "r", encoding="utf-8") as f:
-                metadata = json.load(f)
-        except Exception:
-            print("⚠️ Corrupted metadata. Reinitializing.")
+        hidden = merge_bidir(hidden)
+        cell = merge_bidir(cell)
 
-    file_hash = get_file_hash(file_path)
-    for entry in metadata:
-        if entry.get("hash") == file_hash:
-            print("⚠️ Duplicate file detected. Skipping.")
-            return False
+        embedded_target = self.embedding(target_ids)
+        decoder_output, (dec_hidden, dec_cell) = self.decoder(embedded_target, (hidden, cell))
+        
+        # Apply attention
+        attn_output, _ = self.attention(decoder_output, encoder_output, encoder_output)
+        
+        # Project context
+        context = self.context_projection(attn_output)
+        
+        logits = self.output_layer(context)
+        return logits
 
-    metadata.append({
-        "file": file_name,
-        "hash": file_hash,
-        "uploaded_at": datetime.now().isoformat(),
-        "source": "user_upload"
-    })
+    def encode_document(self, input_ids):
+        embedded = self.embedding(input_ids)
+        output, _ = self.encoder(embedded)
+        pooled = torch.mean(output, dim=1)
+        return pooled
 
-    with open(metadata_path, "w", encoding="utf-8") as f:
-        json.dump(metadata, f, indent=2)
-    return True
-
-def store_and_train(file_path, base_data_dir=BASE_DIR, models_dir=MODELS_DIR):
-    if not os.path.exists(file_path):
-        print(f"❌ File does not exist: {file_path}")
-        return
-
-    text = extract_text_from_file(file_path)
-    if not text.strip():
-        print("❌ No extractable content found.")
-        return
-
-    domain = detect_domain(text)
-    print(f"🌐 Detected domain: {domain}")
-
-    # Folder setup
-    domain_folder = os.path.join(base_data_dir, domain)
-    os.makedirs(domain_folder, exist_ok=True)
-    os.makedirs(models_dir, exist_ok=True)
-    os.makedirs(LOGS_DIR, exist_ok=True)
-
-    # Save original and text file
-    filename = os.path.basename(file_path)
-    target_original = os.path.join(domain_folder, filename)
-    target_text = os.path.join(domain_folder, f"{os.path.splitext(filename)[0]}.txt")
-
-    # Skip if already processed
-    if not update_metadata(domain_folder, filename, file_path):
-        return
-
-    # Copy original + text content
-    shutil.copy(file_path, target_original)
-    with open(target_text, "w", encoding="utf-8") as f:
-        f.write(text)
-
-    # Load handler
-    handler = LLMHandler()
-    handler.model_path = os.path.join(models_dir, f"{domain}_checkpoint.pt")
-    handler.tokenizer_path = os.path.join(models_dir, f"{domain}_tokenizer.pkl")
-
-    # Load existing model/tokenizer if available
-    if os.path.exists(handler.model_path):
-        handler._load_checkpoint()
-    if os.path.exists(handler.tokenizer_path):
-        handler.tokenizer.load(handler.tokenizer_path)
-
-    # Index all domain documents
-    documents = {}
-    for fname in os.listdir(domain_folder):
-        if fname.endswith(".txt"):
-            with open(os.path.join(domain_folder, fname), "r", encoding="utf-8") as f:
-                documents[fname] = f.read()
-
-    for fname, content in documents.items():
-        handler.index_document(fname, content)
-
-    print("🚀 Training domain model...")
-    handler.train_on_documents(
-        epochs=5,
-        batch_size=8,
-        save_path=handler.model_path,
-        log_path=os.path.join(LOGS_DIR, f"{domain}_log.txt")
-    )
-    print(f"✅ Training complete for domain: {domain}")
-
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) < 2:
-        print("Usage: python rag_domain_trainer.py <path_to_file>")
-    else:
-        store_and_train(sys.argv[1])
+    def infer(self, prompt: str, tokenizer, device=None) -> str:
+        if tokenizer is None:
+            raise ValueError("Tokenizer must be provided.")
+    
+        self.eval()
+        device = device or next(self.parameters()).device
+    
+        input_ids = tokenizer.encode(prompt)
+        if not input_ids:
+            return "⚠️ Prompt is empty or cannot be tokenized."
+    
+        input_tensor = torch.tensor([input_ids], dtype=torch.long).to(device)
+    
+        with torch.no_grad():
+            embedded_input = self.embedding(input_tensor)
+            encoder_output, (hidden, cell) = self.encoder(embedded_input)
+    
+            def merge_bidir(h):
+                h = h.view(self.num_layers, 2, h.size(1), h.size(2))
+                return torch.cat([h[:, 0], h[:, 1]], dim=-1)
+    
+            hidden = merge_bidir(hidden)
+            cell = merge_bidir(cell)
+    
+            start_token_id = getattr(tokenizer, "start_token_id", tokenizer.pad_token_id)
+            end_token_id = getattr(tokenizer, "end_token_id", tokenizer.pad_token_id)
+            pad_token_id = tokenizer.pad_token_id
+    
+            cur_input = torch.tensor([[start_token_id]], dtype=torch.long).to(device)
+            generated = []
+    
+            for _ in range(len(input_ids) * 3):
+                embedded = self.embedding(cur_input)
+                output, (hidden, cell) = self.decoder(embedded, (hidden, cell))
+                attn_output, _ = self.attention(output, encoder_output, encoder_output)
+                context = self.context_projection(attn_output[:, -1, :])
+                logits = self.output_layer(context)
+                next_token_id = logits.argmax(dim=-1)
+                token = next_token_id.item()
+    
+                if token in (end_token_id, pad_token_id):
+                    break
+                
+                generated.append(token)
+                cur_input = next_token_id.unsqueeze(0).unsqueeze(0)
+    
+        return tokenizer.decode(generated)

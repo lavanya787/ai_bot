@@ -34,6 +34,7 @@ def cli():
             output_ids = model.generate(input_tensor, max_length=50, mode="greedy")
 
         generated = tokenizer.decode(output_ids[0])
+        
         print(f"🤖 Bot: {generated}")
 
 if __name__ == "__main__":

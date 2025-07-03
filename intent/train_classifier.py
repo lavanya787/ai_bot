@@ -14,11 +14,11 @@ from sklearn.metrics import accuracy_score, precision_recall_fscore_support, con
 from datetime import datetime
 
 # ----------- CONFIG -----------
-MAX_VOCAB_SIZE = 80000
-EMBEDDING_DIM = 512
-HIDDEN_SIZE = 768
-NUM_LAYERS = 6
-NUM_HEADS = 6
+MAX_VOCAB_SIZE = 10000
+EMBEDDING_DIM = 256
+HIDDEN_SIZE = 128
+NUM_LAYERS = 3
+NUM_HEADS = 4
 MAX_SEQ_LENGTH = 256
 BATCH_SIZE = 32
 EPOCHS = 20
@@ -84,6 +84,7 @@ def train_loop(model, dataloader, optimizer, criterion):
         optimizer.zero_grad()
         logits = model(x)
         loss = criterion(logits, y)
+        torch.autograd.set_detect_anomaly(True)  # 👈 Add this
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), GRAD_CLIP)
         optimizer.step()

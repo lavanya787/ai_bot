@@ -6,12 +6,26 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Union
 from googletrans import Translator
+import logging
+
+# Logging configuration
+logging.basicConfig(
+    filename='logs/app.log',
+    encoding='utf-8',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+logger.handlers = [stream_handler]
+logger.handlers[0].stream.reconfigure(encoding='utf-8')
 
 LOG_PATH_JSON = "logs/domain_usage.json"
 LOG_PATH_CSV = "logs/domain_scores.csv"
 translator = Translator()
 
-# 🔍 Domain-wise keyword mappings
+# Domain-wise keyword mappings
 DOMAIN_KEYWORDS = {
     "education": [
         "student", "exam", "grade", "subject", "marks", "syllabus", "teacher", "university",
@@ -43,53 +57,70 @@ DOMAIN_KEYWORDS = {
     ]
 }
 
-
 def translate_to_english(text):
     try:
         translated = translator.translate(text, dest="en")
         return translated.text
     except Exception:
+        logger.warning(f"Translation failed: {text[:50]}...")
         return text  # Fallback to original
 
-
-def detect_domain(text: str, top_n: int = 2) -> Union[str, list]:
+def detect_domain(text: Union[str, list, tuple], top_n: int = 2) -> Union[str, list]:
     """
     Detect domain from raw text content using keyword TF-IDF style scoring.
     """
-    text = text.lower()
-    tokens = re.findall(r'\b\w+\b', text)
-    word_freq = defaultdict(int)
-    for word in tokens:
-        word_freq[word] += 1
+    try:
+        def flatten_input(item, depth=0, max_depth=10):
+            if depth > max_depth:
+                logger.warning(f"Max recursion depth {max_depth} reached in flatten_input")
+                return str(item)
+            if isinstance(item, (list, tuple)):
+                return " ".join(flatten_input(subitem, depth + 1, max_depth) for subitem in item if subitem)
+            elif isinstance(item, dict):
+                return " ".join(flatten_input(v, depth + 1, max_depth) for v in item.values() if v)
+            else:
+                return str(item)
 
-    scores = {}
-    for domain, keywords in DOMAIN_KEYWORDS.items():
-        domain_score = 0
-        for keyword in keywords:
-            tf = word_freq.get(keyword, 0)
-            idf = 1 + 1 / (1 + sum(1 for d in DOMAIN_KEYWORDS.values() if keyword in d))
-            domain_score += tf * idf
-        scores[domain] = domain_score
+        text = flatten_input(text)
+        if not isinstance(text, str):
+            text = str(text)
+        logger.debug(f"Input to detect_domain: type={type(text)}, sample={text[:100]}")
 
-    sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-    filtered = [(d, round(s, 4)) for d, s in sorted_scores if s > 0]
+        text = text.lower()
+        tokens = re.findall(r'\b\w+\b', text)
+        word_freq = defaultdict(int)
+        for word in tokens:
+            word_freq[word] += 1
 
-    if filtered:
-        log_domain_usage(filtered)
-        log_domain_scores(filtered, text_snippet=text)
-    else:
-        log_domain_usage("general")
-        log_domain_scores([("general", 0.0)], text_snippet=text)
+        scores = {}
+        for domain, keywords in DOMAIN_KEYWORDS.items():
+            domain_score = 0
+            for keyword in keywords:
+                tf = word_freq.get(keyword, 0)
+                idf = 1 + 1 / (1 + sum(1 for d in DOMAIN_KEYWORDS.values() if keyword in d))
+                domain_score += tf * idf
+            scores[domain] = domain_score
 
-    return filtered[0][0] if top_n == 1 else filtered[:top_n]
+        sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+        filtered = [(d, round(s, 4)) for d, s in sorted_scores if s > 0]
 
+        if filtered:
+            log_domain_usage(filtered)
+            log_domain_scores(filtered, text_snippet=text)
+        else:
+            log_domain_usage("general")
+            log_domain_scores([("general", 0.0)], text_snippet=text)
+
+        return filtered[0][0] if top_n == 1 else filtered[:top_n]
+    except Exception as e:
+        logger.error(f"Domain detection failed: {e}")
+        raise
 
 def get_domain_from_file(df) -> str:
     text = " ".join(map(str, df.columns.tolist()))
     if not df.empty:
         text += " " + " ".join(map(str, df.iloc[0].astype(str).tolist()))
     return detect_domain(text)
-
 
 def log_domain_usage(predictions: Union[str, list]):
     os.makedirs(os.path.dirname(LOG_PATH_JSON), exist_ok=True)
@@ -110,7 +141,6 @@ def log_domain_usage(predictions: Union[str, list]):
 
     with open(LOG_PATH_JSON, "w") as f:
         json.dump(dict(usage), f, indent=2)
-
 
 def log_domain_scores(predictions: list, text_snippet: str = ""):
     """
@@ -143,8 +173,7 @@ def log_domain_scores(predictions: list, text_snippet: str = ""):
             writer.writeheader()
         writer.writerow(row)
 
-
-# 🧪 Test
+# Test
 if __name__ == "__main__":
     text = input("Enter text to detect domain: ")
     result = detect_domain(text, top_n=3)

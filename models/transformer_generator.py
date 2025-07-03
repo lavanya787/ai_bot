@@ -14,7 +14,7 @@ class TransformerModel(nn.Module):
         self.device = torch.device(config.get("device", "cpu"))
 
         self.vocab_size = len(vocab)
-        self.d_model = config.get("d_model", 128)
+        self.d_model = config.get("d_model", 64) #chnaged from 128 to 64
         self.max_len = config.get("max_len", 64)
 
         self.embedding = nn.Embedding(self.vocab_size, self.d_model)
@@ -22,11 +22,11 @@ class TransformerModel(nn.Module):
 
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=self.d_model,
-            nhead=config.get("num_heads", 4),
-            dim_feedforward=config.get("ff_dim", 256),
+            nhead=config.get("num_heads", 2),#chnaged from 4 to 2
+            dim_feedforward=config.get("ff_dim", 128),#changed from 256 to 128
             batch_first=True
         )
-        self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=config.get("n_layers", 2))
+        self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=config.get("n_layers", 1)) #chnaged from 2 to 1
 
         self.output_layer = nn.Linear(self.d_model, self.vocab_size)  # Optional: For generation
 
@@ -88,18 +88,18 @@ class TransformerModel(nn.Module):
         return " ".join([self.idx2word.get(idx, "<UNK>") for idx in output_tokens])
     
 class TransformerGenerator(nn.Module):
-    def __init__(self, vocab_size, embedding_dim=128, hidden_dim=256):
+    def __init__(self, vocab_size, embedding_dim=64, hidden_dim=128):#reduced from 128 to 64 ;256 to 128
         super(TransformerGenerator, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
         self.transformer = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(
                 d_model=embedding_dim,
-                nhead=8,
+                nhead=2,#changed from 8 to 2
                 dim_feedforward=hidden_dim,
                 dropout=0.1,
                 batch_first=True
             ),
-            num_layers=2
+            num_layers=1 #changed frm 2 to 1
         )
         self.fc = nn.Linear(embedding_dim, vocab_size)
 
