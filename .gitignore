@@ -62,6 +62,8 @@ chat_history.json
 thur_app.py
 adding.py
 llm_hanlder_old.py
+intent_model.pt
+checkpoint.pt
 # 📈 Reports and outputs
 *.pdf
 *.csv
@@ -70,8 +72,10 @@ llm_hanlder_old.py
 *.xls
 *.html
 *.pth
+*.pt
 reports/
 rag_data/
+logs/
 
 # 🚀 Streamlit or runtime files
 *.streamlit/
