@@ -4,17 +4,20 @@ from datetime import datetime
 import os
 import re
 import logging
-from pythonjsonlogger import jsonlogger
-import streamlit as st
-from typing import List, Dict, Optional
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.model_selection import train_test_split
+import json
+import time
+import uuid
+import shutil
 from pathlib import Path
 import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 import hashlib
-import time
-import json
+import pickle
+import tempfile
+from tokenizer.uml_tokenizer import UnigramTokenizer
+from llm_components.RAGModel import RAGModel
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -22,7 +25,6 @@ logger = logging.getLogger(__name__)
 
 # Helper functions
 def format_memory_stats():
-    """Format memory statistics for logging"""
     try:
         import psutil
         memory = psutil.virtual_memory()
@@ -31,209 +33,21 @@ def format_memory_stats():
         return "Memory stats unavailable"
 
 def log_gpu_stats(logger):
-    """Log GPU statistics"""
     if torch.cuda.is_available():
         logger.info(f"GPU Memory: {torch.cuda.memory_allocated()/1024/1024/1024:.1f}GB allocated")
     else:
         logger.info("No GPU available")
 
 def get_embedding(text: str):
-    """Simple embedding function using TF-IDF"""
     try:
-        # Simple TF-IDF embedding for fallback
-        vectorizer = TfidfVectorizer(max_features=100, stop_words='english')
-        # Need at least 2 documents for TF-IDF, so we add a dummy document
+        vectorizer = TfidfVectorizer(max_features=10000, stop_words='english')
         corpus = [text, "dummy document"]
         embeddings = vectorizer.fit_transform(corpus)
         return embeddings[0].toarray().flatten()
     except:
-        # Fallback to simple word count vector
         words = text.lower().split()
         return np.array([len(words), len(set(words)), len(text)])
 
-# -----------------------------
-# ✅ Improved BPE Tokenizer (Simple Implementation)
-# -----------------------------
-class ImprovedBPETokenizer:
-    def __init__(self, vocab_size=5000):
-        self.vocab_size = vocab_size
-        self.vocab = {}
-        self.inv_vocab = {}
-        self.word_freq = {}
-        self.trained = False
-        
-    def train(self, texts):
-        """Train the tokenizer on a list of texts"""
-        if not texts:
-            return
-            
-        # Simple word-based tokenization for now
-        all_words = []
-        for text in texts:
-            words = re.findall(r'\b\w+\b', text.lower())
-            all_words.extend(words)
-        
-        # Count word frequencies
-        from collections import Counter
-        word_counts = Counter(all_words)
-        
-        # Build vocabulary with most frequent words
-        special_tokens = ['<PAD>', '<UNK>', '<SOS>', '<EOS>']
-        self.vocab = {token: i for i, token in enumerate(special_tokens)}
-        
-        # Add most frequent words
-        for word, count in word_counts.most_common(self.vocab_size - len(special_tokens)):
-            if word not in self.vocab:
-                self.vocab[word] = len(self.vocab)
-        
-        # Create inverse vocabulary
-        self.inv_vocab = {i: word for word, i in self.vocab.items()}
-        self.trained = True
-    
-    def encode(self, text):
-        """Encode text to token IDs"""
-        if not self.trained:
-            return [1]  # Return UNK token
-        
-        words = re.findall(r'\b\w+\b', text.lower())
-        return [self.vocab.get(word, 1) for word in words]  # 1 is UNK
-    
-    def decode(self, token_ids):
-        """Decode token IDs to text"""
-        if not self.trained:
-            return "untrained tokenizer"
-        
-        words = [self.inv_vocab.get(id, '<UNK>') for id in token_ids]
-        return ' '.join(words)
-    
-    def save(self, path):
-        """Save tokenizer to file"""
-        data = {
-            'vocab': self.vocab,
-            'vocab_size': self.vocab_size,
-            'trained': self.trained
-        }
-        with open(path, 'wb') as f:
-            import pickle
-            pickle.dump(data, f)
-    
-    def load(self, path):
-        """Load tokenizer from file"""
-        with open(path, 'rb') as f:
-            import pickle
-            data = pickle.load(f)
-        
-        self.vocab = data['vocab']
-        self.vocab_size = data['vocab_size']
-        self.trained = data['trained']
-        self.inv_vocab = {i: word for word, i in self.vocab.items()}
-
-# -----------------------------
-# ✅ Enhanced RAG Model with Better Generation
-# -----------------------------
-class RAGModel(nn.Module):
-    def __init__(self, vocab_size, embed_dim=128, hidden_dim=256, num_layers=2):
-        super().__init__()
-        self.vocab_size = vocab_size
-        self.embed_dim = embed_dim
-        self.hidden_dim = hidden_dim
-        self.num_layers = num_layers
-        
-        self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=0)
-        self.encoder = nn.LSTM(embed_dim, hidden_dim, num_layers=num_layers, batch_first=True, bidirectional=True)
-        self.decoder = nn.LSTM(embed_dim, hidden_dim * 2, num_layers=num_layers, batch_first=True)
-        self.output_layer = nn.Linear(hidden_dim * 2, vocab_size)
-        self.dropout = nn.Dropout(0.1)
-        
-        # Attention mechanism for better generation
-        self.attention = nn.MultiheadAttention(embed_dim, num_heads=8, batch_first=True)
-        self.context_projection = nn.Linear(hidden_dim * 2, embed_dim)
-
-    def forward(self, input_ids, target_ids=None, context_embeddings=None):
-        embedded_input = self.embedding(input_ids)
-        encoder_output, (hidden, cell) = self.encoder(embedded_input)
-        
-        # Merge bidirectional states
-        hidden = self._merge_bidir(hidden)
-        cell = self._merge_bidir(cell)
-
-        if target_ids is not None:
-            # Training mode
-            embedded_target = self.embedding(target_ids)
-            
-            # Apply attention if context is provided
-            if context_embeddings is not None:
-                context_proj = self.context_projection(context_embeddings)
-                embedded_target, _ = self.attention(embedded_target, context_proj, context_proj)
-            
-            decoder_output, _ = self.decoder(embedded_target, (hidden, cell))
-            decoder_output = self.dropout(decoder_output)
-            logits = self.output_layer(decoder_output)
-            return logits
-        else:
-            # Inference mode - return encoder output for retrieval
-            pooled = torch.mean(encoder_output, dim=1)
-            return pooled
-
-    def encode_document(self, input_ids):
-        """Encode document for retrieval"""
-        embedded = self.embedding(input_ids)
-        output, _ = self.encoder(embedded)
-        pooled = torch.mean(output, dim=1)
-        return pooled
-
-    def generate_with_context(self, input_ids, context_embeddings=None, max_length=100, temperature=0.8, top_k=50):
-        """Enhanced generation with context and sampling"""
-        self.eval()
-        with torch.no_grad():
-            # Get encoder states
-            embedded_input = self.embedding(input_ids)
-            encoder_output, (hidden, cell) = self.encoder(embedded_input)
-            hidden = self._merge_bidir(hidden)
-            cell = self._merge_bidir(cell)
-            
-            # Start with SOS token
-            current_input = torch.tensor([[2]], dtype=torch.long, device=input_ids.device)  # SOS token
-            generated = []
-            
-            for _ in range(max_length):
-                embedded = self.embedding(current_input)
-                
-                # Apply attention if context is provided
-                if context_embeddings is not None:
-                    context_proj = self.context_projection(context_embeddings)
-                    embedded, _ = self.attention(embedded, context_proj, context_proj)
-                
-                output, (hidden, cell) = self.decoder(embedded, (hidden, cell))
-                logits = self.output_layer(output)
-                
-                # Apply temperature and top-k sampling
-                logits = logits / temperature
-                if top_k > 0:
-                    top_k_logits, top_k_indices = torch.topk(logits, top_k, dim=-1)
-                    probs = torch.nn.functional.softmax(top_k_logits, dim=-1)
-                    next_token_idx = torch.multinomial(probs.squeeze(), 1)
-                    next_token = top_k_indices.squeeze()[next_token_idx]
-                else:
-                    next_token = torch.multinomial(torch.nn.functional.softmax(logits.squeeze(), dim=-1), 1)
-                
-                token_id = next_token.item()
-                if token_id == 3:  # EOS token
-                    break
-                    
-                generated.append(token_id)
-                current_input = next_token.unsqueeze(0)
-            
-            return torch.tensor([generated])
-
-    def _merge_bidir(self, h):
-        """Merge bidirectional LSTM states"""
-        h = h.view(self.num_layers, 2, h.size(1), h.size(2))
-        return torch.cat([h[:, 0], h[:, 1]], dim=-1)
-
-# -----------------------------
-# ✅ Enhanced LLM Handler with Model-Based Generation
-# -----------------------------
 def count_parameters(model):
     total = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -251,7 +65,10 @@ def infer_task_type(prompt: str) -> str:
         "bullet_points": ["bullet", "points", "outline", "key points"],
         "keywords": ["keywords", "terms", "key words"],
         "short_note": ["short note", "note on", "explain shortly"],
-        "definition": ["define", "definition", "what is"],
+        "definition": ["define", "definition", "what is", "state"],
+        "explain": ["explain", "describe", "how does", "what happens"],
+        "formula": ["formula", "equation", "expression"],
+        "law": ["law", "principle", "rule", "theorem"]
     }
     for task, keywords in task_keywords.items():
         if any(kw in prompt_lower for kw in keywords):
@@ -259,8 +76,7 @@ def infer_task_type(prompt: str) -> str:
     return "faq"
 
 class LLMHandler:
-    def __init__(self, model_path='checkpoint.pt', tokenizer_path='bpe_tokenizer.pkl', model_version=None):
-        """Initialize LLMHandler with optional model version"""
+    def __init__(self, model_path='checkpoint.pt', tokenizer_path='uml_tokenizer.pkl', model_version=None):
         logger.info("Initializing LLMHandler")
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         logger.info(f"Device: {self.device}")
@@ -270,101 +86,115 @@ class LLMHandler:
         self.trained_models_path = "trained_models.json"
         self.model_version = model_version
     
-        self.vocab_size = 5000
+        self.vocab_size = 10000
         self.seq_len = 512
         self.pad_token_id = 0
-        self.top_k = 3
+        self.sos_token_id = 2
+        self.eos_token_id = 3
+        self.top_k = 5  # Increased to retrieve more relevant chunks
     
-        # Initialize tokenizer and model
-        self.tokenizer = ImprovedBPETokenizer(vocab_size=self.vocab_size)
+        self.tokenizer = UnigramTokenizer()
         self.model = RAGModel(vocab_size=self.vocab_size).to(self.device)
+        self.model.tokenizer = self.tokenizer
     
         self.doc_texts = {}
         self.doc_embeddings = {}
         self.is_trained = False
     
         self._log_model_params()
-        self._load_tokenizer(model_version)
         self._load_model(model_version)
-
+        self._load_tokenizer()
+        
     def _log_model_params(self):
         total, trainable = count_parameters(self.model)
         logger.info(f"📊 Model Parameters: Total = {total:,}, Trainable = {trainable:,}")
 
-    def _load_model(self, model_version=None):
-        if Path(self.model_path).exists():
-            try:
-                state = torch.load(self.model_path, map_location=self.device)
-                if 'model_state_dict' in state:
-                    self.model.load_state_dict(state['model_state_dict'])
-                else:
-                    self.model.load_state_dict(state)
-                self.is_trained = True
-                logger.info(f"✅ Model loaded successfully{' (version: ' + str(model_version) + ')' if model_version else ''}.")
-            except Exception as e:
-                logger.warning(f"⚠️ Model corrupted: {e}. Will retrain when needed.")
-                self.is_trained = False
+    def _load_model(self, domain_name=None):
+        if domain_name is None:
+            logger.warning("No domain name provided. Using default model.")
+            path = self.model_path
         else:
-            logger.info("No saved model found. Will train when documents are available.")
-            self.is_trained = False
+            path = f"saved_models/{domain_name}/{domain_name}_checkpoint.pt"
+
+        if not os.path.exists(path):
+            logger.info(f"Model file {path} does not exist, will train new model")
+            return False
+
+        try:
+            state = torch.load(path, map_location=self.device)
+            state_dict = state.get("model_state_dict", state)
+            self.model.load_state_dict(state_dict, strict=False)
+            self.doc_texts = state.get("doc_texts", {})
+            self.is_trained = state.get("is_trained", False)
+            if "vocab_size" in state:
+                self.vocab_size = state["vocab_size"]
+            logger.info(f"✅ Successfully loaded model from {path}")
+            logger.info(f"📄 Loaded {len(self.doc_texts)} documents from checkpoint")
+            return True
+        except Exception as e:
+            logger.warning(f"❌ Failed to load model from {path}: {e}")
+            logger.info("Reinitializing model due to loading failure")
+            self.model = RAGModel(vocab_size=self.vocab_size).to(self.device)
+            self.model.tokenizer = self.tokenizer
+            return False
 
     def _load_tokenizer(self, tokenizer_version=None):
-        """Load tokenizer with optional version parameter"""
-        if Path(self.tokenizer_path).exists():
+        root_tokenizer_path = Path("uml_tokenizer.pkl")
+        if root_tokenizer_path.exists():
             try:
-                self.tokenizer.load(self.tokenizer_path)
-                logger.info(f"✅ Tokenizer loaded successfully{' (version: ' + str(tokenizer_version) + ')' if tokenizer_version else ''}.")
+                self.tokenizer.load_pickle(str(root_tokenizer_path))
+                self.model.tokenizer = self.tokenizer
+                logger.info(f"✅ Tokenizer loaded from {root_tokenizer_path}")
+                return True
             except Exception as e:
-                logger.warning(f"⚠️ Tokenizer corrupted: {e}. Will retrain when needed.")
-                self.tokenizer = ImprovedBPETokenizer(vocab_size=self.vocab_size)
+                logger.error(f"❌ Failed to load tokenizer: {e}", exc_info=True)
+                raise RuntimeError("Tokenizer loading failed.")
         else:
-            logger.info("No saved tokenizer found. Will train when documents are available.")
+            logger.error("❌ Tokenizer file 'uml_tokenizer.pkl' not found.")
+            raise FileNotFoundError("Tokenizer file 'uml_tokenizer.pkl' is required.")
 
     def _train_tokenizer(self):
         if not self.doc_texts:
-            logger.warning("No documents available to train tokenizer.")
+            logger.error("No documents available to train tokenizer")
             return
-        
         texts = []
-        for doc in self.doc_texts.values():
-            if isinstance(doc, dict):
-                content = doc.get("content", "")
-            else:
-                content = str(doc)
-            if content:
-                texts.append(content)
-        
-        if texts:
-            self.tokenizer.train(texts)
-            self.tokenizer.save(self.tokenizer_path)
-            logger.info("✅ Tokenizer trained and saved.")
+        for filename, doc in self.doc_texts.items():
+            content = doc.get("content", "")
+            if not isinstance(content, str) or not content.strip():
+                logger.error(f"Invalid or empty content for {filename}: {content}")
+                continue
+            texts.append(content)
+        if not texts:
+            logger.error("No valid texts for tokenizer training")
+            return
+        try:
+            self.tokenizer.train(texts, vocab_size=max(self.vocab_size, 20000))
+            self.tokenizer.save_pickle(self.tokenizer_path)
+            self.model.tokenizer = self.tokenizer
+            logger.info(f"Tokenizer trained with vocab size: {len(self.tokenizer.token_to_id)}")
+        except Exception as e:
+            logger.error(f"Tokenizer training failed: {e}")
 
-    def index_documents(self, documents):
-        """Index documents for retrieval"""
+    def index_documents(self, documents, force_reindex=False):
         if isinstance(documents, tuple):
             documents = [documents]
-        
         if not documents:
-            logger.warning("No documents provided for indexing")
+            logger.error("No documents provided for indexing")
             return False
-
         indexed = 0
         for filename, content in documents:
             if not isinstance(content, str) or not content.strip():
-                logger.warning(f"Skipping invalid content in {filename}")
+                logger.error(f"Invalid content for {filename}: type={type(content)}")
                 continue
-                
             content_hash = _content_hash(content)
-            if filename in self.doc_texts:
-                existing_hash = self.doc_texts[filename].get("hash", "")
-                if existing_hash == content_hash:
-                    logger.info(f"Skipping already indexed document: {filename}")
-                    continue
-            
-            # Process content into sentences for better retrieval
+            if not force_reindex and filename in self.doc_texts and self.doc_texts[filename].get("hash") == content_hash:
+                logger.info(f"Skipping duplicate document: {filename}")
+                continue
             sentences = re.split(r'[.!?]+', content)
             sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
-            
+            if not sentences:
+                logger.warning(f"No valid sentences in {filename}")
+                continue
             self.doc_texts[filename] = {
                 "content": content,
                 "sentences": sentences,
@@ -372,377 +202,496 @@ class LLMHandler:
             }
             logger.info(f"Indexed document: {filename}")
             indexed += 1
-
-        # Train tokenizer if we have new documents
         if indexed > 0 and not self.tokenizer.trained:
             self._train_tokenizer()
-
         logger.info(f"Indexing complete: {indexed} documents indexed")
         return indexed > 0
-
-    def train_on_documents(self, epochs=5, batch_size=8, save_path="checkpoint.pt"):
-        """Train the model on indexed documents"""
+    
+    def train_on_documents(self, epochs=20, batch_size=8, save_path=None, patience=3, domain_name=None):
         if not self.doc_texts:
-            logger.warning("No documents available for training.")
-            return
+            logger.error("No documents available for training")
+            return False
 
-        logger.info(f"🚀 Starting training on {len(self.doc_texts)} documents")
-        
-        # Ensure tokenizer is trained
+        if domain_name is None:
+            first_filename = next(iter(self.doc_texts))
+            base_name = os.path.splitext(first_filename)[0]
+            timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
+            domain_name = f"model_{base_name}_{timestamp}"
+
+        save_dir = os.path.join("saved_models", domain_name)
+        os.makedirs(save_dir, exist_ok=True)
+        self.model_path = os.path.join(save_dir, f"{domain_name}_checkpoint.pt")
+        self.tokenizer_path = os.path.join(save_dir, "uml_tokenizer.pkl")
+        if save_path is None:
+            save_path = self.model_path
+
         if not self.tokenizer.trained:
             self._train_tokenizer()
+            if len(self.tokenizer.token_to_id) <= 4:
+                logger.error(f"Tokenizer training failed, vocabulary size: {len(self.tokenizer.token_to_id)}")
+                return False
 
-        # Create training pairs from sentences
         train_pairs = []
-        for doc in self.doc_texts.values():
-            sentences = doc.get("sentences", [])
-            for i in range(len(sentences) - 1):
-                if len(sentences[i]) > 30 and len(sentences[i + 1]) > 30:
-                    train_pairs.append((sentences[i], sentences[i + 1]))
-
+        for fname, doc in self.doc_texts.items():
+            content = doc.get("content", "")
+            if not content.strip():
+                logger.warning(f"Skipping empty content in {fname}")
+                continue
+            try:
+                token_ids = self.tokenizer.encode_ids(content)
+                if not token_ids:
+                    logger.warning(f"No tokens generated for {fname}")
+                    continue
+                for i in range(0, len(token_ids) - self.seq_len * 2, self.seq_len):
+                    input_chunk = token_ids[i: i + self.seq_len]
+                    output_chunk = token_ids[i + self.seq_len: i + self.seq_len * 2]
+                    input_chunk += [self.pad_token_id] * (self.seq_len - len(input_chunk))
+                    output_chunk += [self.pad_token_id] * (self.seq_len - len(output_chunk))
+                    train_pairs.append((input_chunk, output_chunk))
+            except Exception as e:
+                logger.error(f"Error tokenizing {fname}: {e}")
         if not train_pairs:
-            logger.warning("No training pairs found.")
-            return
+            logger.error("No valid training pairs found")
+            return False
 
-        # Tokenize training pairs
-        def encode_pair(q, a):
-            q_ids = self.tokenizer.encode(q)[:self.seq_len]
-            a_ids = self.tokenizer.encode(a)[:self.seq_len]
-            
-            # Pad sequences
-            q_ids += [self.pad_token_id] * (self.seq_len - len(q_ids))
-            a_ids += [self.pad_token_id] * (self.seq_len - len(a_ids))
-            
-            return q_ids, a_ids
+        logger.info(f"Prepared {len(train_pairs)} training chunks")
+        train_data, val_data = train_test_split(train_pairs, test_size=0.1, random_state=42)
 
-        encoded_pairs = [encode_pair(q, a) for q, a in train_pairs[:2000]]  # Increased for better training
-        
-        # Split into train/val
-        train_data, val_data = train_test_split(encoded_pairs, test_size=0.1, random_state=42)
-
-        # Create data loaders
         def create_dataset(data):
             queries = torch.tensor([q for q, _ in data], dtype=torch.long)
             answers = torch.tensor([a for _, a in data], dtype=torch.long)
             return torch.utils.data.TensorDataset(queries, answers)
 
-        train_loader = torch.utils.data.DataLoader(
-            create_dataset(train_data), batch_size=batch_size, shuffle=True
-        )
-        val_loader = torch.utils.data.DataLoader(
-            create_dataset(val_data), batch_size=batch_size
-        )
+        train_loader = torch.utils.data.DataLoader(create_dataset(train_data), batch_size=batch_size, shuffle=True)
+        val_loader = torch.utils.data.DataLoader(create_dataset(val_data), batch_size=batch_size)
 
-        # Setup training
         optimizer = torch.optim.Adam(self.model.parameters(), lr=1e-4)
         criterion = nn.CrossEntropyLoss(ignore_index=self.pad_token_id)
 
+        best_val_loss = float('inf')
+        no_improvement = 0
         self.model.train()
         
         for epoch in range(epochs):
-            total_loss = 0
+            total_train_loss = 0.0
             for batch_idx, (queries, answers) in enumerate(train_loader):
                 queries, answers = queries.to(self.device), answers.to(self.device)
-                
                 optimizer.zero_grad()
                 logits = self.model(queries, answers)
-                loss = criterion(logits.view(-1, logits.size(-1)), answers.view(-1))
+                loss = criterion(logits.reshape(-1, logits.size(-1)), answers.reshape(-1))
                 loss.backward()
                 optimizer.step()
-                
-                total_loss += loss.item()
-                
-                if batch_idx % 10 == 0:
-                    logger.info(f"Epoch {epoch+1}/{epochs}, Batch {batch_idx}, Loss: {loss.item():.4f}")
-            
-            avg_loss = total_loss / len(train_loader)
-            logger.info(f"Epoch {epoch+1} completed. Average Loss: {avg_loss:.4f}")
+                total_train_loss += loss.item()
+            avg_train_loss = total_train_loss / len(train_loader)
 
-        # Save model
-        torch.save({
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'vocab_size': self.vocab_size
-        }, save_path)
-        
-        logger.info(f"✅ Model saved to {save_path}")
+            self.model.eval()
+            total_val_loss = 0.0
+            with torch.no_grad():
+                for queries, answers in val_loader:
+                    queries, answers = queries.to(self.device), answers.to(self.device)
+                    logits = self.model(queries, answers)
+                    val_loss = criterion(logits.view(-1, logits.size(-1)), answers.view(-1))
+                    total_val_loss += val_loss.item()
+            avg_val_loss = total_val_loss / len(val_loader)
+
+            logger.info(f"[Epoch {epoch+1}] ✅ Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}")
+            if avg_val_loss < best_val_loss:
+                best_val_loss = avg_val_loss
+                no_improvement = 0
+                try:
+                    torch.save({
+                        'model_state_dict': self.model.state_dict(),
+                        'optimizer_state_dict': optimizer.state_dict(),
+                        'vocab_size': self.vocab_size,
+                        'doc_texts': self.doc_texts
+                    }, save_path)
+                    logger.info(f"✅ New best model saved to {save_path}")
+                except Exception as e:
+                    logger.error(f"❌ Error saving checkpoint: {e}")
+                    return False
+            else:
+                no_improvement += 1
+                if no_improvement >= patience:
+                    logger.info(f"Early stopping at epoch {epoch+1}")
+                    break
+
         self.is_trained = True
+        logger.info("✅ Training complete")
+        return True
 
-    def generate_response(self, prompt, task="answer", max_length=100, temperature=0.8):
-        if not self.is_trained:
-            logger.warning("Model not trained, returning default response")
-            return "Please train the model by uploading documents and calling train_on_documents."
+    def generate_response(self, prompt, task="answer", max_length=10000, temperature=0.8, context=None):
+        logger.info(f"Generating response for prompt: {prompt[:50]}...")
+        logger.info(f"Documents available: {len(self.doc_texts)}")
+        logger.info(f"Model trained: {self.is_trained}")
+        logger.info(f"Tokenizer trained: {self.tokenizer.trained}")
 
-        if not self.tokenizer.trained:
-            logger.warning("Tokenizer not trained, returning default response")
-            return "Please upload documents to train the tokenizer."
+        if not self.doc_texts:
+            logger.warning("No documents available for response generation")
+            return "Please upload documents first to enable response generation."
 
-        prompt_ids = self.tokenizer.encode(prompt)
-        if not prompt_ids:
-            return "Could not encode the prompt. Please check the input."
+        inferred_task = infer_task_type(prompt)
+        logger.info(f"Inferred task type: {inferred_task}")
 
-        prompt_ids = prompt_ids[:self.seq_len]
-        prompt_ids += [self.pad_token_id] * (self.seq_len - len(prompt_ids))
-        prompt_tensor = torch.tensor([prompt_ids], dtype=torch.long, device=self.device)
+        context_result = self._search_documents(prompt)
+        if not context_result:
+            context_result = {
+                "content": "No relevant information found.",
+                "sources": ["unknown"],
+                "confidence": 0.0,
+                "sentences": []
+            }
+            logger.warning("No relevant information found in documents")
 
-        context_embeddings = None
-        relevant_info = ""
-        if self.doc_texts:
-            context_result = self._faq_chunk_search(prompt)
-            if context_result and context_result.get("confidence", 0) > 0.1:
-                relevant_info = context_result["summary"]
-                context_ids = self.tokenizer.encode(relevant_info)
-                context_ids = context_ids[:self.seq_len]
-                context_ids += [self.pad_token_id] * (self.seq_len - len(context_ids))
-                context_tensor = torch.tensor([context_ids], dtype=torch.long, device=self.device)
+        if self.is_trained and self.tokenizer.trained:
+            try:
+                prompt_ids = self.tokenizer.encode_ids(prompt)
+                if not prompt_ids or not all(isinstance(i, int) for i in prompt_ids):
+                    logger.warning("Invalid prompt encoding, falling back to retrieval")
+                    return self._format_professional_response(context_result, inferred_task, prompt)
+
+                prompt_ids = prompt_ids[:self.seq_len]
+                prompt_ids += [self.pad_token_id] * (self.seq_len - len(prompt_ids))
+                prompt_tensor = torch.tensor([prompt_ids], dtype=torch.long, device=self.device)
 
                 with torch.no_grad():
-                    context_embeddings = self.model.encode_document(context_tensor)
-                    context_embeddings = context_embeddings.unsqueeze(1)
+                    generated_ids = self.model.generate(
+                        input_ids=prompt_tensor,
+                        max_length=max_length,
+                        temperature=temperature,
+                        top_k=50
+                    )
 
-        with torch.no_grad():
-            generated_ids = self.model.generate_with_context(
-                prompt_tensor, 
-                context_embeddings=context_embeddings,
-                max_length=max_length,
-                temperature=temperature,
-                top_k=50
-            )
+                if generated_ids.numel() > 0:
+                    generated_text = self.tokenizer.decode(generated_ids[0].tolist())
+                    generated_text = self._post_process_response(generated_text)
+                    if len(generated_text.strip()) > 50:
+                        context_result["content"] = generated_text
+                        context_result["sources"] = context_result.get("sources", ["model"])
+                        context_result["confidence"] = context_result.get("confidence", 0.9)
+                        response = self._format_professional_response(context_result, inferred_task, prompt)
+                        logger.info(f"Generated response length: {len(response)}")
+                        return response
+            except Exception as e:
+                logger.error(f"Model generation failed: {e}, falling back to retrieval")
 
-            if generated_ids.numel() > 0:
-                generated_text = self.tokenizer.decode(generated_ids[0].tolist())
-                generated_text = self._post_process_response(generated_text)
+        logger.info("Using retrieval-based response")
+        response = self._format_professional_response(context_result, inferred_task, prompt)
+        logger.info(f"Generated response length: {len(response)}")
+        return response
 
-                response = f"Generated Response: {generated_text}"
-                if relevant_info:
-                    response += f"\n\nContext Used: {relevant_info[:200]}..."
-                    response += f"\nConfidence: {context_result['confidence']:.2f}"
-                    response += f"\nSource: {context_result['source']}"
-                return response
-            else:
-                return "Model failed to generate a response. Please try a different prompt."
-        
-    def _post_process_response(self, text):
-        """Post-process generated text to improve quality"""
-        # Remove special tokens and clean up
-        text = text.replace('<UNK>', '').replace('<PAD>', '').replace('<SOS>', '').replace('<EOS>', '')
-        
-        # Remove excessive whitespace
-        text = re.sub(r'\s+', ' ', text).strip()
-        
-        # Capitalize first letter
-        if text:
-            text = text[0].upper() + text[1:]
-        
-        # Add period if missing
-        if text and not text.endswith(('.', '!', '?')):
-            text += '.'
-        
-        return text
-
-    def _faq_chunk_search(self, prompt: str, top_k: int = 3):
-        """Search for relevant chunks in documents"""
+    def _search_documents(self, query):
         if not self.doc_texts:
             return None
             
         all_chunks = []
         chunk_sources = []
-
+        chunk_sentences = []
+        query_lower = query.lower()
+        
         for fname, doc in self.doc_texts.items():
             sentences = doc.get("sentences", [])
+            content = doc.get("content", "")
+            current_chunk = ""
+            current_sentences = []
             for sentence in sentences:
-                if len(sentence.strip()) > 40:
-                    all_chunks.append(sentence)
-                    chunk_sources.append(fname)
-
+                if len(sentence.strip()) < 20:
+                    continue
+                cleaned = re.sub(r'\(cid\d+\)', '', sentence)
+                cleaned = re.sub(r'[^\w\s,.!?()-]', ' ', cleaned)
+                cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+                if cleaned and len(cleaned) > 20:
+                    # Prioritize sentences containing query terms
+                    if any(term in cleaned.lower() for term in query_lower.split()):
+                        if len(current_chunk) + len(cleaned) < 500:
+                            current_chunk += cleaned + ". "
+                            current_sentences.append(cleaned)
+                        else:
+                            all_chunks.append(current_chunk.strip())
+                            chunk_sources.append(fname)
+                            chunk_sentences.append(current_sentences)
+                            current_chunk = cleaned + ". "
+                            current_sentences = [cleaned]
+            if current_chunk:
+                all_chunks.append(current_chunk.strip())
+                chunk_sources.append(fname)
+                chunk_sentences.append(current_sentences)
+        
         if not all_chunks:
             return None
-
-        # Simple similarity search using embeddings
-        prompt_embedding = get_embedding(prompt)
-        chunk_embeddings = [get_embedding(chunk) for chunk in all_chunks]
         
-        # Calculate similarities
+        query_embedding = get_embedding(query)
         similarities = []
-        for chunk_emb in chunk_embeddings:
+        
+        for chunk in all_chunks:
+            chunk_embedding = get_embedding(chunk)
             try:
-                # Ensure embeddings have same dimension
-                if len(prompt_embedding) != len(chunk_emb):
-                    # Pad shorter embedding with zeros
-                    max_len = max(len(prompt_embedding), len(chunk_emb))
-                    prompt_embedding = np.pad(prompt_embedding, (0, max_len - len(prompt_embedding)))
-                    chunk_emb = np.pad(chunk_emb, (0, max_len - len(chunk_emb)))
-                
-                sim = cosine_similarity([prompt_embedding], [chunk_emb])[0][0]
+                if len(query_embedding) != len(chunk_embedding):
+                    max_len = max(len(query_embedding), len(chunk_embedding))
+                    query_embedding = np.pad(query_embedding, (0, max_len - len(query_embedding)))
+                    chunk_embedding = np.pad(chunk_embedding, (0, max_len - len(chunk_embedding)))
+                sim = cosine_similarity([query_embedding], [chunk_embedding])[0][0]
                 similarities.append(sim)
             except:
                 similarities.append(0.0)
-
-        # Get top results
-        top_indices = np.argsort(similarities)[-top_k:][::-1]
-        top_chunks = [all_chunks[i] for i in top_indices if similarities[i] > 0.1]
+        
+        top_indices = np.argsort(similarities)[-self.top_k:][::-1]
+        top_chunks = []
+        top_sentences = []
+        for i in top_indices:
+            if similarities[i] > 0.3:  # Increased threshold for relevance
+                top_chunks.append(all_chunks[i])
+                top_sentences.extend(chunk_sentences[i])
         
         if not top_chunks:
             return None
-
-        # Combine top chunks for summary
+        
         combined_text = " ".join(top_chunks)
-        avg_confidence = np.mean([similarities[i] for i in top_indices if similarities[i] > 0.1])
-        sources = list(set(chunk_sources[i] for i in top_indices if similarities[i] > 0.1))
-
+        avg_confidence = np.mean([similarities[i] for i in top_indices if similarities[i] > 0.3])
+        sources = list(set(chunk_sources[i] for i in top_indices if similarities[i] > 0.3))
+        
         return {
-            "summary": combined_text[:500] + "..." if len(combined_text) >500 else combined_text,
+            "content": combined_text[:1000] + "..." if len(combined_text) > 1000 else combined_text,
             "confidence": avg_confidence,
-            "source": ", ".join(sources)
+            "sources": sources,
+            "sentences": top_sentences[:5]
         }
 
-    def is_retriever_ready(self) -> bool:
-        """Check if retriever is ready"""
-        return bool(self.doc_texts)
+    def get_relevant_context(self, query, max_context_length=1000):
+        try:
+            if not self.doc_texts:
+                logger.warning("No documents available for context retrieval")
+                return ""
+
+            context_result = self._search_documents(query)
+            if not context_result:
+                return ""
+
+            content = context_result.get("content", "")
+            sentences = context_result.get("sentences", [])
+            context = " ".join(sentences[:3]) if sentences else content[:max_context_length]
+            return context[:max_context_length] + ("..." if len(context) > max_context_length else "")
+        except Exception as e:
+            logger.error(f"Error getting relevant context: {e}")
+            return ""
+
+    def _format_professional_response(self, context_result, task_type, prompt):
+        content = context_result.get("content", "No relevant information found.")
+        sources = context_result.get("sources", ["unknown"])
+        confidence = context_result.get("confidence", 0.0)
+        sentences = context_result.get("sentences", [])
+        
+        response = ""
+        if task_type == "definition" or task_type == "law":
+            response = self._format_definition_response(content, sources, sentences, prompt)
+        elif task_type == "explain":
+            response = self._format_explanation_response(content, sources, sentences, prompt)
+        elif task_type == "formula":
+            response = self._format_formula_response(content, sources, sentences, prompt)
+        elif task_type == "mcq":
+            response = self._format_mcq_response(content, sources, sentences, prompt)
+        elif task_type == "summary":
+            response = self._format_summary_response(content, sources, sentences)
+        elif task_type == "bullet_points":
+            response = self._format_bullet_points_response(content, sources, sentences)
+        else:
+            response = self._format_general_response(content, sources, sentences, prompt)
+        
+        if content and content != "No relevant information found.":
+            response += f"\n\n📚 *Source: {', '.join(sources)}*"
+            response += f"\n*Confidence: {confidence:.2f}*"
+        return response
+
+    def _format_definition_response(self, content, sources, sentences, prompt):
+        key_terms = re.findall(r'\b[A-Z][a-z]*(?:\s+[A-Z][a-z]*)*\b', prompt) or [word for word in prompt.split() if word.lower() in prompt.lower()]
+        main_term = key_terms[0] if key_terms else "concept"
+        
+        definition_sentences = []
+        prompt_lower = prompt.lower()
+        for sentence in sentences:
+            sentence_lower = sentence.lower()
+            if any(term in sentence_lower for term in prompt_lower.split()) or any(word in sentence_lower for word in ['states', 'law', 'principle', 'defined', 'equation', 'current', 'charge', 'flow']):
+                definition_sentences.append(sentence)
+        
+        if not definition_sentences and sentences:
+            definition_sentences = sentences[:2]
+        
+        response = f"📋 **{main_term}**\n\n"
+        main_def = definition_sentences[0] if definition_sentences else content[:200]
+        response += f"**Definition:** {main_def.strip()}\n\n"
+        
+        if len(definition_sentences) > 1:
+            response += f"**Key Points:**\n"
+            for i, sentence in enumerate(definition_sentences[1:3], 1):
+                response += f"{i}. {sentence.strip()}\n"
+        
+        math_patterns = re.findall(r'[A-Z]\s*=\s*[A-Z\d\s*/+-]+', content)
+        if math_patterns:
+            response += f"\n**Mathematical Form:** {math_patterns[0]}\n"
+        
+        return response
+
+    def _format_explanation_response(self, content, sources, sentences, prompt):
+        response = f"💡 **Explanation**\n\n"
+        
+        if sentences:
+            response += f"**Overview:** {sentences[0]}\n\n"
+            response += f"**Details:**\n"
+            for i, sentence in enumerate(sentences[1:4], 1):
+                response += f"{i}. {sentence}\n"
+        else:
+            response += content[:500]
+        
+        return response
+
+    def _format_formula_response(self, content, sources, sentences, prompt):
+        response = f"🔢 **Formula/Equation**\n\n"
+        
+        math_patterns = re.findall(r'[A-Z]\s*=\s*[A-Z\d\s*/+-]+', content)
+        response += f"**Mathematical Expression:** {math_patterns[0] if math_patterns else 'Not found'}\n\n"
+        
+        response += f"**Context:** {sentences[0] if sentences else 'Formula derivation'}\n\n"
+        
+        if len(sentences) > 1:
+            response += f"**Application:** {sentences[1]}\n"
+        
+        return response
+
+    def _format_mcq_response(self, content, sources, sentences, prompt):
+        response = f"❓ **Multiple Choice Question**\n\n"
+        
+        if len(sentences) >= 4:
+            response += f"**Question:** {sentences[0]}?\n\n"
+            response += f"**Options:**\n"
+            response += f"A) {sentences[1]}\n"
+            response += f"B) {sentences[2]}\n"
+            response += f"C) {sentences[3]}\n"
+            response += f"D) None of the above\n\n"
+        else:
+            response += f"**Question Context:** {content[:300]}\n\n"
+        
+        return response
+
+    def _format_summary_response(self, content, sources, sentences):
+        response = f"📄 **Summary**\n\n"
+        summary_text = " ".join(sentences[:3]) if sentences else content[:300]
+        response += summary_text[:300] + ("..." if len(summary_text) > 300 else "")
+        return response
+
+    def _format_bullet_points_response(self, content, sources, sentences):
+        response = f"📝 **Key Points**\n\n"
+        for i, sentence in enumerate(sentences[:5], 1):
+            response += f"• {sentence}\n"
+        return response
+
+    def _format_general_response(self, content, sources, sentences, prompt):
+        response = f"💬 **Answer**\n\n"
+        response += " ".join(sentences[:3]) if sentences else content[:400]
+        response += ("..." if len(content) > 400 else "")
+        return response
+
+    def _post_process_response(self, text):
+        text = text.replace('<UNK>', '').replace('<PAD>', '').replace('<SOS>', '').replace('<EOS>', '')
+        text = re.sub(r'\s+', ' ', text).strip()
+        text = re.sub(r'(.)\1{3,}', r'\1\1', text)
+        words = text.split()
+        filtered_words = [w for w in words if len(w) > 1 or w in ['a', 'I']]
+        text = ' '.join(filtered_words)
+        if len(filtered_words) < 3:
+            return ""
+        if text and not text.endswith(('.', '?', '!')):
+            text += '.'
+        return text
 
     def get_status(self):
-        """Get current status"""
         return {
             "trained": self.is_trained,
             "device": str(self.device),
             "documents": len(self.doc_texts),
-            "tokenizer_vocab": len(self.tokenizer.vocab) if self.tokenizer.trained else 0,
+            "tokenizer_vocab": len(self.tokenizer.token_to_id) if self.tokenizer.trained else 0,
             "embeddings": len(self.doc_embeddings)
         }
 
-    def generate_with_beam_search(self, prompt, beam_size=3, max_length=100):
-        """Generate response using beam search for better quality"""
-        if not self.is_trained or not self.tokenizer.trained:
-            return "❌ Model or tokenizer not trained yet."
-        
+    def save_model(self, save_path=None, domain_name=None):
         try:
-            # Encode the prompt
-            prompt_ids = self.tokenizer.encode(prompt)[:self.seq_len]
-            prompt_ids += [self.pad_token_id] * (self.seq_len - len(prompt_ids))
-            prompt_tensor = torch.tensor([prompt_ids], dtype=torch.long, device=self.device)
-            
-            # Get context if available
-            context_embeddings = None
-            if self.doc_texts:
-                context_result = self._faq_chunk_search(prompt)
-                if context_result and context_result.get("confidence", 0) > 0.1:
-                    context_ids = self.tokenizer.encode(context_result["summary"])[:self.seq_len]
-                    context_ids += [self.pad_token_id] * (self.seq_len - len(context_ids))
-                    context_tensor = torch.tensor([context_ids], dtype=torch.long, device=self.device)
-                    
-                    with torch.no_grad():
-                        context_embeddings = self.model.encode_document(context_tensor).unsqueeze(1)
-            
-            # Beam search implementation
-            with torch.no_grad():
-                self.model.eval()
-                
-                # Initialize beam
-                beams = [([2], 0.0)]  # Start with SOS token and 0 log probability
-                
-                for _ in range(max_length):
-                    candidates = []
-                    
-                    for sequence, score in beams:
-                        if sequence[-1] == 3:  # EOS token
-                            candidates.append((sequence, score))
-                            continue
-                        
-                        # Get current input
-                        current_input = torch.tensor([[sequence[-1]]], dtype=torch.long, device=self.device)
-                        embedded = self.model.embedding(current_input)
-                        
-                        # Get encoder states for the sequence
-                        if len(sequence) == 1:
-                            embedded_input = self.model.embedding(prompt_tensor)
-                            _, (hidden, cell) = self.model.encoder(embedded_input)
-                            hidden = self.model._merge_bidir(hidden)
-                            cell = self.model._merge_bidir(cell)
-                        
-                        # Generate next token probabilities
-                        output, _ = self.model.decoder(embedded, (hidden, cell))
-                        logits = self.model.output_layer(output)
-                        probs = torch.nn.functional.log_softmax(logits.squeeze(), dim=-1)
-                        
-                        # Get top beam_size candidates
-                        top_probs, top_indices = torch.topk(probs, beam_size)
-                        
-                        for i in range(beam_size):
-                            new_sequence = sequence + [top_indices[i].item()]
-                            new_score = score + top_probs[i].item()
-                            candidates.append((new_sequence, new_score))
-                    
-                    # Select top beam_size candidates
-                    candidates.sort(key=lambda x: x[1], reverse=True)
-                    beams = candidates[:beam_size]
-                    
-                    # Check if all beams ended
-                    if all(seq[-1] == 3 for seq, _ in beams):
-                        break
-                
-                # Get best sequence
-                best_sequence = beams[0][0][1:]  # Remove SOS token
-                if best_sequence and best_sequence[-1] == 3:
-                    best_sequence = best_sequence[:-1]  # Remove EOS token
-                
-                # Decode and return
-                if best_sequence:
-                    generated_text = self.tokenizer.decode(best_sequence)
-                    return self._post_process_response(generated_text)
+            if domain_name is None:
+                if self.doc_texts:
+                    first_filename = next(iter(self.doc_texts))
+                    base_name = os.path.splitext(first_filename)[0]
                 else:
-                    return "❌ No valid sequence generated during beam search."
+                    base_name = "default"
+                timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
+                domain_name = f"model_{base_name}_{timestamp}"
 
-        except Exception as e:
-            logger.error(f"Error in beam search generation: {e}")
-            return f"❌ Error generating response with beam search: {str(e)}"
+            save_dir = os.path.join("saved_models", domain_name)
+            os.makedirs(save_dir, exist_ok=True)
+            filename = f"{domain_name}_checkpoint.pt"
+            final_path = os.path.join(save_dir, filename)
 
-    def save_model(self, save_path="checkpoint.pt"):
-        """Save the model and tokenizer"""
-        try:
             torch.save({
                 'model_state_dict': self.model.state_dict(),
-                'vocab_size': self.vocab_size
-            }, save_path)
-            self.tokenizer.save(self.tokenizer_path)
-            logger.info(f"✅ Model and tokenizer saved successfully to {save_path} and {self.tokenizer_path}")
-        except Exception as e:
-            logger.error(f"Error saving model: {e}")
-            return f"❌ Error saving model: {str(e)}"
+                'vocab_size': self.vocab_size,
+                'doc_texts': self.doc_texts,
+                'is_trained': self.is_trained
+            }, final_path)
+            
+            self.tokenizer.save_pickle(os.path.join(save_dir, "uml_tokenizer.pkl"))
 
-    def load_model(self, model_path="checkpoint.pt", tokenizer_path="bpe_tokenizer.pkl"):
-        """Load the model and tokenizer"""
-        self.model_path = model_path
-        self.tokenizer_path = tokenizer_path
-        self._load_model()
-        self._load_tokenizer()
-        logger.info("✅ Model and tokenizer loaded successfully")
+            trained_models = {}
+            if os.path.exists(self.trained_models_path):
+                try:
+                    with open(self.trained_models_path, 'r', encoding='utf-8') as f:
+                        trained_models = json.load(f)
+                except Exception as e:
+                    logger.warning(f"⚠️ Failed to load trained_models.json: {e}")
+
+            model_metadata = {
+                'domain': domain_name,
+                'filename': filename,
+                'path': final_path,
+                'timestamp': datetime.now().isoformat(),
+                'vocab_size': self.vocab_size,
+                'num_documents': len(self.doc_texts)
+            }
+            trained_models[filename] = model_metadata
+            with open(self.trained_models_path, 'w', encoding='utf-8') as f:
+                json.dump(trained_models, f, indent=2)
+
+            logger.info(f"✅ Model and tokenizer saved successfully to {final_path}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Error saving model: {e}")
+            return False
+
+    def load_model(self, model_path=None, tokenizer_path=None):
+        try:
+            if model_path is None or tokenizer_path is None:
+                logger.warning("⚠️ Model path or tokenizer path not provided. Loading default model.")
+                model_path = "saved_models/default/default_checkpoint.pt"
+                tokenizer_path = "saved_models/default/uml_tokenizer.pkl"
+
+            self.model_path = model_path
+            self.tokenizer_path = tokenizer_path
+            domain_name = Path(model_path).parent.name
+            model_loaded = self._load_model(domain_name=domain_name)
+            tokenizer_loaded = self._load_tokenizer()
+            if model_loaded or tokenizer_loaded:
+                logger.info("✅ Model and tokenizer loaded successfully")
+            else:
+                logger.warning("⚠️ Model and/or tokenizer could not be loaded properly")
+        except Exception as e:
+            logger.error(f"❌ Error during loading: {e}")
 
     def clear_documents(self):
-        """Clear indexed documents"""
         self.doc_texts = {}
         self.doc_embeddings = {}
         logger.info("✅ Documents cleared")
 
     def get_document_summary(self, filename: str) -> str:
-        """Get summary of a specific document"""
         if filename not in self.doc_texts:
             return f"❌ Document {filename} not found"
-        
         doc = self.doc_texts[filename]
         sentences = doc.get("sentences", [])
         if not sentences:
             return "❌ No content available for summary"
-        
-        # Simple summary: take first few sentences
-        summary_length = min(3, len(sentences))
-        summary = " ".join(sentences[:summary_length])
+        summary = " ".join(sentences[:3])
         return self._post_process_response(summary[:500] + "..." if len(summary) > 500 else summary)
-    def get_status(self):
-        return {
-            "trained": self.is_trained, # ← This must be True
-            "device": str(self.device),
-            "tokenizer_vocab": len(self.tokenizer.vocab) if self.tokenizer.trained else 0,
-            "documents": len(self.doc_texts),
-            "embeddings": len(self.doc_embeddings)
-        }
-    

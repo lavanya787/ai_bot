@@ -20,16 +20,15 @@ class CustomTransformer(nn.Module):
             num_encoder_layers=num_layers,
             num_decoder_layers=num_layers,
             dim_feedforward=2048,
-            dropout=0.1
+            dropout=0.1,
+            batch_first=True  
         )
         self.fc = nn.Linear(d_model, d_model)
         self.d_model = d_model
 
     def forward(self, input_ids):
         embedded = self.embedding(input_ids) * torch.sqrt(torch.tensor(self.d_model, dtype=torch.float32))
-        embedded = embedded.permute(1, 0, 2)
         output = self.transformer(embedded, embedded)
-        output = output.permute(1, 0, 2)
         output = self.fc(output)
         return output
 

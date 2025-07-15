@@ -1,4 +1,4 @@
-from retrieval.hybrid_retriever import HybridRetriever
+from retriever.hybrid_retriever import HybridRetriever
 from llm_handler import generate_response
 class ChatEngine:
     def __init__(self, memory):

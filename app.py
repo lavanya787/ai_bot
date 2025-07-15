@@ -1,91 +1,58 @@
 import logging
 import streamlit as st
 import os
-import io
 import tempfile
 import json
 import hashlib
-import traceback
 import sys
 import pandas as pd
 from datetime import datetime
-from utils.preprocessing import Preprocessor
-from intent.classifier import IntentClassifier
-from llm_handler import LLMHandler, RAGModel
-from dotenv import load_dotenv
 import torch
+import matplotlib.pyplot as plt
+import traceback
+from chatbot_module import ChatBot
+from llm_handler import LLMHandler
 
-# Ensure UTF-8 encoding
+# Setup - REDUCED LOGGING LEVEL
 sys.stdout.reconfigure(encoding='utf-8')
-load_dotenv()
-
-# Logging setup
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')  # Changed to WARNING
 logger = logging.getLogger(__name__)
+from sklearn.model_selection import train_test_split
+import torch.nn as nn
 
-# Safe imports with fallbacks
+# Safe imports
 try:
     import spacy
     nlp = spacy.load("en_core_web_sm")
     SPACY_AVAILABLE = True
 except ImportError:
     SPACY_AVAILABLE = False
-    logger.warning("SpaCy not available")
 
 try:
     import nltk
     NLTK_AVAILABLE = True
 except ImportError:
     NLTK_AVAILABLE = False
-    logger.error("NLTK not installed. Please install with 'pip install nltk'")
 
 # Mock classes for missing modules
 class MockPreprocessor:
     def preprocess_file(self, file_path, domain):
         try:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                return f.read(), {}, pd.DataFrame({"sentence": ["Default sentence"], "intent": ["default"]})
+                content = f.read()
+            return content, {}, pd.DataFrame({"sentence": ["Default sentence"], "intent": ["default"]})
         except Exception as e:
             logger.error(f"Error reading file {file_path}: {e}")
             return "", {}, pd.DataFrame({"sentence": ["Default sentence"], "intent": ["default"]})
 
-class MockLLMHandler:
-    def __init__(self, model_path=None, tokenizer_path=None):
-        self.doc_texts = {}
-        self.trained = False
-        
-    def index_documents(self, docs):
-        try:
-            if isinstance(docs, list):
-                for doc in docs:
-                    if isinstance(doc, tuple) and len(doc) == 2:
-                        filename, content = doc
-                        self.doc_texts[filename] = {"content": content, "metadata": {}}
-                        logger.info(f"📄 Indexed document: {filename} (length: {len(content)} chars)")
-            logger.info(f"🧠 Total documents indexed: {len(self.doc_texts)}")
-            return True
-        except Exception as e:
-            logger.error(f"❌ Error indexing documents: {e}")
-            return False
+class MockIntentClassifier:
+    def predict(self, text): return "default"
+    def train_model(self, data): return True
+
+class MockTokenizer:
+    def save(self, path): pass
     
-    def train_on_documents(self, epochs=5, batch_size=8, save_path="checkpoint.pt"):
-        if self.doc_texts:
-            self.trained = True
-            return True
-        return False
-    
-    def generate_response(self, prompt, task="answer"):
-        if not self.doc_texts:
-            return "Please upload documents first to enable AI responses."
-        responses = {
-            "summarize_document": f"Summary: Based on the uploaded documents, here's a brief overview of the content.",
-            "ask_question": f"Answer: I can help answer questions about your {len(self.doc_texts)} uploaded documents.",
-            "default": f"I can help with your {len(self.doc_texts)} uploaded documents. What would you like to know?"
-        }
-        return responses.get(task, responses["default"])
-    
-    def get_status(self):
-        return {"trained": self.trained, "device": "CPU", "tokenizer_vocab": len(self.doc_texts) * 100, "documents": len(self.doc_texts), "embeddings": 0}
+tokenizer = MockTokenizer()
 
 # Import fallbacks
 try:
@@ -93,120 +60,24 @@ try:
     preprocessor = Preprocessor()
 except ImportError:
     preprocessor = MockPreprocessor()
-    logger.warning("Using mock preprocessor")
 
 try:
-    from llm_handler import LLMHandler
-    LLM_AVAILABLE = True
+    from intent.classifier import IntentClassifier
 except ImportError:
-    LLMHandler = MockLLMHandler
-    LLM_AVAILABLE = False
-    logger.warning("Using mock LLM handler")
+    IntentClassifier = MockIntentClassifier
 
-try:
-    from rag_domain_trainer import store_and_train
-except ImportError:
-    def store_and_train(file_path, domain, cache_dir, output_dir):
-        logger.info(f"Mock training for {file_path}")
-        return True
+# REMOVED store_and_train import - using only preprocessing
+def simple_preprocess_file(file_path, domain):
+    """Simple preprocessing without training"""
+    try:
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            content = f.read()
+        return content, {}, pd.DataFrame({"sentence": ["Default sentence"], "intent": ["default"]})
+    except Exception as e:
+        logger.error(f"Error reading file {file_path}: {e}")
+        return "", {}, pd.DataFrame({"sentence": ["Default sentence"], "intent": ["default"]})
 
-# Enhanced ChatBot class
-class ChatBot:
-    def __init__(self):
-        self.datasets = {}
-        self.documents = {}
-        self.trained_models = {}
-        self.llm_handler = st.session_state.get("llm_handler", LLMHandler(model_path="checkpoint.pt", tokenizer_path="bpe_tokenizer.pkl"))
-        self.intent_classifier = IntentClassifier() if NLTK_AVAILABLE else None
-    
-    def generate_response(self, prompt):
-        try:
-            if not self.documents:
-                return "Hello! Please upload some files first so I can analyze them and provide better responses."
-            
-            if not self.llm_handler:
-                return "AI handler is not available. Please check your configuration."
-            
-            if not self.intent_classifier or not NLTK_AVAILABLE:
-                logger.warning("IntentClassifier unavailable due to missing NLTK. Using default intent.")
-                intent = "default"
-            else:
-                intent = self.intent_classifier.predict(prompt)
-            logger.info(f"Predicted intent for '{prompt}': {intent}")
-            
-            return self.llm_handler.generate_response(prompt, intent)
-            
-        except Exception as e:
-            logger.error(f"Error generating response: {e}")
-            return f"I apologize, but I encountered an error while processing your request. Please try rephrasing your question."
-    
-    def add_document(self, name, doc_dict):
-        try:
-            logger.info(f"Adding document: {name}")
-            self.documents[name] = doc_dict
-            content = doc_dict.get("content", "")
-            logger.info(f"Document content length: {len(content)}")
-
-            if self.llm_handler and content:
-                try:
-                    success = self.llm_handler.index_documents([(name, content)])
-                    if success:
-                        logger.info(f"Document {name} indexed successfully")
-                    else:
-                        logger.warning(f"Failed to index document {name}")
-                except Exception as e:
-                    logger.error(f"Failed to index document {name}: {str(e)}")
-
-            if self.intent_classifier and NLTK_AVAILABLE:
-                intent_data = doc_dict.get("intent_data", pd.DataFrame({"sentence": ["Default sentence"], "intent": ["default"]}))
-                if not isinstance(intent_data, pd.DataFrame):
-                    logger.error(f"Invalid intent_data for {name}: {type(intent_data)}")
-                    intent_data = pd.DataFrame({"sentence": ["Default sentence"], "intent": ["default"]})
-                if intent_data.empty:
-                    logger.warning(f"Empty intent_data for {name}. Using default data.")
-                    intent_data = pd.DataFrame({"sentence": ["Default sentence"], "intent": ["default"]})
-                if not all(col in intent_data for col in ["sentence", "intent"]):
-                    logger.error(f"intent_data missing required columns for {name}")
-                    intent_data = pd.DataFrame({"sentence": ["Default sentence"], "intent": ["default"]})
-                
-                logger.info(f"Training IntentClassifier with {len(intent_data)} sentences for {name}")
-                success = self.intent_classifier.train_model(intent_data)
-                if success:
-                    logger.info(f"IntentClassifier trained successfully for {name}")
-                else:
-                    logger.error(f"IntentClassifier training failed for {name}")
-
-            if content and any(delimiter in content for delimiter in [',', '\t', '|']):
-                lines = content.split('\n')
-                if len(lines) > 1:
-                    doc_id = hashlib.md5(name.encode()).hexdigest()
-                    self.datasets[doc_id] = {'data': lines, 'filename': name, 'type': 'tabular'}
-                    
-        except Exception as e:
-            logger.error(f"Error adding document {name}: {e}")
-
-    def auto_train_models(self, doc_id):
-        try:
-            if doc_id in self.datasets:
-                dataset = self.datasets[doc_id]
-                data_size = len(dataset.get('data', []))
-                
-                self.trained_models[doc_id] = {
-                    'model_type': 'classification' if data_size > 10 else 'regression',
-                    'accuracy': min(0.95, 0.7 + (data_size / 100)),
-                    'features': min(10, max(3, data_size // 5)),
-                    'trained_at': datetime.now().isoformat()
-                }
-                
-                model_info = self.trained_models[doc_id]
-                return f"✅ {model_info['model_type'].title()} model trained with {model_info['accuracy']:.2%} accuracy using {model_info['features']} features"
-            else:
-                return f"⚠️ No dataset found for {doc_id} - upload CSV/Excel files for training"
-        except Exception as e:
-            logger.error(f"Error training model for {doc_id}: {e}")
-            return f"❌ Error training model: {str(e)}"
-
-# Model management functions
+# Model management functions (unchanged)
 def save_trained_model(model_name, model_data, llm_handler=None):
     try:
         models_file = "trained_models.json"
@@ -219,140 +90,171 @@ def save_trained_model(model_name, model_data, llm_handler=None):
             models = {}
 
         version = f"{model_name}_{datetime.now().strftime('%Y-%m-%d_%H-%M')}"
+        model_dir = os.path.join("saved_models", version)
+        os.makedirs(model_dir, exist_ok=True)
+
+        model_path = os.path.join(model_dir, "checkpoint.pt")
+        tokenizer_path = os.path.join(model_dir, "uml_tokenizer.pkl")
+
         if version in models:
             return version
 
-        if llm_handler and hasattr(llm_handler, 'doc_texts'):
-            model_data["doc_texts"] = llm_handler.doc_texts
+        if llm_handler:
+            model_data["doc_texts"] = getattr(llm_handler, "doc_texts", {})
+            model_data["tokenizer_vocab"] = getattr(llm_handler, "tokenizer_vocab", {})
+            model_data["all_chunks"] = getattr(llm_handler, "all_chunks", [])
+            model_data["is_trained"] = getattr(llm_handler, "is_trained", False)
 
-        models[version] = {"name": model_name, "version": version, "timestamp": timestamp, "data": model_data}
+            import pickle
+            with open(model_path, "wb") as f:
+                pickle.dump(model_data, f)
+
+            if hasattr(llm_handler, "tokenizer") and hasattr(llm_handler.tokenizer, "save"):
+                llm_handler.tokenizer.save(tokenizer_path)
+
+        models[version] = {
+            "name": model_name,
+            "version": version,
+            "timestamp": timestamp,
+            "data": model_data,
+            "path": model_path,
+            "tokenizer_path": tokenizer_path
+        }
 
         with open(models_file, 'w') as f:
             json.dump(models, f, indent=2)
+
         return version
+
     except Exception as e:
         logger.error(f"Error saving model: {e}")
         return None
 
 def load_trained_models():
+    models = {}
     try:
         with open("trained_models.json", "r", encoding="utf-8") as f:
             models = json.load(f)
+        for k, v in models.items():
+            v.setdefault("name", k)
+            v.setdefault("version", k)
+            v.setdefault("timestamp", "Unknown")
+            v.setdefault("data", {})
     except (FileNotFoundError, json.JSONDecodeError):
-        return {}
+        pass
 
-    for k, v in models.items():
-        v.setdefault("name", "Unnamed")
-        v.setdefault("version", k)
-        v.setdefault("timestamp", "Unknown")
-        v.setdefault("data", {})
+    saved_models_dir = "saved_models"
+    allowed_extensions = {'.pt', '.pth', '.pkl', '.bin'}
+    if os.path.isdir(saved_models_dir):
+        for fname in os.listdir(saved_models_dir):
+            name, ext = os.path.splitext(fname)
+            if ext.lower() in allowed_extensions:
+                file_path = os.path.join(saved_models_dir, fname)
+                if fname not in models:
+                    models[fname] = {
+                        "name": name,
+                        "version": fname,
+                        "timestamp": "Manual Upload",
+                        "data": {},
+                        "path": file_path
+                    }
     return models
 
 def get_model_dropdown_options():
     models = load_trained_models()
-    if not models:
-        return []
     return [(f"{model['name']} ({model['version']}) - {model['timestamp']}", key) for key, model in models.items()]
 
-def get_latest_model():
-    models = load_trained_models()
+def get_latest_model(models):
     if not models:
         return None
-    
     try:
         sorted_models = sorted(models.items(), 
                               key=lambda x: datetime.strptime(x[1]['timestamp'], "%Y-%m-%d %I:%M %p") 
-                              if x[1]['timestamp'] != 'Unknown' else datetime.min, reverse=True)
+                              if x[1]['timestamp'] not in ['Unknown', 'Manual Upload'] else datetime.min, reverse=True)
         return sorted_models[0][0] if sorted_models else None
     except Exception:
-        return list(models.keys())[0] if models else None
+        return list(models.keys())[0]
 
 def auto_load_latest_model(model_key):
+    import pickle
     try:
-        if not LLM_AVAILABLE:
-            st.error("LLMHandler not available")
+        models = load_trained_models()
+        model_info = models.get(model_key)
+        if not model_info:
+            st.warning(f"⚠️ Model metadata for {model_key} not found.")
             return False
 
-        llm_handler = LLMHandler(model_path="checkpoint.pt", tokenizer_path="bpe_tokenizer.pkl")
-        result = llm_handler._load_model(model_version=model_key)
+        model_path = model_info.get("path")
+        tokenizer_path = model_info.get("tokenizer_path", "uml_tokenizer.pkl")
+        if not model_path or not os.path.exists(model_path):
+            st.error(f"❌ Model file {model_path} does not exist.")
+            return False
 
-        models = load_trained_models()
-        model_data = models.get(model_key, {}).get("data", {})
+        llm_handler = LLMHandler(model_path=model_path, tokenizer_path=tokenizer_path, model_version=model_key)
+
+        with open(model_path, "rb") as f:
+            model_data = pickle.load(f)
+
         doc_texts = model_data.get("doc_texts", {})
+        is_trained = model_data.get("is_trained", False)
+        llm_handler.doc_texts = doc_texts
+        llm_handler.is_trained = is_trained
+        llm_handler.index_documents([(fname, doc["content"]) for fname, doc in doc_texts.items()], force_reindex=True)
 
         if not doc_texts:
-            st.warning("⚠️ No documents were stored with this model.")
+            st.warning("⚠️ No documents stored in the model file.")
+        else:
+            st.session_state.llm_handler.doc_texts = doc_texts
+            st.session_state.llm_handler.index_documents([(fname, doc["content"]) for fname, doc in doc_texts.items()], force_reindex=True)
+
+        if len(llm_handler.tokenizer.token_to_id) <= 4:
+            st.error(f"❌ Tokenizer vocabulary too small ({len(llm_handler.tokenizer.token_to_id)} tokens).")
             return False
-
-        llm_handler.doc_texts = doc_texts
-        indexed_docs = [(filename, doc["content"]) for filename, doc in doc_texts.items()]
-        llm_handler.index_documents(indexed_docs)
-        llm_handler._train_tokenizer()
-        llm_handler.tokenizer.save("bpe_tokenizer.pkl")
-
-        if 'chatbot' in st.session_state:
-            chatbot = st.session_state.chatbot
-            chatbot.documents = {}
-            for filename, doc in doc_texts.items():
-                chatbot.add_document(filename, {
-                    "content": doc["content"],
-                    "file": None,
-                    "type": os.path.splitext(filename)[-1],
-                    "metadata": doc.get("metadata", {}),
-                    "intent_data": pd.DataFrame({"sentence": ["Default sentence"], "intent": ["default"]})
-                })
 
         st.session_state.llm_handler = llm_handler
         st.session_state.model_loaded = True
+        st.session_state.selected_model = model_key
         return True
 
     except Exception as e:
-        st.error(f"Failed to load model: {e}")
-        logger.error(f"Model loading failed: {e}")
+        st.error(f"❌ Failed to load model {model_key}: {e}")
+        st.session_state.model_loaded = False
         return False
-
+        
 # Session state initialization
 def initialize_session_state():
     defaults = {
+        'chat_history': [{"title": "New Chat", "messages": [], "created_at": datetime.now().isoformat()}],
         'selected_chat_index': 0,
         'processed_files': [],
         'current_view': 'chat',
         'show_welcome': True,
         'selected_model': None,
         'trained_models': {},
-        'model_loaded': False
+        'model_loaded': False,
+        'vocab_comparison_done': False,
+        'vocab_results': []
     }
     
-    st.session_state.setdefault("chat_history", [])
-    st.session_state.setdefault("selected_chat_index", 0)
-    st.session_state.setdefault("current_view", "chat")
-    st.session_state.setdefault("show_welcome", True)
-    st.session_state.setdefault("selected_model", None)
-    st.session_state.setdefault("model_loaded", False)
-
-    if 'chat_history' not in st.session_state or not st.session_state['chat_history']:
-        st.session_state['chat_history'] = [{
-            "title": "New Chat",
-            "messages": [],
-            "created_at": datetime.now().isoformat()
-        }]
-        st.session_state['selected_chat_index'] = 0
+    for key, value in defaults.items():
+        st.session_state.setdefault(key, value)
 
     if 'chatbot' not in st.session_state:
         st.session_state.chatbot = ChatBot()
     
     if 'llm_handler' not in st.session_state:
-        st.session_state.llm_handler = LLMHandler(model_path="checkpoint.pt", tokenizer_path="bpe_tokenizer.pkl")
-    
-    for key, value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
+        st.session_state.llm_handler = LLMHandler(model_path="checkpoint.pt", tokenizer_path="uml_tokenizer.pkl")
+        
+    st.session_state.chatbot.llm_handler = st.session_state.llm_handler
 
-# Welcome UI
+# Welcome UI (unchanged)
 def show_welcome():
-    st.markdown("<div style='text-align: center; padding: 2rem 0;'>", unsafe_allow_html=True)
-    st.markdown("# 🤖 AI Document Assistant")
-    st.markdown("### Upload your documents and start intelligent conversations. Get AI-powered insights, summaries, and answers from your files with advanced machine learning.")
+    st.markdown("""
+    <div style='text-align: center; padding: 2rem 0;'>
+        <h1>🤖 AI Document Assistant</h1>
+        <h3>Upload your documents and start intelligent conversations. Get AI-powered insights, summaries, and answers from your files with advanced machine learning.</h3>
+    </div>
+    """, unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3, gap="large")
     
@@ -372,16 +274,12 @@ def show_welcome():
             </div>
             """, unsafe_allow_html=True)
     
-    st.markdown("</div>", unsafe_allow_html=True)
-    
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         if st.button("Start New Conversation →", type="primary", use_container_width=True):
-            st.session_state.show_welcome = False
-            st.session_state.current_view = 'chat'
+            st.session_state.update({'show_welcome': False, 'current_view': 'chat'})
             st.rerun()
 
-# Model Dashboard
 def render_model_dashboard():
     st.markdown("### 🧠 Model Dashboard")
     models = load_trained_models()
@@ -394,59 +292,49 @@ def render_model_dashboard():
     if model_options:
         col1, col2 = st.columns([3, 1])
         with col1:
-            current_selection = 0
-            if st.session_state.selected_model:
-                for i, (_, key) in enumerate(model_options):
-                    if key == st.session_state.selected_model:
-                        current_selection = i
-                        break
+            if not st.session_state.selected_model:
+                st.session_state.selected_model = get_latest_model(models) or model_options[0][1]
 
+            current_selection = next((i for i, (_, key) in enumerate(model_options) if key == st.session_state.selected_model), 0)
             selected_display = st.selectbox(
                 "Select Trained Model",
                 options=[opt[0] for opt in model_options],
                 index=current_selection,
-                key=f"model_selector_dashboard_{datetime.now().timestamp()}"
+                key="model_selector"
             )
 
-            if selected_display:
-                model_key = next(opt[1] for opt in model_options if opt[0] == selected_display)
-
-                if model_key != st.session_state.selected_model:
-                    st.session_state.selected_model = model_key
-                    st.session_state.model_loaded = auto_load_latest_model(model_key)
-                    if st.session_state.model_loaded:
-                        st.success(f"✅ Model loaded: {model_key}")
-                    st.rerun()
+            model_key = next(opt[1] for opt in model_options if opt[0] == selected_display)
+            if model_key != st.session_state.selected_model:
+                st.session_state.selected_model = model_key
+                st.session_state.model_loaded = False
+                if auto_load_latest_model(model_key):
+                    st.success(f"✅ Model loaded: {model_key}")
+                else:
+                    st.error(f"❌ Failed to load model: {model_key}")
+                st.rerun()
 
         with col2:
-            if st.button("🗑️ Delete Model"):
-                if st.session_state.selected_model in models:
-                    del models[st.session_state.selected_model]
-                    try:
-                        with open("trained_models.json", 'w') as f:
-                            json.dump(models, f, indent=2)
-                        st.success("✅ Model deleted successfully")
-                        st.session_state.selected_model = None
-                        st.session_state.model_loaded = False
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Failed to delete model: {e}")
+            if st.button("🗑️ Delete Model") and st.session_state.selected_model in models:
+                model_path = models[st.session_state.selected_model].get("path")
+                if model_path and os.path.exists(model_path):
+                    os.remove(model_path)
+                del models[st.session_state.selected_model]
+                with open("trained_models.json", 'w') as f:
+                    json.dump(models, f, indent=2)
+                st.success("✅ Model deleted successfully")
+                st.session_state.update({'selected_model': None, 'model_loaded': False})
+                st.rerun()
 
-        if st.session_state.selected_model:
-            try:
-                llm_handler = st.session_state.get("llm_handler")
-                if not llm_handler or not hasattr(llm_handler, "get_status"):
-                    st.warning("⚠️ LLM handler is not available or invalid.")
-                    return
-
+        if st.session_state.selected_model and st.session_state.model_loaded:
+            llm_handler = st.session_state.get("llm_handler")
+            if llm_handler and hasattr(llm_handler, "get_status"):
                 status = llm_handler.get_status()
                 doc_count = len(getattr(llm_handler, 'doc_texts', {}))
 
                 st.markdown("#### Model Status")
                 cols = st.columns(5)
-
                 metrics = [
-                    ("✅ Loaded" if status.get("trained", False) else "⚠️ Not Trained", None),
+                    ("Status", "✅ Loaded" if status.get("trained", False) else "⚠️ Not Trained"),
                     ("Trained", "Yes" if status.get("trained", False) else "No"),
                     ("Documents", doc_count),
                     ("Device", status.get("device", "Unknown")),
@@ -455,107 +343,92 @@ def render_model_dashboard():
 
                 for i, (label, value) in enumerate(metrics):
                     with cols[i]:
-                        if value is None:
-                            if "✅" in label:
-                                st.success(label)
+                        if label == "Status":
+                            if "✅" in value:
+                                st.success(value)
                             else:
-                                st.warning(label)
+                                st.warning(value)
                         else:
                             st.metric(label, value)
 
-            except Exception as e:
-                st.error(f"Error getting model status: {e}")
-                logger.error(f"Model Status Error: {e}")
-
-# Sidebar
 def render_sidebar():
     with st.sidebar:
         st.markdown("### 🤖 AI Assistant")
 
-        # Navigation buttons
+        # Navigation
         col1, col2 = st.columns(2)
         nav_buttons = [("💬 Chat", "chat"), ("🧠 Models", "dashboard")]
-
         for i, (label, view) in enumerate(nav_buttons):
             with [col1, col2][i]:
-                if st.button(label, use_container_width=True,
-                             type="primary" if st.session_state.current_view == view else "secondary"):
+                if st.button(label, use_container_width=True, 
+                           type="primary" if st.session_state.current_view == view else "secondary"):
                     st.session_state.current_view = view
                     if view == "chat":
                         st.session_state.show_welcome = False
                     st.rerun()
 
-        # Train Model Button
+        # SEPARATED TRAINING BUTTON
         if st.button("🚀 Train Model", use_container_width=True):
             if not NLTK_AVAILABLE:
                 st.error("NLTK not installed. Please install with 'pip install nltk' and restart the app.")
                 return
-
+        
             if st.session_state.chatbot and st.session_state.chatbot.documents:
                 with st.spinner("Training model..."):
                     try:
                         llm_handler = st.session_state.llm_handler
                         intent_classifier = st.session_state.chatbot.intent_classifier
-
+        
+                        # Index documents without training
                         for filename, doc in st.session_state.chatbot.documents.items():
-                            llm_handler.index_documents([(filename, doc["content"])])
+                            content = doc["content"]
+                            if not content.strip():
+                                st.warning(f"⚠️ Skipping empty document: {filename}")
+                                continue
+                            llm_handler.index_documents([(filename, content)], force_reindex=True)
                             if "intent_data" in doc and isinstance(doc["intent_data"], pd.DataFrame):
-                                logger.info(f"Training IntentClassifier with {len(doc['intent_data'])} sentences for {filename}")
-                                success = intent_classifier.train_model(doc["intent_data"])
-                                if not success:
-                                    st.warning(f"Failed to train IntentClassifier for {filename}")
-                            else:
-                                logger.warning(f"No valid intent_data for {filename}. Skipping IntentClassifier training.")
-
-                        llm_handler.train_on_documents(epochs=5, batch_size=8, save_path="checkpoint.pt")
-
+                                intent_classifier.train_model(doc["intent_data"])
+        
+                        # ACTUAL TRAINING HAPPENS HERE
+                        st.info("🔄 Training model... This may take a few minutes.")
+                        llm_handler.train_on_documents(epochs=3, batch_size=8, save_path="checkpoint.pt")
+                        
+                        if llm_handler.is_trained and len(llm_handler.tokenizer.token_to_id) > 4:
+                            st.success("✅ Model trained successfully")
+                        else:
+                            st.error("❌ Model training failed or tokenizer vocabulary too small")
+                            return
+        
                         doc_names = "_".join([os.path.splitext(name)[0] for name in st.session_state.chatbot.documents.keys()])
                         model_name = f"model_{doc_names}"[:50]
-                        model_data = {"documents": list(st.session_state.chatbot.documents.keys())}
+                        model_data = {
+                            "documents": list(st.session_state.chatbot.documents.keys()),
+                            "doc_texts": llm_handler.doc_texts,
+                            "is_trained": llm_handler.is_trained
+                        }
                         model_key = save_trained_model(model_name, model_data, llm_handler)
-
+        
                         if model_key:
-                            st.session_state.selected_model = model_key
-                            st.session_state.model_loaded = True
+                            st.session_state.update({'selected_model': model_key, 'model_loaded': True})
                             st.success(f"✅ Model trained and saved: {model_key}")
-
-                            # Show document previews
-                            st.markdown("### 🧾 Trained Document Preview")
-                            for filename, doc in st.session_state.chatbot.documents.items():
-                                with st.expander(f"📄 {filename}", expanded=False):
-                                    st.markdown("**Cleaned Content:**")
-                                    st.text_area(
-                                        label="Preview",
-                                        value=doc["content"][:5000],
-                                        height=300,
-                                        key=f"trained_preview_{filename}",
-                                        disabled=True
-                                    )
-                                    if doc["metadata"]:
-                                        st.markdown("**Metadata Extracted:**")
-                                        st.json(doc["metadata"])
-                                    st.download_button(
-                                        label="⬇️ Download Cleaned File",
-                                        data=doc["content"],
-                                        file_name=f"cleaned_{filename}.txt",
-                                        mime="text/plain"
-                                    )
                         else:
                             st.error("Failed to save trained model")
-
+        
                     except Exception as e:
                         st.error(f"Training failed: {e}")
                         logger.error(f"Training error: {e}")
             else:
                 st.warning("📁 Upload documents first!")
 
-        # New Chat Button
+        # New Chat
         if st.button("+ New Chat", use_container_width=True):
             new_chat = {"title": "New Chat", "messages": [], "created_at": datetime.now().isoformat()}
             st.session_state.chat_history.append(new_chat)
-            st.session_state.selected_chat_index = len(st.session_state.chat_history) - 1
-            st.session_state.show_welcome = False
-            st.session_state.current_view = "chat"
+            st.session_state.update({
+                'selected_chat_index': len(st.session_state.chat_history) - 1,
+                'show_welcome': False,
+                'current_view': 'chat'
+            })
             st.rerun()
 
         st.markdown("---")
@@ -564,45 +437,37 @@ def render_sidebar():
         st.markdown("**📝 RECENT CHATS**")
         for i, chat in enumerate(st.session_state.chat_history):
             chat_title = chat["title"] if chat["title"] != "New Chat" else f"Chat {i+1}"
-            msg_count = len(chat["messages"])
             is_selected = i == st.session_state.selected_chat_index
 
             if st.button(f"💬 {chat_title[:20]}", key=f"chat_{i}", use_container_width=True,
-                         type="primary" if is_selected else "secondary"):
-                st.session_state.selected_chat_index = i
-                st.session_state.show_welcome = False
-                st.session_state.current_view = "chat"
+                        type="primary" if is_selected else "secondary"):
+                st.session_state.update({
+                    'selected_chat_index': i,
+                    'show_welcome': False,
+                    'current_view': 'chat'
+                })
                 st.rerun()
-
-            if msg_count > 0:
-                st.caption(f"💬 {msg_count} messages")
 
         st.markdown("---")
 
-        # Document Upload Section
+        # Document Upload
         st.markdown("**📁 DOCUMENTS**")
-        uploaded_files = st.file_uploader("Upload Files",
-                                          type=["pdf", "txt", "docx", "csv", "xlsx", "pptx", "ppt", "doc"],
-                                          accept_multiple_files=True, label_visibility="collapsed")
+        uploaded_files = st.file_uploader("Upload Files", 
+                                         type=["pdf", "txt", "docx", "csv", "xlsx", "pptx", "ppt", "doc"],
+                                         accept_multiple_files=True, label_visibility="collapsed")
         if uploaded_files:
             st.caption(f"📁 {len(uploaded_files)} files selected")
 
         st.caption("PDF, Word, Text, CSV, Excel files supported")
 
-        # Configuration Section
+        # Configuration
         with st.expander("⚙️ Configuration"):
             domain = st.text_input("Domain", value=os.getenv("DOMAIN", "physics"))
-            cache_dir = st.text_input("Cache Directory", value=os.getenv("CACHE_DIR", "rag_data/cache"))
-            output_dir = st.text_input("Output Directory", value=os.getenv("OUTPUT_DIR", os.path.join("rag_data", domain)))
 
-        # Process Files Button
+        # SIMPLIFIED PROCESSING - NO TRAINING
         if uploaded_files and st.button("📊 Process Files", type="primary", use_container_width=True):
             if not NLTK_AVAILABLE:
                 st.error("NLTK not installed. Please install with 'pip install nltk' and restart the app.")
-                return
-
-            if not st.session_state.chatbot:
-                st.error("ChatBot not available")
                 return
 
             with st.spinner("Processing files..."):
@@ -612,21 +477,20 @@ def render_sidebar():
                         if any(f["filename"] == file.name for f in st.session_state.processed_files):
                             st.warning(f"⚠️ {file.name} already processed. Skipping.")
                             continue
-
-                        suffix = os.path.splitext(file.name)[-1]
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                        
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.name)[-1]) as tmp:
                             tmp.write(file.read())
                             tmp_path = tmp.name
 
                         try:
-                            if store_and_train:
-                                store_and_train(tmp_path, domain, cache_dir, output_dir)
-
-                            cleaned, metadata, intent_data = preprocessor.preprocess_file(tmp_path, domain)
+                            # ONLY PREPROCESSING - NO TRAINING
+                            cleaned, metadata, intent_data = simple_preprocess_file(tmp_path, domain)
+                            
                             content = cleaned if isinstance(cleaned, str) else str(cleaned)
-
-                            logger.info(f"Intent data for {file.name}: {intent_data.head().to_dict()}")
-
+                            if not content.strip():
+                                st.error(f"❌ No valid content extracted from {file.name}")
+                                continue
+                            
                             st.session_state.chatbot.add_document(file.name, {
                                 "content": content,
                                 "file": file,
@@ -634,6 +498,9 @@ def render_sidebar():
                                 "metadata": metadata,
                                 "intent_data": intent_data
                             })
+
+                            # Index in llm_handler
+                            st.session_state.llm_handler.index_documents([(file.name, content)], force_reindex=True)
 
                             st.session_state.processed_files.append({
                                 "filename": file.name,
@@ -645,24 +512,23 @@ def render_sidebar():
 
                         except Exception as e:
                             st.error(f"Failed to process {file.name}: {e}")
-                            logger.error(f"File processing error for {file.name}: {e}")
                         finally:
                             try:
                                 os.unlink(tmp_path)
                             except Exception:
                                 pass
-
+                            
                     if processed_count > 0:
-                        st.success(f"✅ {processed_count} files processed successfully!")
+                        st.success(f"✅ {processed_count} files processed successfully! Now click 'Train Model' to train.")
                         st.rerun()
                     else:
                         st.warning("No new files were processed.")
 
                 except Exception as e:
                     st.error(f"Processing failed: {e}")
-                    logger.error(f"File processing error: {e}")
 
-# Chat Interface
+# FIXED CHAT INTERFACE - USES TRAINED MODEL
+# FIXED CHAT INTERFACE - IMPROVED MODEL RESPONSE GENERATION
 def render_chat():
     if st.session_state.show_welcome:
         show_welcome()
@@ -691,56 +557,125 @@ def render_chat():
         with st.chat_message("assistant"):
             with st.spinner("🤔 Thinking..."):
                 try:
-                    response = st.session_state.chatbot.generate_response(prompt)
-                    if st.session_state.selected_model:
-                        models = load_trained_models()
-                        model_data = models.get(st.session_state.selected_model, {})
-                        model_name = model_data.get("name", "Unknown")
-                        response = f"*[Using {model_name}]*\n\n{response}"
-
-                    st.markdown(response)
-                    chat["messages"].append({"role": "assistant", "content": response})
+                    response = ""
+                    model_status = ""
+                    
+                    # Check if we have a trained model loaded
+                    if (st.session_state.model_loaded and 
+                        st.session_state.llm_handler and 
+                        st.session_state.llm_handler.is_trained):
+                        
+                        try:
+                            # Use the trained model for generation
+                            logger.info(f"Using trained model for query: {prompt}")
+                            
+                            # Get relevant context from documents first
+                            relevant_context = st.session_state.llm_handler.get_relevant_context(prompt)
+                            
+                            # Generate response using the trained model
+                            response = st.session_state.llm_handler.generate_response(
+                                prompt, 
+                                max_length=200,
+                                temperature=0.7,
+                                context=relevant_context
+                            )
+                            
+                            model_name = st.session_state.selected_model or "Trained Model"
+                            model_status = f"*[Using trained model: {model_name}]*\n\n"
+                            
+                            logger.info(f"Generated response length: {len(response)}")
+                            
+                        except Exception as e:
+                            logger.error(f"Error with trained model generation: {e}")
+                            # Fallback to document search
+                            response = st.session_state.llm_handler._search_documents(prompt)
+                            model_status = f"*[Using document search - model generation failed]*\n\n"
+                    
+                    # Fallback to chatbot if no trained model
+                    elif st.session_state.chatbot and st.session_state.chatbot.documents:
+                        try:
+                            # Ensure chatbot has access to llm_handler
+                            st.session_state.chatbot.llm_handler = st.session_state.llm_handler
+                            response = st.session_state.chatbot.generate_response(prompt)
+                            model_status = f"*[Using basic chatbot - train a model for better results]*\n\n"
+                            
+                        except Exception as e:
+                            logger.error(f"Error with chatbot generation: {e}")
+                            response = "I apologize, but I'm having trouble generating a response. Please try again."
+                            model_status = f"*[Error in response generation]*\n\n"
+                    
+                    else:
+                        response = "Please upload and process some documents first, then train a model to get better responses."
+                        model_status = f"*[No documents or model available]*\n\n"
+                    
+                    # Ensure we have a valid response
+                    if not response or response.strip() == "":
+                        response = "I couldn't generate a meaningful response to your query. Please try rephrasing your question."
+                    
+                    # Combine status and response
+                    full_response = model_status + response
+                    
+                    st.markdown(full_response)
+                    chat["messages"].append({"role": "assistant", "content": full_response})
+                    
+                    # Log the interaction
+                    logger.info(f"User query: {prompt}")
+                    logger.info(f"Response generated: {len(response)} characters")
 
                 except Exception as e:
                     error_msg = f"❌ Error generating response: {str(e)}"
+                    logger.error(f"Chat error: {e}")
+                    logger.error(f"Traceback: {traceback.format_exc()}")
                     st.error(error_msg)
                     chat["messages"].append({"role": "assistant", "content": error_msg})
-                    logger.error(error_msg)
-                    logger.error(traceback.format_exc())
 
         st.rerun()
 
+
 # Main application
 def main():
-    st.set_page_config(page_title="AI Document Assistant", layout="wide", page_icon="🤖",
-                      initial_sidebar_state="expanded")
+    st.set_page_config(
+        page_title="AI Document Assistant",
+        layout="wide",
+        page_icon="🤖",
+        initial_sidebar_state="expanded"
+    )
 
+    # Custom rounded UI elements
     st.markdown("""
-    <style>
-    .stButton > button { border-radius: 8px; }
-    .stSelectbox > div > div { border-radius: 8px; }
-    .stTextInput > div > div { border-radius: 8px; }
-    </style>
+        <style>
+        .stButton > button { border-radius: 8px; }
+        .stSelectbox > div > div { border-radius: 8px; }
+        .stTextInput > div > div { border-radius: 8px; }
+        </style>
     """, unsafe_allow_html=True)
-    
+
     if not NLTK_AVAILABLE:
         st.error("NLTK is not installed. Please run 'pip install nltk' and restart the app.")
         return
 
     initialize_session_state()
     render_sidebar()
-    
+
     models = load_trained_models()
+
+    # Clear invalid selection
     if st.session_state.selected_model not in models and st.session_state.selected_model is not None:
         st.session_state.selected_model = None
         st.session_state.model_loaded = False
-    
+
+    # Auto-select latest model if nothing is selected
     if not st.session_state.selected_model and models:
-        latest_model = get_latest_model()
+        latest_model = get_latest_model(models)
         if latest_model:
             st.session_state.selected_model = latest_model
             st.session_state.model_loaded = auto_load_latest_model(latest_model)
-    
+
+    # Load selected model (if not already loaded)
+    elif st.session_state.selected_model and not st.session_state.model_loaded:
+        st.session_state.model_loaded = auto_load_latest_model(st.session_state.selected_model)
+
+    # UI routing
     if st.session_state.current_view == "dashboard":
         render_model_dashboard()
     else:

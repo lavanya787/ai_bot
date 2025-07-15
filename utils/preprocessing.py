@@ -14,6 +14,8 @@ from deep_translator import GoogleTranslator
 from langdetect import detect
 from datetime import datetime
 from pathlib import Path
+from utils.domain_detector import detect_domain
+
 # Logging configuration
 logging.basicConfig(
     filename='logs/app.log',
@@ -50,32 +52,39 @@ class Preprocessor:
         }
         self.max_text_size = 5 * 1024 * 1024  # 5MB
         self.chunk_size = 50000  # 50KB
+
     def clean_text(self, text):
         try:
             text = re.sub(r'\s+', ' ', text).strip()
-            text = re.sub(r'[^\w\s.,?!]', '', text)
+            text = re.sub(r'[^\w\s.,?!=\+\-\*/\(\)\u0370-\u03FF]', '', text)
             tokens = nltk.word_tokenize(text.lower())
-            tokens = [t for t in tokens if t not in self.stopwords]
+            lang = self.detect_language(text)
+            tokens = [t for t in tokens if t not in self.stop_words.get(lang, set()) or t in ['equation', 'potential', 'charge', 'field', 'energy']]
             return ' '.join(tokens)
         except Exception as e:
             logger.error(f"Error cleaning text: {e}")
             return text
-
+        
     def extract_metadata(self, text, file_path):
+        domain = detect_domain(text) if text.strip() else "general"
         metadata = {
             "filename": Path(file_path).name,
             "word_count": len(text.split()),
-            "domain": "physics"  # Default domain
+            "domain": domain
         }
+        return metadata
+
 
     def detect_language(self, text):
         try:
-            if not text.strip():
-                return "en"
-            return detect(text)
-        except:
-            logger.warning("Language detection failed, defaulting to English")
+            lang = detect(text)
+            if not lang or not isinstance(lang, str):
+                raise ValueError("Invalid language detected")
+            return lang
+        except Exception as e:
+            logger.warning(f"Language detection error: {e}")
             return "en"
+
 
     def translate_to_english(self, text):
         try:
@@ -127,7 +136,7 @@ class Preprocessor:
             })
     def general_preprocessing(self, text, domain="general"):
         if isinstance(text, (list, tuple)):
-            text = "\n".join(str(item[0]) if isinstance(item, tuple) else str(item) for item in text if item)
+            text = "\n".join(str(item[0] if isinstance(item, tuple) else item) for item in text if item)
         if not isinstance(text, str):
             text = str(text)
         if isinstance(text, bytes):
@@ -191,26 +200,32 @@ class Preprocessor:
         logger.debug(f"Metadata from general_preprocessing: {metadata}")
         return annotated.strip(), metadata
 
-    def preprocess_for_intent(self, text, domain="general"):
-        if not text.strip():
-            logger.warning("Empty text provided for intent preprocessing")
-            return pd.DataFrame({"sentence": [], "intent": []})
-
+    def preprocess_for_intent(self, text, domain):
+        from nltk.tokenize import sent_tokenize
         sentences = sent_tokenize(text)
         intents = []
         for sentence in sentences:
             sentence_lower = sentence.lower()
-            if any(keyword in sentence_lower for keyword in ["define", "what is", "explain", "describe"]):
-                intents.append("ask_question")  # Matches IntentClassifier's label2id
-            elif any(keyword in sentence_lower for keyword in ["chapter", "summarize", "overview"]):
+            if any(keyword in sentence_lower for keyword in ["define", "what is", "explain", "describe", "how does", "potential", "charge", "field"]):
+                intents.append("ask_question")
+            elif any(keyword in sentence_lower for keyword in ["chapter", "summarize", "overview", "section"]):
                 intents.append("summarize_document")
+            elif any(keyword in sentence_lower for keyword in ["calculate", "compute", "find", "determine", "solve", "integral", "derivative"]):
+                intents.append("calculation")
+            elif any(keyword in sentence_lower for keyword in ["law", "principle", "theory", "equation", "force", "energy", "motion", "potential", "field"]):
+                intents.append("inform")
             else:
                 intents.append("default")
         df = pd.DataFrame({"sentence": sentences, "intent": intents})
-        logger.info(f"Generated intent DataFrame with {len(df)} sentences")
-        logger.debug(f"Sample intent data: {df.head().to_dict()}")
+        if df.empty or len(df) < 2 or df['intent'].nunique() <= 1:
+            logger.warning("Insufficient intent variety, adding defaults")
+            df = pd.DataFrame({
+                "sentence": ["Default sentence for training", "Another default sentence"],
+                "intent": ["default", "default"]
+            })
+        logger.info(f"Intent data: shape={df.shape}, unique intents={df['intent'].nunique()}")
         return df
-
+    
     def preprocess_file(self, file_path, domain="general"):
         log = logging.getLogger(__name__)
         text = ""

@@ -7,47 +7,43 @@ import psutil
 import GPUtil
 
 class Logger:
-    _shared_logger = None  # class-level shared logger
+    _instance = None  # Singleton instance
 
-    def __init__(self, log_dir='logs', log_level=logging.INFO):
+    def __new__(cls, log_dir='logs', log_level=logging.INFO):
+        if cls._instance is None:
+            cls._instance = super(Logger, cls).__new__(cls)
+            cls._instance._setup(log_dir, log_level)
+        return cls._instance
+
+    def _setup(self, log_dir, log_level):
         self.log_dir = log_dir
         self.log_level = log_level
-        self.logs = []
+        os.makedirs(log_dir, exist_ok=True)
 
-        self.logger = logging.getLogger("SystemLogger")
-        self.logger.setLevel(self.log_level)
+        self.logger = logging.getLogger("AIAppLogger")
+        self.logger.setLevel(log_level)
+        self.logger.propagate = False  # Avoid duplicate logs
 
-        if not self.logger.handlers:
-            stream_handler = logging.StreamHandler()
-            stream_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-            self.logger.addHandler(stream_handler)
+        log_file = os.path.join(log_dir, "main.log")
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-        self._setup_logging()
-
-        # Set shared logger if not already set
-        if Logger._shared_logger is None:
-            Logger._shared_logger = self.logger
-
-    def _setup_logging(self) -> None:
-        os.makedirs(self.log_dir, exist_ok=True)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_file = os.path.join(self.log_dir, f"system_{timestamp}.log")
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-
+        # File Handler (write mode so it doesn’t grow endlessly unless rotated)
         if not any(isinstance(h, logging.FileHandler) for h in self.logger.handlers):
-            self.logger.addHandler(file_handler)
+            fh = logging.FileHandler(log_file, encoding="utf-8")
+            fh.setFormatter(formatter)
+            self.logger.addHandler(fh)
 
-    @classmethod
-    def get_logger(cls):
-        if cls._shared_logger is None:
-            cls()
-        return cls._shared_logger
+        # Stream (console) Handler
+        if not any(isinstance(h, logging.StreamHandler) for h in self.logger.handlers):
+            sh = logging.StreamHandler()
+            sh.setFormatter(formatter)
+            self.logger.addHandler(sh)
+
+    def get_logger(self):
+        return self.logger
 
     def log_interaction(self, query: str, response: str, status: str,
-                        intent: str = "", sentiment: str = "",
-                        chunk_used: Optional[str] = None):
-        os.makedirs(self.log_dir, exist_ok=True)
+                        intent: str = "", sentiment: str = "", chunk_used: Optional[str] = None):
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         entry = {
             "Time": timestamp,
@@ -61,110 +57,89 @@ class Logger:
 
         # CSV log
         csv_path = os.path.join(self.log_dir, "interactions.csv")
-        if not os.path.exists(csv_path):
-            with open(csv_path, "w", encoding="utf-8") as f:
-                f.write(",".join(entry.keys()) + "\n")
+        write_header = not os.path.exists(csv_path)
         with open(csv_path, "a", encoding="utf-8") as f:
-            f.write(",".join(f'"{str(value)}"' for value in entry.values()) + "\n")
+            if write_header:
+                f.write(",".join(entry.keys()) + "\n")
+            f.write(",".join(f'"{str(v)}"' for v in entry.values()) + "\n")
 
-        # TXT log
-        txt_path = os.path.join(self.log_dir, "interactions.txt")
-        with open(txt_path, "a", encoding="utf-8") as f:
+        # JSON log
+        json_path = os.path.join(self.log_dir, "interactions.json")
+        logs = []
+        if os.path.exists(json_path):
+            try:
+                with open(json_path, "r", encoding="utf-8") as f:
+                    logs = json.load(f)
+            except json.JSONDecodeError:
+                logs = []
+        logs.append(entry)
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(logs, f, indent=2)
+
+        # TXT log (human-readable)
+        with open(os.path.join(self.log_dir, "interactions.txt"), "a", encoding="utf-8") as f:
             f.write("\n=== Interaction ===\n")
             for k, v in entry.items():
                 f.write(f"{k}: {v}\n")
             f.write("-" * 40 + "\n")
 
-        # JSON log
-        json_path = os.path.join(self.log_dir, "interactions.json")
-        if os.path.exists(json_path):
-            with open(json_path, "r", encoding="utf-8") as jf:
-                try:
-                    logs = json.load(jf)
-                except json.JSONDecodeError:
-                    logs = []
-        else:
-            logs = []
-        logs.append(entry)
-        with open(json_path, "w", encoding="utf-8") as jf:
-            json.dump(logs, jf, indent=2)
-
-        # Intent log
+        # Intent-only log
         if intent:
             with open(os.path.join(self.log_dir, "intent_logs.txt"), "a", encoding="utf-8") as f:
                 f.write(f"{timestamp} | Intent: {intent} | Query: {query}\n")
 
-    def log_info(self, message: str, exc_info: bool = False):
+    def log_info(self, message: str, exc_info=False):
         self.logger.info(message, exc_info=exc_info)
 
-    def log_warning(self, message: str, exc_info: bool = False):
+    def log_warning(self, message: str, exc_info=False):
         self.logger.warning(message, exc_info=exc_info)
 
-    def log_error(self, message: str, exc_info: bool = False):
+    def log_error(self, message: str, exc_info=False):
         self.logger.error(message, exc_info=exc_info)
 
-    def log_debug(self, message: str, domain: Optional[str] = None):
-        logger = self.logger if domain is None else self.get_domain_logger(domain)
-        logger.debug(message)
+    def log_debug(self, message: str):
+        self.logger.debug(message)
 
     def get_domain_logger(self, domain: str) -> logging.Logger:
-        domain_log_file = os.path.join(self.log_dir, f"{domain}.log")
-        domain_logger = logging.getLogger(f"Domain_{domain}")
-
+        domain_logger = logging.getLogger(f"DomainLogger_{domain}")
         if not domain_logger.handlers:
             domain_logger.setLevel(self.log_level)
-            file_handler = logging.FileHandler(domain_log_file)
-            file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-            domain_logger.addHandler(file_handler)
-
+            file_path = os.path.join(self.log_dir, f"{domain}.log")
+            handler = logging.FileHandler(file_path, encoding="utf-8")
+            handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+            domain_logger.addHandler(handler)
         return domain_logger
 
 
-# System stats utilities
+# System Monitoring Utilities
 def format_memory_stats():
     cpu = psutil.cpu_percent()
     mem = psutil.virtual_memory()
-    stats = f"🖥️ | CPU: {cpu:.1f}% | RAM: {mem.percent:.2f}% used ({mem.used / 1024**2:.2f} MB)"
-    return stats
-
+    return f"🖥️ CPU: {cpu:.1f}% | RAM: {mem.percent:.1f}% ({mem.used / 1024**3:.2f} GB used)"
 
 def log_gpu_stats(logger=None):
     try:
         gpus = GPUtil.getGPUs()
         if not gpus:
             return
-
         for gpu in gpus:
-            msg = (
-                f"🧠 GPU: {gpu.name} | "
-                f"Load: {gpu.load * 100:.1f}% | "
-                f"Free Mem: {gpu.memoryFree:.1f}MB | "
-                f"Used Mem: {gpu.memoryUsed:.1f}MB | "
-                f"Total Mem: {gpu.memoryTotal:.1f}MB"
-            )
-            if logger:
-                logger.info(msg)
-            else:
-                print(msg)
+            msg = (f"🧠 GPU {gpu.name} | Load: {gpu.load * 100:.1f}% | "
+                   f"Used: {gpu.memoryUsed:.1f}MB / {gpu.memoryTotal:.1f}MB")
+            logger.info(msg) if logger else print(msg)
     except Exception as e:
         if logger:
             logger.warning(f"⚠️ Failed to log GPU stats: {e}")
         else:
-            print(f"⚠️ Failed to log GPU stats: {e}")
-
+            print(f"⚠️ GPU log failed: {e}")
 
 def log_disk_io():
-    logger = Logger.get_logger()
-    io_counters = psutil.disk_io_counters()
-    read_mb = io_counters.read_bytes / (1024 * 1024)
-    write_mb = io_counters.write_bytes / (1024 * 1024)
-    logger.info(f"💾 Disk I/O | Read: {read_mb:.2f} MB | Write: {write_mb:.2f} MB")
-
+    logger = Logger().get_logger()
+    io = psutil.disk_io_counters()
+    logger.info(f"💾 Disk I/O | Read: {io.read_bytes / (1024**2):.2f} MB | Write: {io.write_bytes / (1024**2):.2f} MB")
 
 def get_file_size_mb(path):
-    if os.path.exists(path):
-        return os.path.getsize(path) / (1024 * 1024)
-    return 0.0
-# utils/logger.py
+    return os.path.getsize(path) / (1024**2) if os.path.exists(path) else 0.0
 
-logger = Logger.get_logger()
+
+# Global access
+logger = Logger().get_logger()
