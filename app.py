@@ -13,7 +13,7 @@ import traceback
 from chatbot_module import ChatBot
 from llm_handler import LLMHandler
 
-# Setup - REDUCED LOGGING LEVEL
+# Setup
 sys.stdout.reconfigure(encoding='utf-8')
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')  # Changed to WARNING
 logger = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ def simple_preprocess_file(file_path, domain):
         logger.error(f"Error reading file {file_path}: {e}")
         return "", {}, pd.DataFrame({"sentence": ["Default sentence"], "intent": ["default"]})
 
-# Model management functions (unchanged)
+# Model management functions
 def save_trained_model(model_name, model_data, llm_handler=None):
     try:
         models_file = "trained_models.json"
