@@ -31,3 +31,4 @@ plotly
 seaborn
 rouge
 python-pptx
+langdetect
