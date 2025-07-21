@@ -20,6 +20,7 @@ import time
 from datetime import datetime
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from utils.preprocessing import Preprocessor
 from utils.domain_detector import detect_domain
 from utils.visualizer import visualize_model_performance, load_training_log
 from evaluation.evaluate import calculate_dynamic_accuracy, calculate_processing_speed, calculate_memory_usage, get_model_accuracy
@@ -37,7 +38,25 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Supabase setup
+try:
+    from supabase import create_client, Client
+    SUPABASE_AVAILABLE = True
+except ImportError:
+    SUPABASE_AVAILABLE = False
 
+SUPABASE_URL = "https://swrhcsfuorjqszqoohfb.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3cmhjc2Z1b3JqcXN6cW9vaGZiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDkxODA3MCwiZXhwIjoyMDY2NDk0MDcwfQ.aYmADn3cpUhPlNSUiKlb-EveEyyE7-8FgYVq7L4A2OA"
+
+supabase = None
+if SUPABASE_AVAILABLE:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        logger.info("Supabase client initialized")
+    except Exception as e:
+        logger.error(f"Failed to connect to Supabase: {e}", exc_info=True)
+        st.error(f"Failed to connect to database: {e}")
+        
 # Safe imports
 try:
     import spacy
@@ -886,10 +905,12 @@ def render_sidebar():
 # CHAT INTERFACE 
 def render_chat():
     logger.debug("Rendering chat interface")
+
     if st.session_state.show_welcome:
         show_welcome()
         return
 
+    user_id = st.session_state.get("user_id")
     chat_history = st.session_state.get("chat_history", [])
     selected_index = st.session_state.get("selected_chat_index", 0)
 
@@ -899,11 +920,28 @@ def render_chat():
         return
 
     chat = chat_history[selected_index]
-    
-    # Display chat messages
+
+    # Update chat title based on content
+    if chat["title"] == "New Chat" and chat["messages"]:
+        chat["title"] = generate_chat_title(chat["messages"])
+
+    # Display previous messages
     for msg in chat["messages"]:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
+
+    # Show placeholder if no messages
+    if not chat["messages"]:
+        messages = [
+            "Ready to explore your documents? Ask me anything!",
+            "I'm here to help you discover insights from your files.",
+            "What would you like to know about your documents today?",
+            "Let's dive into your content together!",
+            "I can help you find patterns and connections across files."
+        ]
+        current_msg = messages[int(time.time() // 5) % len(messages)]
+        with st.chat_message("assistant"):
+            st.markdown(current_msg)
 
     # Chat input
     if prompt := st.chat_input("Ask me anything about your documents..."):
@@ -916,64 +954,84 @@ def render_chat():
                 try:
                     response = ""
                     model_status = ""
-                    
-                    # Check if we have a trained model loaded
+
+                    # Safe domain detection
+                    try:
+                        domain_name = detect_domain(prompt)
+                    except Exception as e:
+                        domain_name = "general"
+                        logger.warning(f"Domain detection failed: {e}")
+
+                    # Use trained model if available
                     if (st.session_state.model_loaded and 
                         st.session_state.llm_handler and 
                         st.session_state.llm_handler.is_trained):
-                        
-                        # Use the trained model for generation
+
                         logger.info(f"Using trained model for query: {prompt}")
-                        
-                        # Get relevant context from documents first
-                        relevant_context = st.session_state.llm_handler.get_relevant_context(prompt)
-                        
-                        # Generate response using the trained model
+                        context = st.session_state.llm_handler.get_relevant_context(prompt)
                         response = st.session_state.llm_handler.generate_response(
-                            prompt, 
-                            max_length=200,
-                            temperature=0.7,
-                            context=relevant_context
+                            prompt, max_length=200, temperature=0.7, context=context
                         )
-                        
                         model_name = st.session_state.selected_model or "Trained Model"
                         model_status = f"*[Using trained model: {model_name}]*\n\n"
-                        
-                        logger.info(f"Generated response length: {len(response)}")
-                    
-                    # Fallback to chatbot if no trained model
+
+                    # Fallback to basic chatbot
                     elif st.session_state.chatbot and st.session_state.chatbot.documents:
                         st.session_state.chatbot.llm_handler = st.session_state.llm_handler
                         response = st.session_state.chatbot.generate_response(prompt)
-                        model_status = f"*[Using basic chatbot - train a model for better results]*\n\n"
-                        logger.info(f"Generated chatbot response length: {len(response)}")
-                    
+                        model_status = "*[Using basic chatbot - train a model for better results]*\n\n"
+
                     else:
-                        response = "Please upload and process some documents first, then train a model to get better responses."
-                        model_status = f"*[No documents or model available]*\n\n"
+                        response = "Please upload and process documents, then train a model to get better responses."
+                        model_status = "*[No documents or model available]*\n\n"
                         logger.warning("No documents or trained model available")
-                    
-                    # Ensure we have a valid response
-                    if not response or response.strip() == "":
-                        response = "I couldn't generate a meaningful response to your query. Please try rephrasing your question."
+
+                    if not response.strip():
+                        response = "I couldn't generate a meaningful response to your query. Please try rephrasing."
                         logger.warning("Empty response generated")
 
-                    # Combine status and response
+                    # Display response
                     full_response = model_status + response
                     st.markdown(full_response)
                     chat["messages"].append({"role": "assistant", "content": full_response})
-                    logger.info(f"User query: {prompt}")
-                    logger.info(f"Response generated: {len(response)} characters")
+
+                    # Save the query
+                    if user_id:
+                        try:
+                            payload = {
+                                "user_id": user_id,
+                                "query": prompt,
+                                "response": response,
+                                "timestamp": datetime.now().isoformat()
+                            }
+                            if supabase and SUPABASE_AVAILABLE:
+                                result = supabase.table("queries").insert(payload).execute()
+                                if not result.data:
+                                    st.warning("⚠️ Failed to save to Supabase")
+                            else:
+                                save_query_to_file(user_id, prompt, response)
+                        except Exception as e:
+                            logger.warning(f"Error saving query: {e}")
+                            save_query_to_file(user_id, prompt, response)
+                    else:
+                        user_id_from_url = st.query_params.get("user_id")
+                        if user_id_from_url:
+                            st.session_state["user_id"] = user_id_from_url
+                            logger.info(f"✅ user_id from URL: {user_id_from_url}")
+                        else:
+                            st.warning("⚠️ Login required. Please log in from the main page.")
+
+                    # Update chat title if it's still 'New Chat'
+                    if len(chat["messages"]) >= 2 and chat["title"] == "New Chat":
+                        chat["title"] = generate_chat_title(chat["messages"])
+
+                    st.rerun()
 
                 except Exception as e:
                     error_msg = f"❌ Error generating response: {str(e)}"
-                    logger.error(f"Chat error: {e}")
-                    logger.error(f"Traceback: {traceback.format_exc()}")
+                    logger.error(f"Chat error: {traceback.format_exc()}")
                     st.error(error_msg)
                     chat["messages"].append({"role": "assistant", "content": error_msg})
-
-        st.rerun()
-
 
 # Main application
 def main():
