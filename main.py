@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 import logging
 import auth
-import app
+import app as doc_app
 
 # Logging
 logging.basicConfig(
@@ -39,7 +39,7 @@ def main():
 
     if st.session_state.get('authenticated', False):
         logger.debug("User is authenticated. Running main app.")
-        app.main()
+        doc_app.main()
     else:
         logger.debug("User not authenticated. Showing login.")
         auth.render_auth_page()
