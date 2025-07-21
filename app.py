@@ -4,6 +4,7 @@ import os
 import tempfile
 import json
 import hashlib
+import requests
 import sys
 import pandas as pd
 from datetime import datetime
@@ -1020,6 +1021,18 @@ def render_chat():
                     logger.error(f"Chat error: {traceback.format_exc()}")
                     st.error(error_msg)
                     chat["messages"].append({"role": "assistant", "content": error_msg})
+
+def download_model():
+    model_url = st.secrets["MODEL_URL"]
+    local_path = "models/checkpoint.pt"
+    if not os.path.exists(local_path):
+        print("🔽 Downloading model...")
+        with open(local_path, "wb") as f:
+            f.write(requests.get(model_url).content)
+    return local_path
+
+model_path = download_model()
+model = torch.load(model_path, map_location=torch.device('cpu'))
 
 # Main application
 def main():

@@ -4,6 +4,7 @@ from pathlib import Path
 import logging
 import auth
 import app as doc_app
+from utils.nltk_setup import download_nltk_resources
 
 # Logging
 logging.basicConfig(
@@ -12,6 +13,7 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
+download_nltk_resources()
 
 # Ensure current directory is in sys.path
 current_dir = Path(__file__).parent
