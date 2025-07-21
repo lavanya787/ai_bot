@@ -6,18 +6,15 @@ def download_nltk_resources():
     resources = [
         "punkt",
         "averaged_perceptron_tagger",
-        "stopwords",
         "maxent_ne_chunker",
-        "words"
+        "words",
+        "stopwords"
     ]
-
-    for resource in resources:
+    for res in resources:
         try:
-            if resource == "punkt":
-                nltk.data.find("tokenizers/punkt")
-            elif resource == "words":
-                nltk.data.find("corpora/words")
+            if res == "punkt":
+                nltk.data.find(f"tokenizers/{res}")
             else:
-                nltk.data.find(f"corpora/{resource}")
+                nltk.data.find(f"corpora/{res}")
         except LookupError:
-            nltk.download(resource, quiet=True)
+            nltk.download(res, quiet=True)

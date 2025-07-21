@@ -18,6 +18,7 @@ from sklearn.linear_model import LogisticRegression
 from nltk.tokenize import word_tokenize
 from deep_translator import GoogleTranslator
 from typing import Optional, Tuple
+from utils.nltk_setup import download_nltk_resources
 
 # Initialize logging
 logger = logging.getLogger(__name__)
@@ -31,12 +32,6 @@ if not logger.handlers:
     stream = logging.StreamHandler()
     stream.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
     logger.addHandler(stream)
-import nltk
-
-try:
-    nltk.data.find("tokenizers/punkt")
-except LookupError:
-    nltk.download("punkt")
 
 # Constants
 LOG_PATH_JSON = "logs/domain_usage.json"
@@ -49,6 +44,9 @@ CHECKPOINT_PATH = "checkpoint.pt"
 #Create or append to a file:
 TRAINING_DATA_PATH = Path("domain_models/training_dataset.csv")
 TRAINING_DATA_PATH.parent.mkdir(exist_ok=True)
+
+download_nltk_resources()
+
 
 # Keywords for hybrid scoring
 DOMAIN_KEYWORDS = {
