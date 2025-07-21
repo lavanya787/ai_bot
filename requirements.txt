@@ -28,3 +28,4 @@ supabase==1.0.3
 psutil
 GPUtil
 plotly
+seaborn
