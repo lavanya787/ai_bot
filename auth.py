@@ -215,9 +215,8 @@ def render_auth_page():
             st.markdown('<p style="color: rgba(255,255,255,0.8); text-align: center; margin-bottom: 1.5rem;">Sign in to access your AI-powered workspace</p>', unsafe_allow_html=True)
             
             with st.form("login_form"):
-                email = st.text_input("", placeholder="Enter your email", label_visibility="collapsed")
-                password = st.text_input("", placeholder="Enter your password", type="password", label_visibility="collapsed")
-                
+                email = st.text_input("Email", placeholder="Enter your email", label_visibility="collapsed")
+                password = st.text_input("Password", placeholder="Enter your password", type="password", label_visibility="collapsed")               
                 col_a, col_b = st.columns(2)
                 with col_a:
                     login_btn = st.form_submit_button("🚀 Sign In")
@@ -243,11 +242,11 @@ def render_auth_page():
             st.markdown('<p style="color: rgba(255,255,255,0.8); text-align: center; margin-bottom: 1.5rem;">Create your account and start exploring AI-powered document analysis</p>', unsafe_allow_html=True)
             
             with st.form("register_form"):
-                full_name = st.text_input("", placeholder="Enter your full name", label_visibility="collapsed")
-                email = st.text_input("", placeholder="Enter your email", label_visibility="collapsed")
-                password = st.text_input("", placeholder="Create a secure password", type="password", label_visibility="collapsed")
-                confirm_password = st.text_input("", placeholder="Confirm your password", type="password", label_visibility="collapsed")
-                
+                full_name = st.text_input("Full Name", placeholder="Enter your full name", label_visibility="collapsed")
+                email = st.text_input("Email", placeholder="Enter your email", label_visibility="collapsed")
+                password = st.text_input("Password", placeholder="Enter your password", type="password", label_visibility="collapsed")                
+                confirm_password = st.text_input("Confirm Password", placeholder="Confirm your password", type="password", label_visibility="collapsed")
+               
                 col_a, col_b = st.columns(2)
                 with col_a:
                     register_btn = st.form_submit_button("✨ Create Account")
