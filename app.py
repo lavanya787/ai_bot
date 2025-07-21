@@ -56,7 +56,7 @@ if SUPABASE_AVAILABLE:
     except Exception as e:
         logger.error(f"Failed to connect to Supabase: {e}", exc_info=True)
         st.error(f"Failed to connect to database: {e}")
-        
+
 # Safe imports
 try:
     import spacy
@@ -415,227 +415,212 @@ def render_model_dashboard():
     logger.debug("Rendering model dashboard")
     st.markdown("### 🧠 Model Dashboard")
 
-    # Load real-time data
+    # Load models and check for documents
     models = load_trained_models()
     if not models:
         st.info("📭 No trained models available. Upload documents and train a model to get started.")
         return
 
-    llm_handler = st.session_state.get("llm_handler", {})
-    doc_texts = getattr(llm_handler, 'doc_texts', {})
+    llm_handler = st.session_state.get("llm_handler")
+    doc_texts = getattr(llm_handler, 'doc_texts', {}) if llm_handler else {}
     
-    # Real-time metrics
     doc_count = len(doc_texts)
+    if doc_count == 0:
+        st.warning("⚠️ No document data available in the current model session.")
+        return
+
+    # Performance Metrics
     accuracy = get_model_accuracy() if hasattr(llm_handler, 'model') else calculate_dynamic_accuracy()
     processing_speed = calculate_processing_speed(doc_texts)
     memory_usage = calculate_memory_usage()
-    
-    # Multi-domain detection
+
+    # Domain Detection
     document_domains = {}
     all_domains = set()
-    
+
     for doc_name, content in doc_texts.items():
         text_content = content.get('content', str(content)) if isinstance(content, dict) else str(content)
         domain = detect_domain(text_content) if text_content else "general"
         document_domains[doc_name] = domain
         all_domains.add(domain)
-    
+
     primary_domain = max(all_domains, key=lambda x: list(document_domains.values()).count(x)) if all_domains else "general"
 
-    # Main Metrics
+    # Main Metric Display
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("📄 Documents", doc_count, delta=f"+{doc_count}")
+        st.metric("📄 Documents", doc_count)
     with col2:
         st.metric("📊 Accuracy", f"{accuracy:.1f}%", delta=f"{accuracy-85:+.1f}%")
     with col3:
         if len(all_domains) > 1:
-            st.metric("🎯 Domains", f"{len(all_domains)} detected")
+            st.metric("🎯 Domains", f"{len(all_domains)}")
             st.caption(f"Primary: {primary_domain.title()}")
         else:
             st.metric("🎯 Domain", primary_domain.title())
     with col4:
         st.metric("💾 Memory", f"{memory_usage:.1f}%")
-        st.caption(f"Speed: {processing_speed:.0f}ms")
+        st.caption(f"Speed: {processing_speed:.0f} ms")
 
-    # Status indicators
+    # System Status
     status_cols = st.columns(4)
     with status_cols[0]:
         st.success("🟢 System Online")
     with status_cols[1]:
         st.info(f"🔄 Last Update: {datetime.now().strftime('%H:%M:%S')}")
     with status_cols[2]:
-        st.metric("⚡ Speed", f"{processing_speed:.0f}ms")
+        st.metric("⚡ Speed", f"{processing_speed:.0f} ms")
     with status_cols[3]:
         st.success("🟢 Model: Active" if st.session_state.get("model_loaded") else "⚠️ Model: Inactive")
 
-    # Document List with Individual Retrain Options
+    # 📚 Document Tools
     st.markdown("### 📚 Documents & Training")
     
-    if doc_texts:
-        # Bulk operations
-        col_bulk1, col_bulk2 = st.columns(2)
-        with col_bulk1:
-            if st.button("🔄 Retrain All Documents", use_container_width=True, type="primary"):
-                with st.spinner("Retraining all documents..."):
-                    retrain_model(list(doc_texts.keys()))
-                st.success("✅ All documents retrained")
-                st.balloons()
-                st.rerun()
+    # Bulk Retrain
+    col_bulk1, col_bulk2 = st.columns(2)
+    with col_bulk1:
+        if st.button("🔄 Retrain All Documents", use_container_width=True):
+            with st.spinner("Retraining all documents..."):
+                retrain_model(list(doc_texts.keys()))
+            st.success("✅ All documents retrained")
+            st.balloons()
+            st.rerun()
+
+    with col_bulk2:
+        selected_docs = st.multiselect("Select documents for bulk retrain", list(doc_texts.keys()))
+        if st.button("🔄 Retrain Selected", disabled=not selected_docs, use_container_width=True):
+            with st.spinner(f"Retraining {len(selected_docs)} documents..."):
+                retrain_model(selected_docs)
+            st.success(f"✅ {len(selected_docs)} documents retrained")
+            st.rerun()
+
+    # Individual Document Display
+    for doc_name, content in doc_texts.items():
+        text_content = content.get('content', str(content)) if isinstance(content, dict) else str(content)
+        domain = document_domains.get(doc_name, "general")
+        word_count = len(text_content.split())
+        confidence = calculate_domain_confidence(text_content, domain)
+        complexity = calculate_text_complexity(text_content)
         
-        with col_bulk2:
-            selected_docs = st.multiselect("Select documents for bulk retrain", list(doc_texts.keys()))
-            if st.button("🔄 Retrain Selected", disabled=not selected_docs, use_container_width=True):
-                with st.spinner(f"Retraining {len(selected_docs)} documents..."):
-                    retrain_model(selected_docs)
-                st.success(f"✅ {len(selected_docs)} documents retrained")
-                st.rerun()
+        with st.expander(f"📄 {doc_name} • {domain.title()} • {word_count:,} words"):
+            col_info, col_retrain = st.columns([4, 1])
+            with col_info:
+                metric_cols = st.columns(4)
+                metric_cols[0].metric("📝 Words", f"{word_count:,}")
+                metric_cols[1].metric("🎯 Domain", domain.title())
+                metric_cols[2].metric("📊 Confidence", f"{confidence:.0f}%")
+                metric_cols[3].metric("🔍 Complexity", complexity)
 
-        # Individual Document Cards
-        for doc_name, content in doc_texts.items():
-            text_content = content.get('content', str(content)) if isinstance(content, dict) else str(content)
-            domain = document_domains.get(doc_name, "general")
-            word_count = len(text_content.split())
-            confidence = calculate_domain_confidence(text_content, domain)
-            complexity = calculate_text_complexity(text_content)
-            
-            with st.expander(f"📄 {doc_name} • {domain.title()} • {word_count:,} words", expanded=False):
-                # Document metrics and retrain button
-                col_info, col_retrain = st.columns([4, 1])
-                
-                with col_info:
-                    metric_cols = st.columns(4)
-                    with metric_cols[0]:
-                        st.metric("📝 Words", f"{word_count:,}")
-                    with metric_cols[1]:
-                        st.metric("🎯 Domain", domain.title())
-                    with metric_cols[2]:
-                        st.metric("📊 Confidence", f"{confidence:.0f}%")
-                    with metric_cols[3]:
-                        st.metric("🔍 Complexity", complexity)
-                
-                with col_retrain:
-                    if st.button(f"🔄 Retrain", key=f"retrain_{doc_name}", use_container_width=True, type="secondary"):
-                        with st.spinner(f"Retraining {doc_name}..."):
-                            retrain_model([doc_name])
-                        st.success(f"✅ {doc_name} retrained")
-                        st.rerun()
-                
-                # Document preview
-                preview_text = text_content[:300] + "..." if len(text_content) > 300 else text_content
-                st.text_area("Preview", preview_text, height=80, disabled=True, label_visibility="collapsed")
+            with col_retrain:
+                if st.button(f"🔄 Retrain", key=f"retrain_{doc_name}", use_container_width=True):
+                    with st.spinner(f"Retraining {doc_name}..."):
+                        retrain_model([doc_name])
+                    st.success(f"✅ {doc_name} retrained")
+                    st.rerun()
 
-        # Multi-Domain Visualization
-        if len(all_domains) > 1:
-            st.markdown("### 🎯 Domain Distribution")
-            domain_counts = {domain: list(document_domains.values()).count(domain) for domain in all_domains}
-            
-            col_chart, col_stats = st.columns([3, 2])
-            with col_chart:
-                fig = go.Figure(data=[go.Pie(
-                    labels=[d.title() for d in domain_counts.keys()],
-                    values=list(domain_counts.values()),
-                    hole=0.3
-                )])
-                fig.update_layout(title="Document Domain Distribution", height=300)
-                st.plotly_chart(fig, use_container_width=True)
-            
-            with col_stats:
-                st.markdown("**Domain Breakdown:**")
-                for domain, count in sorted(domain_counts.items(), key=lambda x: x[1], reverse=True):
-                    percentage = (count / doc_count) * 100
-                    st.metric(domain.title(), f"{count} docs", f"{percentage:.1f}%")
+            preview = text_content[:300] + "..." if len(text_content) > 300 else text_content
+            st.text_area("Preview", preview, height=80, disabled=True, label_visibility="collapsed")
 
-    # Model Selection and Management
+    # 📊 Domain Pie Chart
+    if len(all_domains) > 1:
+        st.markdown("### 🎯 Domain Distribution")
+        domain_counts = {d: list(document_domains.values()).count(d) for d in all_domains}
+
+        col_chart, col_stats = st.columns([3, 2])
+        with col_chart:
+            fig = go.Figure(data=[go.Pie(
+                labels=[d.title() for d in domain_counts],
+                values=list(domain_counts.values()),
+                hole=0.3
+            )])
+            fig.update_layout(title="Document Domain Distribution", height=300)
+            st.plotly_chart(fig, use_container_width=True)
+
+        with col_stats:
+            for d, c in sorted(domain_counts.items(), key=lambda x: x[1], reverse=True):
+                st.metric(d.title(), f"{c} docs", f"{(c / doc_count) * 100:.1f}%")
+
+    # ⚙️ Model Manager
     st.markdown("### ⚙️ Model Management")
-    
     if models:
         col_model, col_actions = st.columns([3, 2])
-        
         with col_model:
-            # Get current model or latest
-            if not st.session_state.get('selected_model'):
-                st.session_state.selected_model = get_latest_model(models) if hasattr(models, 'get_latest_model') else list(models.keys())[0]
-            
+            if not st.session_state.get("selected_model"):
+                st.session_state.selected_model = list(models.keys())[0]
+
             model_options = [(f"📋 {name} ({info.get('doc_count', 0)} docs)", name) for name, info in models.items()]
-            current_idx = next((i for i, (_, key) in enumerate(model_options) if key == st.session_state.selected_model), 0)
-            
-            selected_display = st.selectbox("Active Model", [opt[0] for opt in model_options], index=current_idx)
-            model_key = next(opt[1] for opt in model_options if opt[0] == selected_display)
-            
+            current_display = [opt[0] for opt in model_options]
+            current_index = next((i for i, (_, key) in enumerate(model_options)
+                                  if key == st.session_state.selected_model), 0)
+
+            selected_display = st.selectbox("Active Model", current_display, index=current_index)
+            model_key = next(k for label, k in model_options if label == selected_display)
+
             if model_key != st.session_state.selected_model:
                 st.session_state.selected_model = model_key
                 st.session_state.model_loaded = True
                 st.success(f"✅ Model loaded: {model_key}")
                 st.rerun()
-        
-        with col_actions:
-            action_cols = st.columns(2)
-            with action_cols[0]:
-                if st.button("🔄 Reload", use_container_width=True):
-                    st.session_state.model_loaded = True
-                    st.success("✅ Model reloaded")
-                    st.rerun()
-            
-            with action_cols[1]:
-                if st.button("🗑️ Delete", use_container_width=True):
-                    if st.session_state.get('selected_model') in models:
-                        model_path = models[st.session_state.selected_model].get("path")
-                        if model_path and os.path.exists(model_path):
-                            os.remove(model_path)
-                        del models[st.session_state.selected_model]
-                        save_trained_model(models)
-                        st.session_state.update({'selected_model': None, 'model_loaded': False})
-                        st.success("✅ Model deleted")
-                        st.rerun()
 
-    # Performance Monitor
+        with col_actions:
+            if st.button("🔄 Reload", use_container_width=True):
+                st.session_state.model_loaded = True
+                st.success("✅ Model reloaded")
+                st.rerun()
+
+            if st.button("🗑️ Delete", use_container_width=True):
+                if st.session_state.selected_model in models:
+                    path = models[st.session_state.selected_model].get("path")
+                    if path and os.path.exists(path):
+                        os.remove(path)
+                    del models[st.session_state.selected_model]
+                    save_trained_model(models)
+                    st.session_state.update({'selected_model': None, 'model_loaded': False})
+                    st.success("✅ Model deleted")
+                    st.rerun()
+
+    # 📈 Training Performance Chart
     if st.session_state.get("model_loaded") and os.path.exists("logs/training_log.txt"):
         st.markdown("### 📈 Performance Monitor")
-        
         try:
             df = load_training_log("logs/training_log.txt")
-            if not df.empty and 'TrainLoss' in df.columns and 'ValLoss' in df.columns:
+            if not df.empty and {'TrainLoss', 'ValLoss'}.issubset(df.columns):
                 col_chart, col_metrics = st.columns([3, 1])
-                
                 with col_chart:
                     fig = go.Figure()
                     fig.add_trace(go.Scatter(x=df['Epoch'], y=df['TrainLoss'], name='Train Loss', line=dict(color='blue')))
                     fig.add_trace(go.Scatter(x=df['Epoch'], y=df['ValLoss'], name='Val Loss', line=dict(color='red')))
                     fig.update_layout(title="🎯 Training Progress", height=400)
                     st.plotly_chart(fig, use_container_width=True)
-                
+
                 with col_metrics:
                     st.metric("📊 Epochs", len(df))
                     st.metric("📉 Best Loss", f"{df['ValLoss'].min():.4f}")
                     st.metric("🎯 Final Loss", f"{df['ValLoss'].iloc[-1]:.4f}")
-                    
-                    # Performance status
                     improvement = df['ValLoss'].iloc[0] - df['ValLoss'].iloc[-1]
                     if improvement > 0:
                         st.success(f"🟢 Improved by {improvement:.4f}")
                     else:
                         st.warning("🟡 Needs optimization")
-                        
         except Exception as e:
-            st.error(f"Performance data unavailable: {str(e)}")
+            st.error(f"Performance data unavailable: {e}")
 
-    # Navigation and Auto-refresh
-    col_nav1, col_nav2, col_refresh = st.columns([1, 1, 1])
-    
+    # Navigation Controls
+    col_nav1, col_nav2, col_refresh = st.columns(3)
     with col_nav1:
         if st.button("📤 Upload Documents", use_container_width=True):
             st.session_state.page = "upload"
             st.rerun()
-    
+
     with col_nav2:
         if st.button("💬 Start Chat", use_container_width=True):
             st.session_state.page = "chat"
             st.rerun()
-    
+
     with col_refresh:
         if st.button("🔄 Auto-Refresh", use_container_width=True, help="Enable auto-refresh"):
             st.rerun()
+
 
 
 # Helper functions for real-time calculations

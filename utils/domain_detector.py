@@ -31,6 +31,12 @@ if not logger.handlers:
     stream = logging.StreamHandler()
     stream.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
     logger.addHandler(stream)
+import nltk
+
+try:
+    nltk.data.find("tokenizers/punkt")
+except LookupError:
+    nltk.download("punkt")
 
 # Constants
 LOG_PATH_JSON = "logs/domain_usage.json"
@@ -160,41 +166,32 @@ def train_ml_model(domain: str):
     return model, vectorizer
 
 def load_ml_model(domain: Optional[str] = None) -> Tuple[Optional[object], Optional[object]]:
-    """
-    Load the ML model and vectorizer for the specified domain.
-
-    Args:
-        domain (Optional[str]): The domain to load the model for (e.g., 'physics'). Defaults to 'general'.
-
-    Returns:
-        Tuple[Optional[object], Optional[object]]: The loaded model and vectorizer, or (None, None) if loading fails.
-    """
     try:
-        # Use default domain if none provided
-        domain = DOMAIN_KEYWORDS.get(domain)
+        if domain is None:
+            domain = "general"
         logger.info(f"Loading model for domain: {domain}")
 
         model_path = BASE_MODEL_DIR / domain / MODEL_FILE
         vectorizer_path = BASE_MODEL_DIR / domain / VECTORIZER_FILE
 
-        # Check if files exist
         if not model_path.exists() or not vectorizer_path.exists():
-            logger.warning(f"Model or vectorizer for {domain} not found at {model_path} or {vectorizer_path}, retraining...")
+            logger.warning(f"Model or vectorizer for {domain} not found. Retraining...")
             return train_ml_model(domain)
 
-        # Load model and vectorizer
         model = joblib.load(model_path)
         vectorizer = joblib.load(vectorizer_path)
-        logger.info(f"Loaded model and vectorizer for {domain} from {model_path}")
+        logger.info(f"✅ Loaded model and vectorizer for {domain}")
         return model, vectorizer
 
     except Exception as e:
-        logger.error(f"Failed to load model for {domain}: {e}")
+        logger.error(f"❌ Failed to load model for {domain}: {e}")
         return None, None
+
 
 # ----------------------- Hybrid Detection -----------------------
 
 def keyword_score(text: str) -> dict:
+    from nltk.tokenize import word_tokenize  # moved inside function
     tokens = word_tokenize(clean_text(text))
     scores = defaultdict(int)
     for domain, keywords in DOMAIN_KEYWORDS.items():
