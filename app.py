@@ -46,16 +46,30 @@ try:
 except ImportError:
     SPACY_AVAILABLE = False
 
+# nltk
 try:
     import nltk
-    nltk.download('punkt', quiet=True)
-    nltk.download('averaged_perceptron_tagger', quiet=True)
-    nltk.download('maxent_ne_chunker', quiet=True)
-    nltk.download('words', quiet=True)
-    nltk.download('stopwords', quiet=True)
+    from nltk.tokenize import word_tokenize
+    from nltk.corpus import stopwords
+
+    # Only download if not already present
+    def download_nltk_resource(resource):
+        try:
+            nltk.data.find(resource)
+        except LookupError:
+            nltk.download(resource.split('/')[-1], quiet=True)
+
+    download_nltk_resource("tokenizers/punkt")
+    download_nltk_resource("taggers/averaged_perceptron_tagger")
+    download_nltk_resource("chunkers/maxent_ne_chunker")
+    download_nltk_resource("corpora/words")
+    download_nltk_resource("corpora/stopwords")
+
     NLTK_AVAILABLE = True
-except ImportError:
+    logger.info("NLTK resources downloaded and loaded.")
+except Exception as e:
     NLTK_AVAILABLE = False
+    logger.warning(f"NLTK initialization failed: {e}")
 
 # Mock classes for missing modules
 class MockPreprocessor:
