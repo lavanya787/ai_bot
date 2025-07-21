@@ -29,3 +29,4 @@ psutil
 GPUtil
 plotly
 seaborn
+rouge
