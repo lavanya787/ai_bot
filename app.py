@@ -24,6 +24,9 @@ from utils.preprocessing import Preprocessor
 from utils.domain_detector import detect_domain
 from utils.visualizer import visualize_model_performance, load_training_log
 from evaluation.evaluate import calculate_dynamic_accuracy, calculate_processing_speed, calculate_memory_usage, get_model_accuracy
+from utils.nltk_setup import download_nltk_resources
+
+download_nltk_resources()
 
 # Setup
 #sys.stdout.reconfigure(encoding='utf-8')
