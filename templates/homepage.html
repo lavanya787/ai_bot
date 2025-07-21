@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduBot - AI Assistant for Educators</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='homepage.css') }}">
+    
+    
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="#" class="logo">
+                <span></span> EduBot
+            </a>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="{{ url_for('index') }}">Login/Signup</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero" id="home">
+        <div class="container">
+            <h1>Empower Your Teaching with AI</h1>
+            <p class="hero-subtitle">The Smart Assistant Every Educator Needs</p>
+            <p>Transform your classroom experience with TeacherBot - an AI assistant designed specifically for teachers. Save hours on lesson planning, get instant curriculum support, and enhance student engagement like never before.</p>
+            <div class="cta-buttons">
+                
+                <a href="#features" class="cta-button cta-secondary">See Features</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="teacher-features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Built for Teachers, By Educators</h2>
+                <p>Everything you need to streamline your teaching workflow and focus on what matters most - your students.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">📝</div>
+                        <h3>Lesson Plan Generator</h3>
+                    </div>
+                    <p>Create comprehensive lesson plans in minutes, not hours. Aligned with curriculum standards and customizable for any grade level or subject.</p>
+                    <ul class="feature-list">
+                        <li>Standards-aligned content</li>
+                        <li>Differentiated learning activities</li>
+                        <li>Assessment rubrics included</li>
+                        <li>Multiple format exports</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">📊</div>
+                        <h3>Student Assessment Tools</h3>
+                    </div>
+                    <p>Generate quizzes, tests, and rubrics instantly. Get detailed analytics on student performance and learning gaps.</p>
+                    <ul class="feature-list">
+                        <li>Auto-generated questions</li>
+                        <li>Multiple question types</li>
+                        <li>Performance analytics</li>
+                        <li>Progress tracking</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Curriculum Alignment</h3>
+                    </div>
+                    <p>Ensure your lessons meet educational standards with our comprehensive curriculum mapping and alignment tools.</p>
+                    <ul class="feature-list">
+                        <li>Common Core alignment</li>
+                        <li>State standard mapping</li>
+                        <li>Learning objective tracking</li>
+                        <li>Skill progression monitoring</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">💬</div>
+                        <h3>Parent Communication</h3>
+                    </div>
+                    <p>Generate professional emails, progress reports, and meeting notes to keep parents informed and engaged.</p>
+                    <ul class="feature-list">
+                        <li>Automated progress reports</li>
+                        <li>Meeting summary templates</li>
+                        <li>Behavioral incident reports</li>
+                        <li>Achievement celebrations</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">🎨</div>
+                        <h3>Creative Activity Ideas</h3>
+                    </div>
+                    <p>Never run out of engaging activities. Get creative ideas for projects, games, and interactive learning experiences.</p>
+                    <ul class="feature-list">
+                        <li>Subject-specific activities</li>
+                        <li>Hands-on project ideas</li>
+                        <li>Technology integration</li>
+                        <li>Seasonal themed content</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">📚</div>
+                        <h3>Resource Library</h3>
+                    </div>
+                    <p>Access thousands of teaching resources, worksheets, and materials organized by subject and grade level.</p>
+                    <ul class="feature-list">
+                        <li>Printable worksheets</li>
+                        <li>Interactive digital content</li>
+                        <li>Video lesson plans</li>
+                        <li>Professional development</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>EduBot</h4>
+                    <p>Empowering educators with AI technology to create better learning experiences for every student.</p>
+                </div>
+               
+            <div class="footer-bottom">
+                <p>&copy; 2025 EduBot. Transforming education through AI innovation.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const messages = document.getElementById('chatMessages');
+            
+            if (input.value.trim() === '') return;
+            
+            // Add teacher message
+            const teacherMessage = document.createElement('div');
+            teacherMessage.className = 'message teacher-message';
+            teacherMessage.innerHTML = input.value + '<div class="message-time">' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + '</div>';
+            messages.appendChild(teacherMessage);
+            
+            // Simulate bot response
+            setTimeout(() => {
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot-message';
+                botMessage.innerHTML = "I'd be happy to help you with that! Let me create some tailored resources and suggestions for your classroom. This will just take a moment..." + '<div class="message-time">' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + '</div>';
+                messages.appendChild(botMessage);
+                messages.scrollTop = messages.scrollHeight;
+            }, 1000);
+            
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // Allow Enter key to send message
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        
