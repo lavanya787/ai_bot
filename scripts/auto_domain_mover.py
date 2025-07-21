@@ -5,7 +5,6 @@ import shutil
 from datetime import datetime
 from rag_domain_trainer import store_and_train, get_file_hash
 from utils.domain_detector import detect_domain, log_domain_usage
-from utils.alerts_email import send_alert_email
 from file_processing.processor import extract_text_from_file
 
 WATCH_DIR = "rag_data"
@@ -32,12 +31,7 @@ def move_to_error_and_alert(file_path, reason):
     shutil.move(file_path, dest_path)
 
     print(f"⚠️ Moved to error folder: {fname} | Reason: {reason}")
-    send_alert_email(
-        subject=f"🚨 File Failed: {fname}",
-        html_content=f"<p><b>Reason:</b> {reason}</p><p><b>Original Path:</b> {file_path}</p>",
-        attachment_paths=[dest_path],
-        log_file=LOG_FILE
-    )
+
 
 def move_file_to_domain_folder():
     print(f"👀 Watching '{WATCH_DIR}/' for new documents...")

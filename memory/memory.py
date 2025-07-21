@@ -1,104 +1,76 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-import torch
-import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
-from intent.classifier import BiLSTMClassifier
 import json
-import re
+import os
+from utils.logger import Logger, format_memory_stats, log_gpu_stats, log_disk_io, get_file_size_mb
+
 class Memory:
-    def __init__(self):
+    def __init__(self, storage_file="conversation_history.json"):
+        self.logger = Logger().get_logger()
         self.history = []
-    def append(self, role, message):
-        self.history.append({"role": role, "message": message})
-    def get_formatted(self):
-        return "\n".join(f"{entry['role']}: {entry['message']}" for entry in self.history)
-    def clear(self):
-        self.history = []
+        self.storage_file = storage_file
+        # Use direct logging.Logger methods as fallback
+        self.logger.info(f"Initializing Memory with storage file: {storage_file}")  # Fallback to info
+        log_gpu_stats(self.logger)
+        self.logger.info(format_memory_stats())  # Fallback to info
+        log_disk_io()
+        self._load_history()
+        self.chat_logs = {}
+
+
+    def add_message(self, session_id, role, message):
+        if session_id not in self.chat_logs:
+            self.chat_logs[session_id] = []
+        self.chat_logs[session_id].append({"role": role, "message": message})
+
+    def get_context(self, session_id, limit=None):
+        """
+        Retrieve recent chat messages for the given session.
+        If limit is None, return all messages. Otherwise return the last `limit` messages.
+        """
+        messages = self.chat_logs.get(session_id, [])
+        return messages if limit is None else messages[-limit:]
     
-# Training data
-data = [
-    ("What are the marks of student A?", "file", "neutral"),
-    ("Tell me about the history of India.", "general", "neutral"),
-    ("This is so confusing!", "general", "negative"),
-    ("Summarize chapter 3 from the uploaded file.", "file", "neutral"),
-    ("You are doing great!", "general", "positive")
-]
+    def _load_history(self):
+        self.logger.info(f"Loading history from {self.storage_file}")  # Fallback to info
+        try:
+            if os.path.exists(self.storage_file):
+                with open(self.storage_file, 'r', encoding='utf-8') as f:
+                    self.history = json.load(f)
+                self.logger.info(f"Loaded {len(self.history)} entries from {self.storage_file}")  # Fallback to info
+                file_size = get_file_size_mb(self.storage_file)
+                self.logger.info(f"File size: {file_size:.2f} MB")  # Fallback to info
+            else:
+                self.logger.info(f"No existing history file found at {self.storage_file}")  # Fallback to info
+        except json.JSONDecodeError:
+            self.logger.warning("Corrupted history file, starting fresh")  # Fallback to warning
+            self.history = []
+        except Exception as e:
+            self.logger.error(f"Error loading history: {e}")  # Fallback to error
+            self.history = []
 
-intent_labels = {"file": 0, "general": 1}
-sentiment_labels = {"positive": 0, "neutral": 1, "negative": 2}
+    def _save_history(self):
+        self.logger.info(f"Saving history to {self.storage_file}")  # Fallback to info
+        try:
+            with open(self.storage_file, 'w', encoding='utf-8') as f:
+                json.dump(self.history, f, ensure_ascii=False, indent=2)
+            file_size = get_file_size_mb(self.storage_file)
+            self.logger.info(f"History saved, file size: {file_size:.2f} MB")  # Fallback to info
+        except Exception as e:
+            self.logger.error(f"Error saving history: {e}")  # Fallback to error
 
-# Tokenization
-tokens = set()
-for q, _, _ in data:
-    tokens.update(re.findall(r"\b\w+\b", q.lower()))
-tokens = sorted(tokens | {"<unk>"})
-stoi = {w: i for i, w in enumerate(tokens)}
+    def append(self, role, message):
+        self.logger.info(f"Appending message - Role: {role}, Message: {message[:50]}{'...' if len(message) > 50 else ''}")  # Fallback to info
+        self.history.append({"role": role, "message": message})
+        self._save_history()
+        log_gpu_stats(self.logger)
+        self.logger.info(format_memory_stats())  # Fallback to info
 
-# Save vocab
-with open("intent/intent_vocab.json", "w") as f:
-    json.dump({
-        "stoi": stoi,
-        "intent_labels": {v: k for k, v in intent_labels.items()},
-        "sentiment_labels": {v: k for k, v in sentiment_labels.items()}
-    }, f)
+    def get_formatted(self):
+        self.logger.info(f"Retrieving formatted history with {len(self.history)} entries")  # Fallback to info
+        return "\n".join(f"{entry['role']}: {entry['message']}" for entry in self.history)
 
-# Dataset
-class IntentDataset(Dataset):
-    def __init__(self, data, task="intent"):
-        self.data = data
-        self.task = task
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        q, intent, sentiment = self.data[idx]
-        x = torch.tensor([stoi.get(tok, stoi["<unk>"]) for tok in re.findall(r"\b\w+\b", q.lower())])
-        y = torch.tensor(intent_labels[intent] if self.task == "intent" else sentiment_labels[sentiment])
-        return x, y
-
-# Pad batch
-def collate(batch):
-    inputs, labels = zip(*batch)
-    lengths = [len(x) for x in inputs]
-    max_len = max(lengths)
-    padded = torch.zeros(len(inputs), max_len, dtype=torch.long)
-    for i, seq in enumerate(inputs):
-        padded[i, :lengths[i]] = seq
-    return padded, torch.tensor(labels)
-
-# Train intent model
-intent_dataset = IntentDataset(data, task="intent")
-intent_loader = DataLoader(intent_dataset, batch_size=2, shuffle=True, collate_fn=collate)
-intent_model = BiLSTMClassifier(len(stoi), output_dim=2)
-optimizer = torch.optim.Adam(intent_model.parameters())
-loss_fn = nn.CrossEntropyLoss()
-
-for epoch in range(5):
-    for x, y in intent_loader:
-        optimizer.zero_grad()
-        pred = intent_model(x)
-        loss = loss_fn(pred, y)
-        loss.backward()
-        optimizer.step()
-
-torch.save(intent_model.state_dict(), "intent/intent_model.pth")
-
-# Train sentiment model
-sentiment_dataset = IntentDataset(data, task="sentiment")
-sentiment_loader = DataLoader(sentiment_dataset, batch_size=2, shuffle=True, collate_fn=collate)
-sentiment_model = BiLSTMClassifier(len(stoi), output_dim=3)
-optimizer = torch.optim.Adam(sentiment_model.parameters())
-
-for epoch in range(5):
-    for x, y in sentiment_loader:
-        optimizer.zero_grad()
-        pred = sentiment_model(x)
-        loss = loss_fn(pred, y)
-        loss.backward()
-        optimizer.step()
-
-torch.save(sentiment_model.state_dict(), "intent/sentiment_model.pth")
+    def clear(self):
+        self.logger.info("Clearing history")  # Fallback to info
+        self.history = []
+        self._save_history()
+        log_gpu_stats(self.logger)
+        self.logger.info(format_memory_stats())  # Fallback to info

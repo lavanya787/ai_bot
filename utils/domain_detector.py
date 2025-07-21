@@ -16,7 +16,8 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from nltk.tokenize import word_tokenize
-from googletrans import Translator
+from deep_translator import GoogleTranslator
+from typing import Optional, Tuple
 
 # Initialize logging
 logger = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ if not logger.handlers:
 # Constants
 LOG_PATH_JSON = "logs/domain_usage.json"
 LOG_PATH_CSV = "logs/domain_scores.csv"
-BASE_MODEL_DIR = Path("domain_models")
+BASE_MODEL_DIR = Path("rag_data")
 BASE_MODEL_DIR.mkdir(exist_ok=True)
 VECTORIZER_FILE = "vectorizer.pkl"
 MODEL_FILE = "logistic_model.pkl"
@@ -54,8 +55,7 @@ DOMAIN_KEYWORDS = {
     "biology": ["cell", "photosynthesis", "dna", "gene", "organism", "anatomy", "evolution"]
 }
 
-translator = Translator()
-
+translator = GoogleTranslator(source='auto', target='en')
 
 # ----------------------- Clean / Hash -----------------------
 
@@ -111,8 +111,8 @@ def evaluate_model(model, vectorizer, X_raw, y_true):
         logger.error(f"⚠️ Evaluation failed: {e}")
         return 0.0, None, ""
 
-def train_ml_model():
-    logger.info("🧠 Retraining domain model...")
+def train_ml_model(domain: str):
+    logger.info(f"🧠 Training domain model for {domain}...")
     base_df = build_training_dataset()
 
     if TRAINING_DATA_PATH.exists():
@@ -148,23 +148,49 @@ def train_ml_model():
     else:
         logger.warning("⚠️ Not enough data to evaluate model")
 
-    # Save artifacts
-    joblib.dump(model, BASE_MODEL_DIR / MODEL_FILE)
-    joblib.dump(vectorizer, BASE_MODEL_DIR / VECTORIZER_FILE)
-    logger.info("✅ Updated model and vectorizer saved.")
+    # Save to domain-specific folder
+    domain_dir = BASE_MODEL_DIR / domain
+    domain_dir.mkdir(parents=True, exist_ok=True)
+    model_path = domain_dir / MODEL_FILE
+    vectorizer_path = domain_dir / VECTORIZER_FILE
+    joblib.dump(model, model_path)
+    joblib.dump(vectorizer, vectorizer_path)
+    logger.info(f"✅ Saved model and vectorizer to {domain_dir}")
 
     return model, vectorizer
 
-def load_ml_model() -> tuple:
-    model_path = BASE_MODEL_DIR / MODEL_FILE
-    vectorizer_path = BASE_MODEL_DIR / VECTORIZER_FILE
-    if not model_path.exists() or not vectorizer_path.exists():
-        logger.warning("❗ Model not found, retraining...")
-        return train_ml_model()
-    model = joblib.load(model_path)
-    vectorizer = joblib.load(vectorizer_path)
-    return model, vectorizer
+def load_ml_model(domain: Optional[str] = None) -> Tuple[Optional[object], Optional[object]]:
+    """
+    Load the ML model and vectorizer for the specified domain.
 
+    Args:
+        domain (Optional[str]): The domain to load the model for (e.g., 'physics'). Defaults to 'general'.
+
+    Returns:
+        Tuple[Optional[object], Optional[object]]: The loaded model and vectorizer, or (None, None) if loading fails.
+    """
+    try:
+        # Use default domain if none provided
+        domain = DOMAIN_KEYWORDS.get(domain)
+        logger.info(f"Loading model for domain: {domain}")
+
+        model_path = BASE_MODEL_DIR / domain / MODEL_FILE
+        vectorizer_path = BASE_MODEL_DIR / domain / VECTORIZER_FILE
+
+        # Check if files exist
+        if not model_path.exists() or not vectorizer_path.exists():
+            logger.warning(f"Model or vectorizer for {domain} not found at {model_path} or {vectorizer_path}, retraining...")
+            return train_ml_model(domain)
+
+        # Load model and vectorizer
+        model = joblib.load(model_path)
+        vectorizer = joblib.load(vectorizer_path)
+        logger.info(f"Loaded model and vectorizer for {domain} from {model_path}")
+        return model, vectorizer
+
+    except Exception as e:
+        logger.error(f"Failed to load model for {domain}: {e}")
+        return None, None
 
 # ----------------------- Hybrid Detection -----------------------
 

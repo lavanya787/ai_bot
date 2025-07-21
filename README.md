@@ -52,6 +52,9 @@ A fully modular, from-scratch implementation of an AI-powered chatbot system usi
 git clone <your-repo-url>
 cd ai_bot
 python -m venv menv
-source menv/bin/activate     # On Windows: menv\Scripts\activate
+menv\Scripts\activate    # source menv/bin/activate
 pip install -r requirements.txt
 python app.py
+
+
+if stopwords related any error occurs, run python fix_stowords.py in env

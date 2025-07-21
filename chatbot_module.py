@@ -7,6 +7,7 @@ from datetime import datetime
 import pandas as pd
 from typing import Dict, Optional
 import time
+from utils.domain_detector import detect_domain
 
 # Setup logging
 logging.basicConfig(
@@ -146,6 +147,13 @@ class ChatBot:
             return "LLM Handler is not available. Please check your configuration."
 
         try:
+            # Detect domain from prompt
+            domain_name = detect_domain(prompt)
+            logger.info(f"Detected domain: {domain_name}")
+
+            # Load domain-specific model if available
+            self.llm_handler.load_model(model_path=f"rag_data/{domain_name}/{domain_name}_checkpoint.pt",
+                                     tokenizer_path=f"rag_data/{domain_name}/uml_tokenizer.pkl")
             # Auto-detect task if not provided
             if not task:
                 prompt_lower = prompt.lower()

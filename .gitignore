@@ -64,7 +64,23 @@ adding.py
 llm_handler_old.py
 intent_model.pt
 checkpoint.pt
-fix_stopwords.py
+persistent_documents.json
+profiling_log.json
+llm_handler_old.py
+query_history.json
+trained_models.json
+
+chat_history.json
+.gitattributes
+retriever/cache
+logs/
+login-register/
+faiss_logs/
+bot/
+data/
+domain_models/
+static/
+templates/
 
 # 📈 Reports and outputs
 *.pdf
@@ -72,6 +88,7 @@ fix_stopwords.py
 *.tsv
 *.xlsx
 *.xls
+*.css
 *.html
 *.pth
 *.pt
