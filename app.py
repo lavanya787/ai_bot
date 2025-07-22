@@ -217,7 +217,7 @@ def load_trained_models():
     logger.debug("Loading trained models")
     models = {}
     try:
-        with open("trained_models.json", "r", encoding="utf-8") as f:
+        with open("models_trained.json", "r", encoding="utf-8") as f:
             models = json.load(f)
         for k, v in models.items():
             v.setdefault("name", k)
@@ -225,7 +225,7 @@ def load_trained_models():
             v.setdefault("timestamp", "Unknown")
             v.setdefault("data", {})
     except (FileNotFoundError, json.JSONDecodeError):
-        logger.debug("No trained_models.json found or invalid")
+        logger.debug("No models_trained.json found or invalid")
         pass
 
     saved_models_dir = "saved_models"
