@@ -33,3 +33,4 @@ rouge
 python-pptx
 langdetect
 pydrive2
+python-dotenv
