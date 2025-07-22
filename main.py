@@ -4,8 +4,12 @@ from pathlib import Path
 import logging
 import json
 import auth
+import os
 import app as doc_app
+from dotenv import load_dotenv  # ✅ Add this
 from utils.nltk_setup import download_nltk_resources
+
+load_dotenv()  # ✅ Load environment variables
 
 # Optional: for Google Drive
 from pydrive2.auth import GoogleAuth
@@ -25,7 +29,8 @@ current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 
 # ✅ Google Drive Authentication & Model Download
-def download_models_from_drive(drive_folder_id, destination_folder):
+def download_models_from_drive(drive_folder_id=os.getenv("GOOGLE_DRIVE_FOLDER_ID"),
+    destination_folder="saved_models"):
     print("Authenticating with Google Drive...")
 
     gauth = GoogleAuth()
