@@ -8,6 +8,7 @@ import pandas as pd
 from typing import Dict, Optional
 import time
 from utils.domain_detector import detect_domain
+import subprocess
 
 # Setup logging
 logging.basicConfig(
@@ -382,7 +383,10 @@ class ChatBot:
             #st.session_state.losses = losses  # Store for visualization
             total_time = time.time() - start_time
             logger.info(f"Trained {model_type} model for {doc_name} in {total_time:.2f} seconds")
-
+            # Save model to saved_models/...
+            logger.info("✅ Model training complete. Starting upload...")
+            subprocess.call(["python", "scripts/upload_models.py"])
+            
             return f"✅ {model_type.title()} model trained with {accuracy:.2%} accuracy"
 
         except Exception as e:
