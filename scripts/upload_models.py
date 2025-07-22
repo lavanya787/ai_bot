@@ -11,7 +11,7 @@ load_dotenv()
 
 # Constants
 MODELS_DIR = "saved_models"
-MODEL_LOG_PATH = "trained_models.json"
+MODEL_LOG_PATH = "models_trained.json"
 DRIVE_FOLDER_ID = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
 
 # ✅ Authenticate using service account
