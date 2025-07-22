@@ -100,7 +100,7 @@ rag_data/
 logs/
 
 # 🚀 Streamlit or runtime files
-*.streamlit/
+
 *.tflite
 *.onnx
 checkpoint.pt
