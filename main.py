@@ -8,14 +8,11 @@ import os
 import app as doc_app
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
-from dotenv import load_dotenv  # ✅ Add this
+from dotenv import load_dotenv
 from utils.nltk_setup import download_nltk_resources
 
-load_dotenv()  # ✅ Load environment variables
-
-# Optional: for Google Drive
-from pydrive2.auth import GoogleAuth
-from pydrive2.drive import GoogleDrive
+# Load environment variables
+load_dotenv()
 
 # Logging
 logging.basicConfig(
@@ -24,47 +21,93 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
-download_nltk_resources()
 
+# Download NLTK data
+download_nltk_resources()
+# Create local model folder if not exists
+MODELS_DIR = Path("saved_models")
+MODELS_DIR.mkdir(exist_ok=True)
 # Ensure current directory is in sys.path
 current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 
-# ✅ Google Drive Authentication & Model Download
 
+# ✅ Recursive download function
+def download_folder_contents(drive, folder_id, parent_path="saved_models"):
+    try:
+        # Query contents of the current folder
+        file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
+        for item in file_list:
+            item_path = os.path.join(parent_path, item['title'])
+
+            if item['mimeType'] == 'application/vnd.google-apps.folder':
+                # Create local subfolder
+                os.makedirs(item_path, exist_ok=True)
+                # Recurse into subfolder
+                download_folder_contents(drive, item['id'], item_path)
+            else:
+                # Download file
+                print(f"⬇️  Downloading: {item_path}")
+                item.GetContentFile(item_path)
+
+    except Exception as e:
+        print(f"❌ Error downloading folder contents: {e}")
+
+
+# ✅ Authentication and model download
 def download_models_from_drive():
     print("🔐 Authenticating with Google Drive...")
 
     try:
         gauth = GoogleAuth()
-        gauth.ServiceAuth()  # ✅ Use service account auth (requires settings.yaml + service_account.json)
-
+        gauth.ServiceAuth()
         drive = GoogleDrive(gauth)
 
-        # Folder ID from your environment
-        folder_id = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
-        if not folder_id:
+        parent_id = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
+        if not parent_id:
             raise ValueError("Environment variable GOOGLE_DRIVE_FOLDER_ID not set.")
 
-        file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
+        # Get all subfolders inside 'models'
+        folder_list = drive.ListFile({
+            'q': f"'{parent_id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false"
+        }).GetList()
 
-        if not file_list:
-            print("⚠️ No files found in the specified Google Drive folder.")
+        if not folder_list:
+            print("⚠️ No subfolders found inside the models folder.")
             return
 
-        for file in file_list:
-            file_path = os.path.join("saved_models", file['title'])
-            print(f"⬇️  Downloading {file['title']}...")
-            file.GetContentFile(file_path)
+        for subfolder in folder_list:
+            subfolder_id = subfolder['id']
+            subfolder_name = subfolder['title']
+            local_subfolder_path = MODELS_DIR / subfolder_name
+            local_subfolder_path.mkdir(parents=True, exist_ok=True)
+
+            print(f"\n📁 Processing folder: {subfolder_name}")
+
+            files = drive.ListFile({
+                'q': f"'{subfolder_id}' in parents and trashed=false"
+            }).GetList()
+
+            if not files:
+                print(f"⚠️ Skipping empty subfolder: {subfolder_name}")
+                continue
+
+            for file in files:
+                file_name = file['title']
+                destination_path = local_subfolder_path / file_name
+                print(f"⬇️  Downloading: {file_name}")
+                file.GetContentFile(str(destination_path))
 
         print("✅ All model files downloaded successfully.")
 
     except Exception as e:
-        print("❌ Failed to download model files from Google Drive.\n")
+        print("❌ Failed to download model files from Google Drive.")
         print(f"{type(e).__name__}: {e}")
 
 
 
+
+# ✅ Main Streamlit app entry point
 def main():
     logger.debug("Starting main.py")
 
@@ -74,7 +117,7 @@ def main():
         initial_sidebar_state="collapsed"
     )
 
-    # ✅ Download models at startup
+    # Download models from Google Drive recursively
     download_models_from_drive()
 
     # Session and URL-based authentication
@@ -94,6 +137,7 @@ def main():
     else:
         logger.debug("User not authenticated. Showing login.")
         auth.render_auth_page()
+
 
 if __name__ == "__main__":
     main()

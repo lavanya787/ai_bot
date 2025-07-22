@@ -29,3 +29,25 @@ def load_model_from_drive(model_key):
     print(f"⬇️ Downloading {model_key} from Google Drive...")
     gdown.download(url, local_path, quiet=False)
     return local_path
+
+def get_available_models(models_root="saved_models"):
+    model_info = {}
+
+    if not os.path.exists(models_root):
+        return model_info
+
+    for subfolder in os.listdir(models_root):
+        folder_path = os.path.join(models_root, subfolder)
+        if not os.path.isdir(folder_path):
+            continue
+
+        model_files = [
+            os.path.join(folder_path, f)
+            for f in os.listdir(folder_path)
+            if os.path.isfile(os.path.join(folder_path, f))
+        ]
+
+        if model_files:
+            model_info[subfolder] = model_files
+
+    return model_info
