@@ -29,25 +29,26 @@ download_nltk_resources()
 current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 
-
 # ✅ Recursive download function
 def download_folder_contents(drive, folder_id, parent_path="saved_models/models"):
     try:
         file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
         for item in file_list:
             item_path = os.path.join(parent_path, item['title'])
+            logger.debug(f"Processing item: {item_path}")
 
             if item['mimeType'] == 'application/vnd.google-apps.folder':
                 os.makedirs(item_path, exist_ok=True)
                 download_folder_contents(drive, item['id'], item_path)
             else:
-                print(f"⬇️  Downloading: {item_path}")
+                logger.debug(f"⬇️  Downloading: {item_path}")
                 item.GetContentFile(item_path)
+                logger.debug(f"Downloaded file exists: {os.path.exists(item_path)}")
     except Exception as e:
-        print(f"❌ Error downloading folder contents: {e}")
+        logger.error(f"❌ Error downloading folder contents: {e}")
 
 def download_models_from_drive():
-    print("🔐 Authenticating with Google Drive...")
+    logger.debug("🔐 Authenticating with Google Drive...")
     try:
         gauth = GoogleAuth()
         gauth.ServiceAuth()
@@ -58,11 +59,10 @@ def download_models_from_drive():
             raise ValueError("Environment variable GOOGLE_DRIVE_FOLDER_ID not set.")
 
         download_folder_contents(drive, parent_folder_id)
-        print("✅ All non-empty model folders downloaded.")
+        logger.info("✅ All non-empty model folders downloaded.")
     except Exception as e:
-        print("❌ Failed to download model files.")
-        print(f"{type(e).__name__}: {e}")
-
+        logger.error("❌ Failed to download model files.")
+        logger.error(f"{type(e).__name__}: {e}")
 
 # ✅ Main Streamlit app entry point
 def main():
@@ -77,6 +77,24 @@ def main():
     # Download models from Google Drive recursively
     download_models_from_drive()
 
+    # Find the latest model folder
+    model_dir = os.path.join("saved_models", "models")
+    latest_model_path = None
+    if os.path.exists(model_dir):
+        model_folders = [f for f in os.listdir(model_dir) if os.path.isdir(os.path.join(model_dir, f))]
+        if model_folders:
+            latest_model_path = max(model_folders, key=lambda x: os.path.getctime(os.path.join(model_dir, x)))
+            logger.debug(f"Latest model folder found: {latest_model_path}")
+            checkpoint_path = os.path.join(model_dir, latest_model_path, "checkpoint.pt")
+            if os.path.exists(checkpoint_path):
+                logger.info(f"Found checkpoint file: {checkpoint_path}")
+            else:
+                logger.warning(f"Checkpoint file not found in {checkpoint_path}")
+        else:
+            logger.warning(f"No model folders found in {model_dir}")
+    else:
+        logger.warning(f"Model directory {model_dir} does not exist.")
+
     # Session and URL-based authentication
     user_id_from_url = st.query_params.get("user_id")
     is_authenticated = st.session_state.get('authenticated', False)
@@ -90,11 +108,13 @@ def main():
 
     if st.session_state.get('authenticated', False):
         logger.debug("User is authenticated. Running main app.")
+        # Pass the latest model path to doc_app.main() if available
+        if latest_model_path:
+            st.session_state['model_path'] = os.path.join(model_dir, latest_model_path)
         doc_app.main()
     else:
         logger.debug("User not authenticated. Showing login.")
         auth.render_auth_page()
-
 
 if __name__ == "__main__":
     main()
