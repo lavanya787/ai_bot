@@ -51,7 +51,15 @@ def download_models_from_drive():
     logger.debug("🔐 Authenticating with Google Drive...")
     try:
         gauth = GoogleAuth()
-        gauth.ServiceAuth()
+        # Load client secrets for OAuth2
+        client_secrets_path = os.getenv("GOOGLE_CLIENT_SECRETS")
+        if client_secrets_path and os.path.exists(client_secrets_path):
+            gauth.LoadClientConfigFile(client_secrets_path)
+        else:
+            raise ValueError("GOOGLE_CLIENT_SECRETS environment variable not set or file not found.")
+
+        # Authenticate using local web server flow
+        gauth.LocalWebserverAuth()
         drive = GoogleDrive(gauth)
 
         parent_folder_id = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
@@ -60,6 +68,22 @@ def download_models_from_drive():
 
         download_folder_contents(drive, parent_folder_id)
         logger.info("✅ All non-empty model folders downloaded.")
+
+        # Create symlink to latest folder
+        model_dir = os.path.join("saved_models", "models")
+        if os.path.exists(model_dir):
+            model_folders = [f for f in os.listdir(model_dir) if os.path.isdir(os.path.join(model_dir, f))]
+            if model_folders:
+                latest_model = max(model_folders, key=lambda x: os.path.getctime(os.path.join(model_dir, x)))
+                latest_link = os.path.join("saved_models", "latest")
+                if os.path.exists(latest_link):
+                    os.unlink(latest_link)
+                os.symlink(os.path.join(model_dir, latest_model), latest_link)
+                logger.info(f"Created latest symlink to: {latest_model}")
+            else:
+                logger.warning(f"No model folders found in {model_dir}")
+        else:
+            logger.warning(f"Model directory {model_dir} does not exist.")
     except Exception as e:
         logger.error("❌ Failed to download model files.")
         logger.error(f"{type(e).__name__}: {e}")
