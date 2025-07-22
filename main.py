@@ -80,10 +80,6 @@ def download_models_from_drive():
                     os.unlink(latest_link)
                 os.symlink(os.path.join(model_dir, latest_model), latest_link)
                 logger.info(f"Created latest symlink to: {latest_model}")
-            else:
-                logger.warning(f"No model folders found in {model_dir}")
-        else:
-            logger.warning(f"Model directory {model_dir} does not exist.")
     except Exception as e:
         logger.error("❌ Failed to download model files.")
         logger.error(f"{type(e).__name__}: {e}")
