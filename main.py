@@ -29,21 +29,28 @@ def download_models_from_drive():
     try:
         st.info("Authenticating with Google Drive...")
 
-        # Load service account credentials from Streamlit secrets
+        # Load service account JSON from secrets
         service_account_info = json.loads(st.secrets["GOOGLE_DRIVE_SERVICE_ACCOUNT"])
-        credentials_file_path = current_dir / "service_account.json"
-        with open(credentials_file_path, "w") as f:
+
+        # Save the service account JSON to a file
+        with open("service_account.json", "w") as f:
             json.dump(service_account_info, f)
 
-        # ✅ Set up PyDrive2 to use the service account
-        gauth = GoogleAuth()
-        gauth.settings['get_refresh_token'] = True
-        gauth.LoadCredentialsFile(str(credentials_file_path))
+        # Create a settings.yaml file for service account auth
+        with open("settings.yaml", "w") as f:
+            f.write(f"""client_config_backend: service
+service_config:
+  client_json_file_path: service_account.json
+""")
+
+        # Authenticate using the service account
+        gauth = GoogleAuth(settings_file="settings.yaml")
         gauth.ServiceAuth()
 
         drive = GoogleDrive(gauth)
         folder_id = st.secrets["GOOGLE_DRIVE_FOLDER_ID"]
 
+        # List and download all files from the folder
         file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
 
         for file in file_list:
@@ -58,6 +65,7 @@ def download_models_from_drive():
         logger.error("Error during Google Drive authentication or download")
         st.error("❌ Failed to download model files from Google Drive.")
         st.exception(e)
+
 
 def main():
     logger.debug("Starting main.py")
