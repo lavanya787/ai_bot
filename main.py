@@ -2,9 +2,14 @@ import streamlit as st
 import sys
 from pathlib import Path
 import logging
+import json
 import auth
 import app as doc_app
 from utils.nltk_setup import download_nltk_resources
+
+# Optional: for Google Drive
+from pydrive2.auth import GoogleAuth
+from pydrive2.drive import GoogleDrive
 
 # Logging
 logging.basicConfig(
@@ -19,6 +24,40 @@ download_nltk_resources()
 current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 
+# ✅ Google Drive Authentication & Model Download
+def download_models_from_drive():
+    try:
+        st.info("Authenticating with Google Drive...")
+
+        # Load and save service account credentials to file
+        service_account_info = json.loads(st.secrets["GOOGLE_DRIVE_SERVICE_ACCOUNT"])
+        with open("service_account.json", "w") as f:
+            json.dump(service_account_info, f)
+
+        # Authenticate with PyDrive2
+        gauth = GoogleAuth()
+        gauth.LoadServiceConfigFile("service_account.json")
+        gauth.ServiceAuth()
+
+        drive = GoogleDrive(gauth)
+        folder_id = st.secrets["GOOGLE_DRIVE_FOLDER_ID"]
+
+        # List and download all files from the folder
+        file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
+
+        for file in file_list:
+            file_path = current_dir / file['title']
+            if not file_path.exists():
+                st.write(f"📥 Downloading model: {file['title']}")
+                file.GetContentFile(str(file_path))
+            else:
+                st.write(f"✅ Already downloaded: {file['title']}")
+
+    except Exception as e:
+        logger.error("Error during Google Drive authentication or download")
+        st.error("❌ Failed to download model files from Google Drive.")
+        st.exception(e)
+
 def main():
     logger.debug("Starting main.py")
 
@@ -27,6 +66,9 @@ def main():
         layout="wide",
         initial_sidebar_state="collapsed"
     )
+
+    # ✅ Download models at startup
+    download_models_from_drive()
 
     # Session and URL-based authentication
     user_id_from_url = st.query_params.get("user_id")
