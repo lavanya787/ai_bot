@@ -6,6 +6,8 @@ import json
 import auth
 import os
 import app as doc_app
+from pydrive2.auth import GoogleAuth
+from pydrive2.drive import GoogleDrive
 from dotenv import load_dotenv  # ✅ Add this
 from utils.nltk_setup import download_nltk_resources
 
@@ -29,37 +31,38 @@ current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 
 # ✅ Google Drive Authentication & Model Download
-def download_models_from_drive(drive_folder_id=os.getenv("GOOGLE_DRIVE_FOLDER_ID"),
-    destination_folder="saved_models"):
-    print("Authenticating with Google Drive...")
 
-    gauth = GoogleAuth()
-    gauth.LoadCredentialsFile("service_account.json")
-    drive = GoogleDrive(gauth)
+def download_models_from_drive():
+    print("🔐 Authenticating with Google Drive...")
 
-    file_list = drive.ListFile({
-        'q': f"'{drive_folder_id}' in parents and trashed=false"
-    }).GetList()
+    try:
+        gauth = GoogleAuth()
+        gauth.ServiceAuth()  # ✅ Use service account auth (requires settings.yaml + service_account.json)
 
-    for file in file_list:
-        file_path = Path(destination_folder) / file['title']
+        drive = GoogleDrive(gauth)
 
-        if file_path.exists():
-            print(f"✅ Already downloaded: {file['title']}")
-            continue
+        # Folder ID from your environment
+        folder_id = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
+        if not folder_id:
+            raise ValueError("Environment variable GOOGLE_DRIVE_FOLDER_ID not set.")
 
-        print(f"\n📥 Downloading model: {file['title']}")
+        file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
 
-        # ✅ Skip Google Docs/Sheets etc.
-        if 'application/vnd.google-apps' in file['mimeType']:
-            print(f"⚠️ Skipping unsupported Google-native file: {file['title']}")
-            continue
+        if not file_list:
+            print("⚠️ No files found in the specified Google Drive folder.")
+            return
 
-        try:
-            file.GetContentFile(str(file_path))
-            print(f"✅ Downloaded: {file['title']}")
-        except Exception as e:
-            print(f"❌ Failed to download {file['title']}\n{e}")
+        for file in file_list:
+            file_path = os.path.join("saved_models", file['title'])
+            print(f"⬇️  Downloading {file['title']}...")
+            file.GetContentFile(file_path)
+
+        print("✅ All model files downloaded successfully.")
+
+    except Exception as e:
+        print("❌ Failed to download model files from Google Drive.\n")
+        print(f"{type(e).__name__}: {e}")
+
 
 
 def main():

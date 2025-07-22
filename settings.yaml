@@ -1,0 +1,3 @@
+client_config_backend: service
+service_config:
+  client_service_file: service_account.json
