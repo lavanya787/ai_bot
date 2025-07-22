@@ -25,46 +25,36 @@ current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 
 # ✅ Google Drive Authentication & Model Download
-def download_models_from_drive():
-    try:
-        st.info("Authenticating with Google Drive...")
+def download_models_from_drive(drive_folder_id, destination_folder):
+    print("Authenticating with Google Drive...")
 
-        # Load service account JSON from secrets
-        service_account_info = json.loads(st.secrets["GOOGLE_DRIVE_SERVICE_ACCOUNT"])
+    gauth = GoogleAuth()
+    gauth.LoadCredentialsFile("service_account.json")
+    drive = GoogleDrive(gauth)
 
-        # Save the service account JSON to a file
-        with open("service_account.json", "w") as f:
-            json.dump(service_account_info, f)
+    file_list = drive.ListFile({
+        'q': f"'{drive_folder_id}' in parents and trashed=false"
+    }).GetList()
 
-        # Create a settings.yaml file for service account auth
-        with open("settings.yaml", "w") as f:
-            f.write(f"""client_config_backend: service
-service_config:
-  client_json_file_path: service_account.json
-""")
+    for file in file_list:
+        file_path = Path(destination_folder) / file['title']
 
-        # Authenticate using the service account
-        gauth = GoogleAuth(settings_file="settings.yaml")
-        gauth.ServiceAuth()
+        if file_path.exists():
+            print(f"✅ Already downloaded: {file['title']}")
+            continue
 
-        drive = GoogleDrive(gauth)
-        folder_id = st.secrets["GOOGLE_DRIVE_FOLDER_ID"]
+        print(f"\n📥 Downloading model: {file['title']}")
 
-        # List and download all files from the folder
-        file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
+        # ✅ Skip Google Docs/Sheets etc.
+        if 'application/vnd.google-apps' in file['mimeType']:
+            print(f"⚠️ Skipping unsupported Google-native file: {file['title']}")
+            continue
 
-        for file in file_list:
-            file_path = current_dir / file['title']
-            if not file_path.exists():
-                st.write(f"📥 Downloading model: {file['title']}")
-                file.GetContentFile(str(file_path))
-            else:
-                st.write(f"✅ Already downloaded: {file['title']}")
-
-    except Exception as e:
-        logger.error("Error during Google Drive authentication or download")
-        st.error("❌ Failed to download model files from Google Drive.")
-        st.exception(e)
+        try:
+            file.GetContentFile(str(file_path))
+            print(f"✅ Downloaded: {file['title']}")
+        except Exception as e:
+            print(f"❌ Failed to download {file['title']}\n{e}")
 
 
 def main():
