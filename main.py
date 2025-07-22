@@ -31,6 +31,25 @@ MODELS_DIR.mkdir(exist_ok=True)
 current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 
+import pickle
+
+def load_models(models_dir=MODELS_DIR):
+    loaded_models = {}
+
+    for subdir in models_dir.iterdir():
+        if subdir.is_dir():
+            for file in subdir.iterdir():
+                if file.suffix in ['.pkl', '.model']:
+                    try:
+                        with open(file, 'rb') as f:
+                            model = pickle.load(f)
+                        model_key = f"{subdir.name}/{file.name}"
+                        loaded_models[model_key] = model
+                        print(f"✅ Loaded model: {model_key}")
+                    except Exception as e:
+                        print(f"❌ Failed to load model {file.name}: {e}")
+
+    return loaded_models
 
 # ✅ Recursive download function
 def download_folder_contents(drive, folder_id, parent_path="saved_models"):
@@ -117,10 +136,14 @@ def main():
         initial_sidebar_state="collapsed"
     )
 
-    # Download models from Google Drive recursively
+    # Step 1: Download models
     download_models_from_drive()
 
-    # Session and URL-based authentication
+    # Step 2: Load models into session_state
+    if 'models' not in st.session_state:
+        st.session_state.models = load_models()
+
+    # Step 3: Handle authentication
     user_id_from_url = st.query_params.get("user_id")
     is_authenticated = st.session_state.get('authenticated', False)
 
@@ -137,7 +160,3 @@ def main():
     else:
         logger.debug("User not authenticated. Showing login.")
         auth.render_auth_page()
-
-
-if __name__ == "__main__":
-    main()
