@@ -91,7 +91,7 @@ class LLMHandler:
         
         self.model_path = model_path
         self.tokenizer_path = tokenizer_path
-        self.trained_models_path = "trained_models.json"
+        self.models_trained = "models_trained.json"
         self.model_version = model_version
     
         self.vocab_size = 10000
@@ -789,13 +789,13 @@ class LLMHandler:
 
             self.tokenizer.save_pickle(tokenizer_path)
 
-            trained_models = {}
-            if os.path.exists(self.trained_models_path):
+            models_trained = {}
+            if os.path.exists(self.models_trained_path):
                 try:
-                    with open(self.trained_models_path, 'r', encoding='utf-8') as f:
-                        trained_models = json.load(f)
+                    with open(self.models_trained_path, 'r', encoding='utf-8') as f:
+                        models_trained = json.load(f)
                 except Exception as e:
-                    logger.warning(f"⚠️ Failed to load trained_models.json: {e}")
+                    logger.warning(f"⚠️ Failed to load models_trained.json: {e}")
 
             model_metadata = {
                 'domain': domain_name,
@@ -806,9 +806,9 @@ class LLMHandler:
                 'vocab_size': self.vocab_size,
                 'num_documents': len(self.doc_texts)
             }
-            trained_models[filename] = model_metadata
-            with open(self.trained_models_path, 'w', encoding='utf-8') as f:
-                json.dump(trained_models, f, indent=2)
+            models_trained[filename] = model_metadata
+            with open(self.models_trained_path, 'w', encoding='utf-8') as f:
+                json.dump(models_trained, f, indent=2)
 
             logger.info(f"✅ Model and tokenizer saved successfully to {final_path}")
             return True

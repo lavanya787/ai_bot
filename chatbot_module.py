@@ -60,8 +60,8 @@ class ChatBot:
     def __init__(self):
         self.datasets = {}
         self.documents = {}
-        self.trained_models = {}
-        self.trained_models_path = "trained_models.json"
+        self.models_trained = {}
+        self.models_trained_path = "models_trained.json"
         
         # Initialize handlers
         self.LLM_AVAILABLE = True
@@ -84,9 +84,9 @@ class ChatBot:
                     self.documents = st.session_state.chatbot_documents
                     logger.info(f"Loaded {len(self.documents)} documents from session state")
                 
-                if 'chatbot_trained_models' in st.session_state:
-                    self.trained_models = st.session_state.chatbot_trained_models
-                    logger.info(f"Loaded {len(self.trained_models)} trained models from session state")
+                if 'chatbot_models_trained' in st.session_state:
+                    self.models_trained = st.session_state.chatbot_models_trained
+                    logger.info(f"Loaded {len(self.models_trained)} trained models from session state")
             
             # Load from file system as backup
             documents_path = "persistent_documents.json"
@@ -117,7 +117,7 @@ class ChatBot:
             # Save to session state if available (Streamlit)
             if 'st' in globals() and hasattr(st, 'session_state'):
                 st.session_state.chatbot_documents = self.documents
-                st.session_state.chatbot_trained_models = self.trained_models
+                st.session_state.chatbot_models_trained = self.models_trained
                 logger.info("Saved state to session state")
             
             # Save to file system as backup
@@ -173,7 +173,7 @@ class ChatBot:
 
             # Check for trained models
             relevant_doc_id = self._get_relevant_doc_id()
-            if relevant_doc_id and relevant_doc_id in self.trained_models:
+            if relevant_doc_id and relevant_doc_id in self.models_trained:
                 response = self._use_trained_model(prompt, relevant_doc_id)
             else:
                 # This is where the actual LLM response generation happens
@@ -196,7 +196,7 @@ class ChatBot:
 
     def _use_trained_model(self, prompt: str, doc_id: str) -> str:
         """Use trained model for prediction."""
-        model_info = self.trained_models[doc_id]
+        model_info = self.models_trained[doc_id]
         model_type = model_info['model_type']
         
         if model_type == "classification":
@@ -372,7 +372,7 @@ class ChatBot:
                 return f"❌ Failed to train model for {doc_name}"
 
             # Store model information
-            self.trained_models[doc_id] = {
+            self.models_trained[doc_id] = {
                 "model_type": model_type,
                 "accuracy": accuracy,
                 "features": len(processed_data.columns) if hasattr(processed_data, 'columns') else 1,
@@ -396,10 +396,10 @@ class ChatBot:
     def load_saved_model(self, model_version: str) -> str:
         """Load a previously saved model."""
         try:
-            if not os.path.exists(self.trained_models_path):
+            if not os.path.exists(self.models_trained_path):
                 return f"❌ No saved models found"
 
-            with open(self.trained_models_path, "r") as f:
+            with open(self.models_trained_path, "r") as f:
                 models = json.load(f)
 
             if model_version not in models:
@@ -419,7 +419,7 @@ class ChatBot:
             
             # Restore trained model info
             doc_id = hashlib.md5(model_info["doc_name"].encode()).hexdigest()
-            self.trained_models[doc_id] = {
+            self.models_trained[doc_id] = {
                 "model_type": model_info.get("model_type", "classification"),
                 "accuracy": model_info.get("accuracy", 0.0),
                 "features": model_info.get("features", 0),

@@ -156,7 +156,7 @@ def save_query_to_file(user_id, prompt, response):
 def save_trained_model(model_name, model_data, llm_handler=None):
     logger.debug(f"Saving model: {model_name}")
     try:
-        models_file = "trained_models.json"
+        models_file = "models_trained.json"
         timestamp = datetime.now().strftime("%Y-%m-%d %I:%M %p")
 
         try:
@@ -213,7 +213,7 @@ def save_trained_model(model_name, model_data, llm_handler=None):
         logger.error(f"Error saving model: {e}")
         return None
 
-def load_trained_models():
+def load_models_trained():
     logger.debug("Loading trained models")
     models = {}
     try:
@@ -246,7 +246,7 @@ def load_trained_models():
     return models
 
 def get_model_dropdown_options():
-    models = load_trained_models()
+    models = load_models_trained()
     return [(f"{model['name']} ({model['version']}) - {model['timestamp']}", key) for key, model in models.items()]
 
 def get_latest_model(models):
@@ -264,7 +264,7 @@ def get_latest_model(models):
 def auto_load_latest_model(model_key):
     logger.debug(f"Auto-loading model: {model_key}")
     try:
-        models = load_trained_models()
+        models = load_models_trained()
         model_info = models.get(model_key)
         if not model_info:
             logger.warning(f"Model metadata for {model_key} not found")
@@ -358,7 +358,7 @@ def initialize_session_state():
         'current_view': 'chat',
         'show_welcome': True,
         'selected_model': None,
-        'trained_models': {},
+        'models_trained': {},
         'model_loaded': False,
         'vocab_comparison_done': False,
         'vocab_results': [],
@@ -420,7 +420,7 @@ def render_model_dashboard():
     st.markdown("### 🧠 Model Dashboard")
 
     # Load models and check for documents
-    models = load_trained_models()
+    models = load_models_trained()
     if not models:
         st.info("📭 No trained models available. Upload documents and train a model to get started.")
         return
@@ -523,7 +523,7 @@ def render_model_dashboard():
                     st.rerun()
 
             preview = text_content[:300] + "..." if len(text_content) > 300 else text_content
-            st.text_area("Preview", preview, height=80, disabled=True, label_visibility="collapsed")
+            st.text_area("Preview", preview, height=80, disabled=True, label_visibility="collapsed", key=f"preview_{doc_name}")
 
     # 📊 Domain Pie Chart
     if len(all_domains) > 1:
@@ -1060,7 +1060,7 @@ def main():
     initialize_session_state()
     render_sidebar()
 
-    models = load_trained_models()
+    models = load_models_trained()
 
     # Clear invalid selection
     if st.session_state.selected_model not in models and st.session_state.selected_model is not None:
