@@ -68,7 +68,10 @@ persistent_documents.json
 profiling_log.json
 llm_handler_old.py
 query_history.json
-trained_models.json
+models_trained.json
+service_account.json
+client_secrets.json
+mycreds.txt
 
 chat_history.json
 .gitattributes
