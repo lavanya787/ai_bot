@@ -2,9 +2,11 @@ import os
 import json
 import time
 import datetime
+import streamlit as st
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 from dotenv import load_dotenv
+from oauth2client.service_account import ServiceAccountCredentials
 
 # Load environment variables
 load_dotenv()
@@ -18,9 +20,12 @@ DRIVE_FOLDER_ID = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
 
    # ✅ Authenticate using OAuth 2.0
 def auth_drive():
+    service_account_info = json.loads(st.secrets["GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON"])
     gauth = GoogleAuth()
-    gauth.LoadClientConfigFile("client_secrets.json")  # Load your client_secrets.json
-    gauth.LocalWebserverAuth()  # Creates a local webserver and automatically handles authentication.
+    gauth.credentials = ServiceAccountCredentials.from_json_keyfile_dict(
+        service_account_info,
+        scopes=["https://www.googleapis.com/auth/drive"]
+    )
     return GoogleDrive(gauth)
 
 def restore_trashed_files(drive):
