@@ -29,20 +29,21 @@ def download_models_from_drive():
     try:
         st.info("Authenticating with Google Drive...")
 
-        # Load and save service account credentials to file
+        # Load service account credentials from Streamlit secrets
         service_account_info = json.loads(st.secrets["GOOGLE_DRIVE_SERVICE_ACCOUNT"])
-        with open("service_account.json", "w") as f:
+        credentials_file_path = current_dir / "service_account.json"
+        with open(credentials_file_path, "w") as f:
             json.dump(service_account_info, f)
 
-        # Authenticate with PyDrive2
+        # ✅ Set up PyDrive2 to use the service account
         gauth = GoogleAuth()
-        gauth.LoadServiceConfigFile("service_account.json")
+        gauth.settings['get_refresh_token'] = True
+        gauth.LoadCredentialsFile(str(credentials_file_path))
         gauth.ServiceAuth()
 
         drive = GoogleDrive(gauth)
         folder_id = st.secrets["GOOGLE_DRIVE_FOLDER_ID"]
 
-        # List and download all files from the folder
         file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
 
         for file in file_list:
